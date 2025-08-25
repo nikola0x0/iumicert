@@ -1,0 +1,28 @@
+{
+  "name": "iumicert-contracts",
+  "version": "1.0.0",
+  "description": "IU-MiCert Smart Contracts for Academic Credential Verification",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:sepolia": "hardhat run deploy/01-deploy-registry.ts --network sepolia",
+    "deploy:mainnet": "hardhat run deploy/01-deploy-registry.ts --network mainnet",
+    "verify:sepolia": "hardhat verify --network sepolia",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.3",
+    "hardhat": "^2.19.4",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "blockchain",
+    "credentials", 
+    "verkle-trees",
+    "micro-credentials",
+    "academic-verification"
+  ],
+  "author": "Le Tien Phat",
+  "license": "MIT"
+}
