@@ -6,6 +6,8 @@ export interface Term {
   start_date: string;
   end_date: string;
   status: string;
+  student_count?: number;
+  total_courses?: number;
 }
 
 export interface Receipt {
@@ -76,6 +78,10 @@ class ApiService {
     });
   }
 
+  async getTermRoot(termId: string): Promise<{ verkle_root: string; merkle_root: string; total_students: number }> {
+    return this.request<{ verkle_root: string; merkle_root: string; total_students: number }>(`/api/terms/${termId}/roots`);
+  }
+
   // Receipt management
   async getReceipts(termId: string): Promise<Receipt[]> {
     return this.request<Receipt[]>(`/api/terms/${termId}/receipts`);
@@ -112,6 +118,17 @@ class ApiService {
     receipts: string[];
   }): Promise<{ transaction_hash: string }> {
     return this.request<{ transaction_hash: string }>('/api/publish-roots', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async publishToBlockchain(data: {
+    term_id: string;
+    network: string;
+    gas_limit: number;
+  }): Promise<{ transaction_hash: string; status: string }> {
+    return this.request<{ transaction_hash: string; status: string }>('/api/blockchain/publish', {
       method: 'POST',
       body: JSON.stringify(data),
     });

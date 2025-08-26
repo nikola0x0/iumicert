@@ -1,12 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
+import { useAccount, useWalletClient } from 'wagmi';
+import { ConnectKitButton } from 'connectkit';
 import { apiService, type Term, type Receipt } from '@/lib/api';
+import { 
+  publishTermRoot, 
+  waitForTransactionConfirmation, 
+  getTermRootHistory, 
+  estimatePublishGas, 
+  formatEther,
+  type TermRootData,
+  type PublishResult 
+} from '@/lib/blockchain';
 
 export function IssuerDashboard() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const { data: walletClient } = useWalletClient();
   const [activeTab, setActiveTab] = useState<'terms' | 'receipts' | 'blockchain' | 'status'>('terms');
   const [terms, setTerms] = useState<Term[]>([]);
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -64,7 +74,16 @@ export function IssuerDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">IU-MiCert Issuer Dashboard</h1>
               <p className="text-sm text-gray-500">Academic credential issuance system with blockchain integration</p>
             </div>
-            <ConnectButton />
+            <ConnectKitButton.Custom>
+              {({ isConnected, show, truncatedAddress }) => (
+                <button 
+                  onClick={show}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {isConnected ? truncatedAddress : "Connect Wallet"}
+                </button>
+              )}
+            </ConnectKitButton.Custom>
           </div>
         </div>
       </header>
@@ -101,7 +120,7 @@ export function IssuerDashboard() {
           <>
             {activeTab === 'terms' && <TermsTab terms={terms} onTermSelect={handleTermSelect} isLoading={isLoading} />}
             {activeTab === 'receipts' && <ReceiptsTab selectedTerm={selectedTerm} receipts={receipts} isLoading={isLoading} />}
-            {activeTab === 'blockchain' && <BlockchainTab />}
+            {activeTab === 'blockchain' && <BlockchainTab terms={terms} />}
             {activeTab === 'status' && <StatusTab systemStatus={systemStatus} />}
           </>
         ) : (
@@ -109,7 +128,16 @@ export function IssuerDashboard() {
             <div className="text-6xl mb-4">🔒</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Wallet Connection Required</h2>
             <p className="text-gray-600 mb-8">Please connect your wallet to access the issuer dashboard.</p>
-            <ConnectButton />
+            <ConnectKitButton.Custom>
+              {({ isConnected, show, truncatedAddress }) => (
+                <button 
+                  onClick={show}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {isConnected ? truncatedAddress : "Connect Wallet"}
+                </button>
+              )}
+            </ConnectKitButton.Custom>
           </div>
         )}
       </main>
@@ -178,6 +206,9 @@ function ReceiptsTab({ selectedTerm, receipts, isLoading }: {
   receipts: Receipt[]; 
   isLoading: boolean; 
 }) {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  
   if (!selectedTerm) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -190,8 +221,31 @@ function ReceiptsTab({ selectedTerm, receipts, isLoading }: {
   }
 
   const handlePublishTerm = async () => {
-    // TODO: Implement term publishing to blockchain
-    alert(`Publishing ${selectedTerm.name} credentials to Sepolia blockchain...`);
+    if (!selectedTerm) return;
+    
+    try {
+      // Get term root data from the backend API
+      const termRoot = await apiService.getTermRoot(selectedTerm.id);
+      
+      const termRootData: TermRootData = {
+        term_id: selectedTerm.id,
+        verkle_root: termRoot.verkle_root,
+        total_students: selectedTerm.student_count || 0
+      };
+
+      // Publish to blockchain via MetaMask  
+      const result: PublishResult = await publishTermRoot(termRootData, address, walletClient);
+      
+      // Wait for confirmation
+      await waitForTransactionConfirmation(result.transactionHash);
+
+      alert(`✅ Successfully published ${selectedTerm.name} to Sepolia blockchain!\nTransaction: ${result.transactionHash}`);
+      
+    } catch (error) {
+      console.error('Publishing failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`❌ Publishing failed: ${errorMessage}`);
+    }
   };
 
   const handleGenerateReceipts = async () => {
@@ -257,7 +311,7 @@ function ReceiptsTab({ selectedTerm, receipts, isLoading }: {
             </div>
           ) : (
             <div className="space-y-4">
-              {receipts.map((receipt, index) => (
+              {receipts.map((receipt) => (
                 <div key={receipt.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -318,52 +372,143 @@ function ReceiptsTab({ selectedTerm, receipts, isLoading }: {
   );
 }
 
-function BlockchainTab() {
+function BlockchainTab({ terms }: { terms: Term[] }) {
+  const { isConnected, address } = useAccount();
+  const { data: walletClient } = useWalletClient();
   const [publishingStatus, setPublishingStatus] = useState<'idle' | 'preparing' | 'signing' | 'confirming'>('idle');
-  const [transactions, setTransactions] = useState([
-    // Mock transaction data for demo
-    {
-      id: '0x1a2b3c...',
-      type: 'Term Publication',
-      term: 'Fall 2024',
-      students: 5,
-      status: 'confirmed',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      blockNumber: 4825193,
-      gasUsed: '142,350'
-    },
-    {
-      id: '0x4d5e6f...',
-      type: 'Root Update',
-      term: 'Spring 2024',
-      students: 3,
-      status: 'pending',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      blockNumber: null,
-      gasUsed: null
-    }
-  ]);
+  const [transactions, setTransactions] = useState<Array<{
+    id: string;
+    type: string;
+    term: string;
+    students: number;
+    status: string;
+    timestamp: string;
+    blockNumber: number | null;
+    gasUsed: string | null;
+  }>>([]);
+  const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
+  const [gasEstimate, setGasEstimate] = useState<{
+    gasLimit: bigint;
+    gasPrice: bigint;
+    estimatedCost: bigint;
+  } | null>(null);
 
-  const handlePublishToBlockchain = async () => {
-    setPublishingStatus('preparing');
-    // Simulate blockchain publishing process
-    setTimeout(() => setPublishingStatus('signing'), 1000);
-    setTimeout(() => setPublishingStatus('confirming'), 3000);
-    setTimeout(() => {
-      setPublishingStatus('idle');
-      // Add new transaction
+  // Load transaction history on component mount
+  useEffect(() => {
+    const loadTransactionHistory = async () => {
+      try {
+        const history = await getTermRootHistory();
+        const formattedTransactions = history.map((event: any) => ({
+          id: event.transactionHash,
+          type: 'Term Publication',
+          term: event.termId,
+          students: event.totalStudents,
+          status: 'confirmed',
+          timestamp: new Date(event.timestamp * 1000).toISOString(),
+          blockNumber: event.blockNumber,
+          gasUsed: 'N/A' // Gas info not in event logs
+        }));
+        setTransactions(formattedTransactions);
+      } catch (error) {
+        console.warn('Failed to load blockchain transaction history:', error);
+      }
+    };
+
+    loadTransactionHistory();
+  }, []);
+
+  const handlePublishToBlockchain = async (term: Term) => {
+    if (!term) {
+      alert('Please select a term to publish');
+      return;
+    }
+
+    // Debug wallet connection state
+    console.log('Wallet connection state:', { 
+      isConnected, 
+      address, 
+      hasWalletClient: !!walletClient,
+      walletClientType: walletClient?.constructor?.name 
+    });
+
+    // Check wallet connection using wagmi state
+    if (!isConnected || !address) {
+      alert('❌ Please connect your wallet first');
+      return;
+    }
+
+    if (!walletClient) {
+      alert('❌ Wallet client not ready. Please try again in a moment.');
+      return;
+    }
+
+    try {
+      setPublishingStatus('preparing');
+
+      // Get term root data from the backend API
+      const termRoot = await apiService.getTermRoot(term.id);
+      
+      const termRootData: TermRootData = {
+        term_id: term.id,
+        verkle_root: termRoot.verkle_root,
+        total_students: term.student_count || 0
+      };
+
+      // Estimate gas costs
+      try {
+        const estimate = await estimatePublishGas(termRootData, address, walletClient);
+        setGasEstimate(estimate);
+      } catch (error) {
+        console.warn('Failed to estimate gas:', error);
+      }
+
+      setPublishingStatus('signing');
+      
+      // Publish to blockchain via MetaMask
+      const result: PublishResult = await publishTermRoot(termRootData, address, walletClient);
+      
+      setPublishingStatus('confirming');
+      
+      // Wait for confirmation with status updates
+      await waitForTransactionConfirmation(result.transactionHash, (status: 'pending' | 'confirmed' | 'failed') => {
+        if (status === 'confirmed') {
+          setPublishingStatus('idle');
+        } else if (status === 'failed') {
+          setPublishingStatus('idle');
+          throw new Error('Transaction failed');
+        }
+      });
+
+      // Add transaction to local state
       const newTx = {
-        id: '0x' + Math.random().toString(16).slice(2, 8) + '...',
+        id: result.transactionHash,
         type: 'Term Publication',
-        term: 'Fall 2024',
-        students: 5,
+        term: term.name,
+        students: term.student_count || 0,
         status: 'confirmed',
         timestamp: new Date().toISOString(),
-        blockNumber: 4825200 + Math.floor(Math.random() * 100),
-        gasUsed: (140000 + Math.floor(Math.random() * 10000)).toLocaleString()
+        blockNumber: Number(result.blockNumber),
+        gasUsed: result.gasUsed.toLocaleString()
       };
+      
       setTransactions(prev => [newTx, ...prev]);
-    }, 8000);
+      
+      // Update backend with transaction info
+      await apiService.publishToBlockchain({
+        term_id: term.id,
+        network: 'sepolia',
+        gas_limit: gasEstimate?.gasLimit ? Number(gasEstimate.gasLimit) : 500000
+      });
+
+      alert(`✅ Successfully published ${term.name} to Sepolia blockchain!\nTransaction: ${result.transactionHash}`);
+      
+    } catch (error) {
+      console.error('Publishing failed:', error);
+      setPublishingStatus('idle');
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`❌ Publishing failed: ${errorMessage}`);
+    }
   };
 
   return (
@@ -396,23 +541,55 @@ function BlockchainTab() {
           <div className="border border-gray-200 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 mb-2">🚀 Publish Term Credentials</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Batch publish all verified student credentials to Sepolia testnet. Creates immutable record of term completion.
+              Publish verified student credentials to Sepolia testnet via MetaMask. Creates immutable record of term completion.
             </p>
             <div className="space-y-3">
               <div className="text-sm">
-                <span className="font-medium">Ready to publish:</span>
-                <ul className="mt-1 text-gray-600 space-y-1">
-                  <li>• Fall 2024: 3 verified receipts</li>
-                  <li>• Spring 2025: 0 receipts (generate first)</li>
-                  <li>• Fall 2023: 0 receipts (generate first)</li>
-                </ul>
+                <label className="font-medium block mb-2">Select Term to Publish:</label>
+                <select 
+                  value={selectedTerm?.id || ''} 
+                  onChange={(e) => setSelectedTerm(terms.find(t => t.id === e.target.value) || null)}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                >
+                  <option value="">Choose a term...</option>
+                  {terms.map(term => (
+                    <option key={term.id} value={term.id}>
+                      {term.name} ({term.student_count} students)
+                    </option>
+                  ))}
+                </select>
               </div>
+              
+              {gasEstimate && (
+                <div className="bg-blue-50 p-3 rounded text-sm">
+                  <p className="font-medium text-blue-900">Gas Estimate:</p>
+                  <p className="text-blue-800">
+                    ~{formatEther(gasEstimate.estimatedCost)} ETH 
+                    ({gasEstimate.gasLimit.toLocaleString()} gas @ {formatEther(gasEstimate.gasPrice * BigInt(1000000000))} gwei)
+                  </p>
+                </div>
+              )}
+              
+              {!isConnected || !address ? (
+                <div className="text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm font-medium">⚠️ Wallet not connected</p>
+                  <p className="text-yellow-700 text-xs mt-1">Please connect your MetaMask wallet to publish to blockchain</p>
+                </div>
+              ) : (
+                <div className="text-center p-2 bg-green-50 border border-green-200 rounded-lg mb-3">
+                  <p className="text-green-800 text-xs">✅ Wallet connected: {address?.slice(0, 6)}...{address?.slice(-4)}</p>
+                </div>
+              )}
+              
               <button 
-                onClick={handlePublishToBlockchain}
-                disabled={publishingStatus !== 'idle'}
+                onClick={() => selectedTerm && handlePublishToBlockchain(selectedTerm)}
+                disabled={publishingStatus !== 'idle' || !selectedTerm || !isConnected || !address}
                 className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {publishingStatus === 'idle' ? '🚀 Publish Fall 2024 to Blockchain' : 'Publishing...'}
+                {publishingStatus === 'idle' ? '🚀 Publish to Blockchain' : 
+                 publishingStatus === 'preparing' ? '📋 Preparing...' :
+                 publishingStatus === 'signing' ? '✍️ Sign in MetaMask...' :
+                 '⏳ Confirming...'}
               </button>
             </div>
           </div>
@@ -431,11 +608,13 @@ function BlockchainTab() {
               </div>
               <div className="flex justify-between">
                 <span>Gas Price:</span>
-                <span>~20 gwei</span>
+                <span>{gasEstimate ? formatEther(gasEstimate.gasPrice * BigInt(1000000000)) + ' gwei' : 'Loading...'}</span>
               </div>
               <div className="flex justify-between">
                 <span>Estimated Cost:</span>
-                <span className="text-green-600">~0.003 SepoliaETH</span>
+                <span className="text-green-600">
+                  {gasEstimate ? `~${formatEther(gasEstimate.estimatedCost)} SepoliaETH` : 'Select term for estimate'}
+                </span>
               </div>
             </div>
             <div className="mt-4 p-2 bg-gray-50 rounded text-xs">

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"iumicert/crypto/merkle"
 	"iumicert/crypto/verkle"
+	"iumicert/issuer/blockchain"
+	"iumicert/issuer/config"
 )
 
 var rootCmd = &cobra.Command{
@@ -578,7 +581,36 @@ func verifyReceiptLocally(receiptFile string) error {
 
 func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error {
 	fmt.Printf("⛓️  Publishing roots for term: %s\n", termID)
-	fmt.Printf("🌐 Target network: %s\n", network)
+	
+	// Load configuration
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+	
+	// Override config with command line arguments if provided
+	if network != "" {
+		cfg.Network = network
+	}
+	if privateKey != "" {
+		cfg.IssuerPrivateKey = privateKey
+	}
+	if gasLimit > 0 {
+		cfg.DefaultGasLimit = gasLimit
+	}
+	
+	// Print current configuration
+	cfg.PrintConfig()
+	
+	// Validate configuration
+	if err := cfg.Validate(); err != nil {
+		fmt.Printf("\n❌ Configuration Error: %v\n\n", err)
+		fmt.Println("💡 To fix this:")
+		fmt.Println("  1. Copy .env.example to .env: cp .env.example .env")
+		fmt.Println("  2. Edit .env file with your actual values")
+		fmt.Println("  3. For localhost testing, the test values should work")
+		return err
+	}
 	
 	// Load root data
 	rootFile := filepath.Join("blockchain_ready/roots", fmt.Sprintf("root_%s.json", termID))
@@ -586,85 +618,36 @@ func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error
 		return fmt.Errorf("root file not found: %s. Run 'add-term' first", rootFile)
 	}
 	
-	fmt.Println("🌳 Loading Verkle tree commitment...")
-	rootData, err := os.ReadFile(rootFile)
+	fmt.Printf("🌐 Target network: %s\n", cfg.Network)
+	fmt.Println("🔗 Connecting to blockchain...")
+	
+	// Create blockchain integration
+	integration, err := blockchain.NewBlockchainIntegration(
+		cfg.Network, 
+		cfg.GetPrivateKey(), 
+		cfg.GetContractAddress(),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to read root file: %w", err)
+		return fmt.Errorf("failed to create blockchain integration: %w", err)
 	}
+	defer integration.Close()
 	
-	var root map[string]interface{}
-	if err := json.Unmarshal(rootData, &root); err != nil {
-		return fmt.Errorf("failed to parse root data: %w", err)
-	}
+	fmt.Println("📡 Publishing term root to blockchain...")
 	
-	verkleRoot, ok := root["verkle_root"].(string)
-	if !ok {
-		return fmt.Errorf("invalid root data: missing verkle_root")
-	}
-	
-	fmt.Printf("  ✓ Verkle root: %s\n", verkleRoot)
-	
-	// Prepare transaction data
-	fmt.Println("📡 Preparing blockchain transaction...")
-	
-	if gasLimit == 0 {
-		gasLimit = 500000 // Default gas limit
-	}
-	
-	txData := map[string]interface{}{
-		"term_id": termID,
-		"verkle_root": verkleRoot,
-		"network": network,
-		"gas_limit": gasLimit,
-		"timestamp": time.Now().Format(time.RFC3339),
-		"status": "prepared",
-		"tx_hash": "", // Will be filled when actually sent
-	}
-	
-	// Save transaction data for blockchain integration
-	txDir := "blockchain_ready/transactions"
-	txFile := filepath.Join(txDir, fmt.Sprintf("tx_%s_%s.json", termID, 
-		time.Now().Format("20060102_150405")))
-	
-	txBytes, err := json.MarshalIndent(txData, "", "  ")
+	// Publish term root from file
+	ctx := context.Background()
+	result, err := integration.PublishTermRootFromFile(ctx, rootFile)
 	if err != nil {
-		return fmt.Errorf("failed to marshal transaction data: %w", err)
+		return fmt.Errorf("failed to publish term root: %w", err)
 	}
 	
-	if err := os.WriteFile(txFile, txBytes, 0644); err != nil {
-		return fmt.Errorf("failed to save transaction file: %w", err)
-	}
+	fmt.Printf("✅ Term root published successfully!\n")
+	fmt.Printf("🔗 Transaction hash: %s\n", result.TransactionHash)
+	fmt.Printf("📦 Block number: %d\n", result.BlockNumber)
+	fmt.Printf("⛽ Gas used: %d\n", result.GasUsed)
 	
-	fmt.Println("💰 Estimating gas costs...")
-	estimatedCost := float64(gasLimit) * 20 // Simplified gas price estimation
-	fmt.Printf("  ✓ Estimated cost: %.6f ETH (gas limit: %d)\n", estimatedCost/1e18, gasLimit)
-	
-	// In production, this would connect to the blockchain and send the transaction
-	fmt.Println("📡 [SIMULATION] Connecting to blockchain...")
-	fmt.Println("📨 [SIMULATION] Broadcasting transaction...")
-	
-	// Update transaction status
-	txData["status"] = "simulated"
-	txData["tx_hash"] = fmt.Sprintf("0x%x", time.Now().Unix()) // Simulated hash
-	
-	updatedTxBytes, err := json.MarshalIndent(txData, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal updated transaction: %w", err)
-	}
-	
-	if err := os.WriteFile(txFile, updatedTxBytes, 0644); err != nil {
-		return fmt.Errorf("failed to update transaction file: %w", err)
-	}
-	
-	fmt.Printf("✅ Term roots prepared for blockchain publishing!\n")
-	fmt.Printf("📄 Transaction data saved: %s\n", txFile)
-	fmt.Printf("🔗 [SIMULATION] Transaction hash: %s\n", txData["tx_hash"].(string))
-	
-	fmt.Println("\n📋 Next steps for production:")
-	fmt.Println("  1. Configure blockchain connection parameters")
-	fmt.Println("  2. Fund account for gas fees")
-	fmt.Println("  3. Deploy smart contracts if not already deployed") 
-	fmt.Println("  4. Execute transaction using generated data")
+	fmt.Println("\n🎉 Blockchain integration completed!")
+	fmt.Printf("📄 Transaction record saved in blockchain_ready/transactions/\n")
 	
 	return nil
 }

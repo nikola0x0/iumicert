@@ -1,9 +1,30 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { sepolia } from 'viem/chains';
+import { getDefaultConfig } from "connectkit";
+import { http, createConfig } from "wagmi";
+import { mainnet, sepolia } from "wagmi/chains";
 
-export const config = getDefaultConfig({
-  appName: 'IU-MiCert Issuer',
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id',
-  chains: [sepolia],
-  ssr: true,
-});
+export const config = createConfig(
+  getDefaultConfig({
+    // Chains our dApp supports
+    chains: [mainnet, sepolia],
+
+    // RPC transport mapping
+    transports: {
+      [mainnet.id]: http(),
+      [sepolia.id]: http(),
+    },
+
+    // Your actual WalletConnect project ID
+    walletConnectProjectId: "afe25c4d6b70033b081c93e3cb146426",
+
+    // Required dApp metadata
+    appName: "IU-MiCert Issuer",
+    appDescription: "Academic credential issuance system with blockchain integration",
+    appUrl: "http://localhost:3000",
+    appIcon: "/next.svg",
+    
+    // Disable Coinbase Wallet to prevent analytics errors
+    options: {
+      enforceSupportedChains: false,
+    },
+  }),
+);
