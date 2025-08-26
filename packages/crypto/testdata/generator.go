@@ -42,30 +42,41 @@ func NewTestDataGenerator() *TestDataGenerator {
 			"IU-CS", "IU-MATH", "IU-PHYS", "IU-CHEM", "IU-BUS",
 		},
 		courses: map[string]CourseInfo{
-			"CS101":   {"CS101", "Introduction to Programming", 3, "Computer Science"},
-			"CS102":   {"CS102", "Data Structures", 3, "Computer Science"},
-			"CS201":   {"CS201", "Algorithms", 3, "Computer Science"},
-			"CS301":   {"CS301", "Database Systems", 3, "Computer Science"},
-			"MATH101": {"MATH101", "Calculus I", 4, "Mathematics"},
-			"MATH102": {"MATH102", "Calculus II", 4, "Mathematics"},
-			"MATH201": {"MATH201", "Linear Algebra", 3, "Mathematics"},
-			"PHYS101": {"PHYS101", "Physics I", 4, "Physics"},
-			"PHYS102": {"PHYS102", "Physics II", 4, "Physics"},
-			"CHEM101": {"CHEM101", "General Chemistry", 4, "Chemistry"},
-			"ENG101":  {"ENG101", "English Composition", 3, "English"},
-			"HIST101": {"HIST101", "World History", 3, "History"},
-			"BUS101":  {"BUS101", "Business Fundamentals", 3, "Business"},
+			"IT064IU":   {"IT064IU", "Introduction to Computing", 3, "Information Technology"},
+			"IT116IU":   {"IT116IU", "C/C++ Programming", 4, "Information Technology"},
+			"IT069IU":   {"IT069IU", "Object-Oriented Programming", 4, "Information Technology"},
+			"IT013IU":   {"IT013IU", "Algorithms & Data Structures", 4, "Information Technology"},
+			"IT076IU":   {"IT076IU", "Software Engineering", 4, "Information Technology"},
+			"IT091IU":   {"IT091IU", "Computer Networks", 4, "Information Technology"},
+			"IT117IU":   {"IT117IU", "System and Network Security", 4, "Information Technology"},
+			"IT160IU":   {"IT160IU", "Data Mining", 4, "Information Technology"},
+			"IT134IU":   {"IT134IU", "Internet of Things", 4, "Information Technology"},
+			"IT133IU":   {"IT133IU", "Mobile Application Development", 4, "Information Technology"},
+			"MA001IU":   {"MA001IU", "Calculus 1", 4, "Mathematics"},
+			"MA003IU":   {"MA003IU", "Calculus 2", 4, "Mathematics"},
+			"IT154IU":   {"IT154IU", "Linear Algebra", 3, "Mathematics"},
+			"MA026IU":   {"MA026IU", "Probability, Statistic & Random Process", 3, "Mathematics"},
+			"PH013IU":   {"PH013IU", "Physics 1", 2, "Physics"},
+			"PH014IU":   {"PH014IU", "Physics 2", 2, "Physics"},
+			"PH015IU":   {"PH015IU", "Physics 3", 3, "Physics"},
+			"CH011IU":   {"CH011IU", "Chemistry for Engineers", 3, "Chemistry"},
+			"EN007IU":   {"EN007IU", "Writing AE1", 2, "English"},
+			"EN008IU":   {"EN008IU", "Listening AE1", 2, "English"},
+			"PE008IU":   {"PE008IU", "Critical Thinking", 3, "Philosophy"},
+			"IT153IU":   {"IT153IU", "Discrete Mathematics", 3, "Mathematics"},
+			"IT067IU":   {"IT067IU", "Digital Logic Design", 3, "Information Technology"},
+			"IT089IU":   {"IT089IU", "Computer Architecture", 4, "Information Technology"},
 		},
 		students: []StudentInfo{
-			{"STU001", "did:example:student001", "Alice Johnson", "Computer Science"},
-			{"STU002", "did:example:student002", "Bob Smith", "Computer Science"},
-			{"STU003", "did:example:student003", "Carol Davis", "Mathematics"},
-			{"STU004", "did:example:student004", "David Wilson", "Physics"},
-			{"STU005", "did:example:student005", "Eva Brown", "Computer Science"},
+			{"ITITIU00001", "did:iu:student:ITITIU00001", "Nguyen Van Minh", "Computer Science"},
+			{"ITITIU00002", "did:iu:student:ITITIU00002", "Tran Thi Lan", "Computer Science"}, 
+			{"ITITIU00003", "did:iu:student:ITITIU00003", "Le Hoang Nam", "Information Technology"},
+			{"ITITIU00004", "did:iu:student:ITITIU00004", "Pham Thi Hoa", "Computer Science"},
+			{"ITITIU00005", "did:iu:student:ITITIU00005", "Vo Van Duc", "Information Technology"},
 		},
 		terms: []string{
-			"Fall_2021", "Spring_2022", "Fall_2022", "Spring_2023", 
-			"Fall_2023", "Spring_2024", "Fall_2024", "Spring_2025",
+			"Semester_1_2023", "Semester_2_2023", "Summer_2023", 
+			"Semester_1_2024", "Semester_2_2024", "Summer_2024",
 		},
 		grades: []string{"A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D"},
 		rand:   rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -163,31 +174,25 @@ func (g *TestDataGenerator) generateCourseCompletion(student StudentInfo, course
 
 // getTermDates returns start and end dates for a term
 func (g *TestDataGenerator) getTermDates(termID string) (time.Time, time.Time, error) {
-	switch {
-	case termID == "Fall_2021":
-		return time.Date(2021, 9, 1, 0, 0, 0, 0, time.UTC), 
-			   time.Date(2021, 12, 31, 23, 59, 59, 0, time.UTC), nil
-	case termID == "Spring_2022":
-		return time.Date(2022, 1, 15, 0, 0, 0, 0, time.UTC), 
-			   time.Date(2022, 5, 15, 23, 59, 59, 0, time.UTC), nil
-	case termID == "Fall_2022":
-		return time.Date(2022, 9, 1, 0, 0, 0, 0, time.UTC), 
-			   time.Date(2022, 12, 31, 23, 59, 59, 0, time.UTC), nil
-	case termID == "Spring_2023":
-		return time.Date(2023, 1, 15, 0, 0, 0, 0, time.UTC), 
-			   time.Date(2023, 5, 15, 23, 59, 59, 0, time.UTC), nil
-	case termID == "Fall_2023":
-		return time.Date(2023, 9, 1, 0, 0, 0, 0, time.UTC), 
-			   time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC), nil
-	case termID == "Spring_2024":
-		return time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), 
+	switch termID {
+	case "Semester_1_2023":
+		return time.Date(2023, 8, 15, 0, 0, 0, 0, time.UTC), 
+			   time.Date(2023, 12, 20, 23, 59, 59, 0, time.UTC), nil
+	case "Semester_2_2023":
+		return time.Date(2024, 1, 8, 0, 0, 0, 0, time.UTC), 
 			   time.Date(2024, 5, 15, 23, 59, 59, 0, time.UTC), nil
-	case termID == "Fall_2024":
-		return time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC), 
-			   time.Date(2024, 12, 31, 23, 59, 59, 0, time.UTC), nil
-	case termID == "Spring_2025":
-		return time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC), 
+	case "Summer_2023":
+		return time.Date(2023, 6, 1, 0, 0, 0, 0, time.UTC), 
+			   time.Date(2023, 7, 31, 23, 59, 59, 0, time.UTC), nil
+	case "Semester_1_2024":
+		return time.Date(2024, 8, 15, 0, 0, 0, 0, time.UTC), 
+			   time.Date(2024, 12, 20, 23, 59, 59, 0, time.UTC), nil
+	case "Semester_2_2024":
+		return time.Date(2025, 1, 8, 0, 0, 0, 0, time.UTC), 
 			   time.Date(2025, 5, 15, 23, 59, 59, 0, time.UTC), nil
+	case "Summer_2024":
+		return time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), 
+			   time.Date(2024, 7, 31, 23, 59, 59, 0, time.UTC), nil
 	default:
 		return time.Time{}, time.Time{}, fmt.Errorf("unknown term: %s", termID)
 	}

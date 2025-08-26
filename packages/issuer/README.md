@@ -1,343 +1,295 @@
-# IU-MiCert CLI - Academic Micro-credential Issuer
+# IU-MiCert Issuer System
 
-**A Transparent and Granular Blockchain System for Verifiable Academic Micro-credential Provenance**
+A comprehensive academic credential management system for educational institutions using hybrid Merkle-Verkle tree architecture with blockchain integration.
 
-The IU-MiCert CLI provides comprehensive tools for managing academic micro-credentials using a hybrid Merkle-Verkle tree architecture with blockchain integration.
+## 🎓 Overview
 
-## 🏗️ Architecture Overview
+The IU-MiCert Issuer System enables universities to:
+- Process and validate academic course completions
+- Generate cryptographic proofs for student achievements
+- Issue verifiable academic journey receipts
+- Publish term credentials to blockchain networks
+- Visualize student learning progress
 
-- **Student-Term Level**: Merkle trees for individual course completions with temporal verification
-- **Term-Aggregation Level**: Verkle trees for efficient multi-student aggregation
-- **Blockchain Integration**: Smart contracts store term roots with anti-forgery protection
-- **Selective Disclosure**: Privacy-preserving credential revelation
+## 🏗️ Architecture
+
+### Core Components
+
+1. **Academic Data Processing Pipeline**
+   - Converts LMS data into cryptographic structures
+   - Builds student-level Merkle trees for each term
+   - Aggregates into term-level Verkle trees
+
+2. **Cryptographic Proof System**
+   - Student-term Merkle trees for course completions
+   - Term-level Verkle trees for efficient aggregation
+   - Selective disclosure support for privacy
+
+3. **Blockchain Integration**
+   - Publishes term root commitments to Ethereum (Sepolia testnet)
+   - Enables on-chain verification of credentials
+   - Transaction monitoring and confirmation
+
+4. **Web Interface**
+   - Student journey visualization
+   - Batch term processing
+   - Receipt generation and verification
+
+## 📁 Project Structure
+
+```
+packages/issuer/
+├── cmd/                           # CLI application
+│   ├── main.go                   # Main CLI entry point
+│   ├── api_server.go            # REST API server
+│   ├── data_generator.go        # Realistic test data generator
+│   ├── data_converter.go        # LMS data converter
+│   └── batch_processor.go       # Batch processing pipeline
+├── data/                         # Data storage
+│   ├── generated_student_data/   # Realistic academic data
+│   │   ├── students/            # Individual student journeys
+│   │   └── terms/               # Term summaries
+│   ├── merkle_trees/            # Student-term Merkle trees
+│   └── verkle_trees/            # Term-level Verkle trees
+├── blockchain_ready/             # Blockchain integration
+│   ├── receipts/                # Student academic receipts
+│   ├── roots/                   # Term root commitments
+│   └── transactions/            # Blockchain transactions
+├── config/                       # System configuration
+└── web/                         # Frontend application
+    └── iumicert-issuer/         # Next.js web interface
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Go 1.21+ installed
-- Git for repository access
+- Go 1.21+
+- Node.js 18+
+- Git
 
 ### Installation
 
-1. **Clone and navigate to the issuer package:**
+1. **Clone and setup**
    ```bash
-   cd packages/issuer
+   git clone https://github.com/Niko1444/iumicert.git
+   cd iumicert/packages/issuer
    ```
 
-2. **Install dependencies:**
+2. **Initialize the system**
    ```bash
-   go mod download
+   go run cmd/*.go init "IU-Vietnam"
    ```
 
-3. **Build the CLI:**
+3. **Generate realistic test data**
    ```bash
-   go build -o micert ./cmd/
+   go run cmd/*.go generate-data
    ```
 
-4. **Verify installation:**
+4. **Process all terms into credential system**
    ```bash
-   ./micert --help
+   go run cmd/*.go batch-process
    ```
 
-## 🧪 Testing the System
+5. **Start the API server**
+   ```bash
+   go run cmd/*.go serve --port 8080 --cors
+   ```
 
-### Run Complete System Test
+6. **Launch web interface**
+   ```bash
+   cd web/iumicert-issuer
+   npm install
+   npm run dev
+   ```
 
-The fastest way to see the system in action:
+## 📊 Features
 
+### Academic Data Management
+
+- **Realistic Test Data Generation**: Creates 100 Vietnamese students with 6 terms of academic data using actual IU Vietnam course codes
+- **LMS Integration**: Converts academic records into cryptographic format
+- **Batch Processing**: Efficiently processes multiple terms simultaneously
+
+### Cryptographic Security
+
+- **Merkle Trees**: Individual student-term proof structures
+- **Verkle Trees**: Efficient term-level aggregation
+- **Selective Disclosure**: Privacy-preserving credential sharing
+- **Tamper-proof Records**: Cryptographically secured academic data
+
+### Student Journey Visualization
+
+- **Academic Timeline**: Visual progression through terms
+- **GPA Tracking**: Performance trends over time  
+- **Course Details**: Complete academic history
+- **Interactive Interface**: Modern React-based UI
+
+### Blockchain Integration
+
+- **Ethereum Compatibility**: Sepolia testnet integration
+- **Root Publishing**: Term commitment anchoring
+- **Transaction Monitoring**: Real-time blockchain status
+- **Verification Support**: On-chain proof validation
+
+## 🛠️ CLI Commands
+
+### System Management
 ```bash
-./micert test
+# Initialize repository
+go run cmd/*.go init <institution-id>
+
+# Check system status  
+go run cmd/*.go version
+
+# Start API server
+go run cmd/*.go serve [--port 8080] [--cors]
 ```
 
-This comprehensive test will:
-- ✅ Generate realistic academic test data (3 students, 4 courses each)
-- ✅ Build student-term Merkle trees with course completions
-- ✅ Aggregate into term-level Verkle trees
-- ✅ Generate and verify full academic receipts
-- ✅ Test selective disclosure (partial course revelation)
-- ✅ Validate anti-forgery mechanisms
-- ✅ Test error handling for invalid inputs
-
-**Expected Output:**
-```
-🧪 Starting IU-MiCert Hybrid System Test
-📊 Step 1: Generating test data...
-✅ Generated 12 course completions for term Fall_2024
-🌲 Step 3: Testing Student-Term Merkle Trees...
-  ✓ Student did:example:STU001: 4 courses, root: 9c456b11...
-  ✓ All Merkle proofs verified for did:example:STU001
-🌳 Step 4: Testing Term-Level Verkle Tree...
-✅ Term published with Verkle root: 6fd96498...
-📄 Step 5: Testing Receipt Generation and Verification...
-  ✅ Receipt verified successfully for did:example:STU001
-🎉 All tests passed successfully!
-```
-
-## 📋 CLI Commands Reference
-
-### Core Commands
-
-#### `micert init [institution-id]`
-Initialize a new credential repository for an institution.
-
+### Data Processing
 ```bash
-./micert init "IU-Vietnam"
+# Generate test data
+go run cmd/*.go generate-data
+
+# Convert student data format
+go run cmd/*.go convert-data <term-id>
+
+# Process single term
+go run cmd/*.go add-term <term-id> <data-file>
+
+# Batch process all terms
+go run cmd/*.go batch-process
 ```
 
-#### `micert add-term [term-id] [data-file]`
-Add academic term data with course completions.
-
+### Receipt Generation
 ```bash
-./micert add-term "Fall_2024" "./data/fall_2024_completions.json"
+# Generate student receipt
+go run cmd/*.go generate-receipt <student-id> <output-file>
+
+# Verify receipt locally
+go run cmd/*.go verify-local <receipt-file>
 ```
 
-**Supported flags:**
-- `--format`: Input data format (`json`, `csv`) [default: `json`]
-- `--validate`: Validate input data [default: `true`]
-
-#### `micert generate-receipt [student-id] [output-file]`
-Generate academic journey receipt for verification.
-
+### Blockchain Operations
 ```bash
-# Full receipt (all courses)
-./micert generate-receipt "did:example:student001" "./receipts/student001_full.json"
-
-# Selective disclosure
-./micert generate-receipt "did:example:student001" "./receipts/student001_selective.json" \
-  --courses "CS101,MATH101" \
-  --selective
+# Publish term roots
+go run cmd/*.go publish-roots <term-id> [--network sepolia] [--gas-limit 500000]
 ```
 
-**Supported flags:**
-- `--terms`: Specific terms to include (comma-separated)
-- `--courses`: Specific courses to include (comma-separated)
-- `--selective`: Enable selective disclosure mode
+## 🌐 API Endpoints
 
-#### `micert verify-local [receipt-file]`
-Perform off-chain verification without blockchain interaction.
+### System
+- `GET /api/status` - System status and configuration
+- `GET /api/health` - Health check
 
-```bash
-./micert verify-local "./receipts/student001_full.json"
-```
+### Terms
+- `GET /api/terms` - List all processed terms
+- `POST /api/terms` - Process new academic term
+- `GET /api/terms/{term_id}/receipts` - Get term receipts
+- `GET /api/terms/{term_id}/roots` - Get term root commitment
 
-#### `micert publish-roots [term-id]`
-Publish term Verkle roots to blockchain (requires setup).
+### Students
+- `GET /api/students` - List all students
+- `GET /api/students/{student_id}/journey` - Get complete academic journey
+- `GET /api/students/{student_id}/terms` - Get student terms
 
-```bash
-./micert publish-roots "Fall_2024" \
-  --network sepolia \
-  --private-key $PRIVATE_KEY \
-  --gas-limit 500000
-```
+### Receipts
+- `POST /api/receipts` - Generate student receipt
+- `POST /api/receipts/verify` - Verify receipt
+- `GET /api/receipts` - List all receipts
 
-### Utility Commands
+### Blockchain
+- `POST /api/blockchain/publish` - Publish term roots
+- `GET /api/blockchain/transactions` - List transactions
+- `GET /api/blockchain/transactions/{tx_hash}` - Get transaction details
 
-#### `micert version`
-Display version and system information.
+## 📈 Sample Data
 
-#### `micert test`
-Run comprehensive system testing suite.
+The system includes realistic IU Vietnam academic data:
 
-## 📊 Data Formats
+- **100 Students**: ITITIU00001-ITITIU00100 format
+- **6 Academic Terms**: Semester 1/2 2023-2024, Summer 2023-2024  
+- **78 Real Courses**: Actual IU Vietnam course codes (IT064IU, MA001IU, etc.)
+- **2,700 Completions**: 3-6 courses per student per term
+- **Vietnamese Names**: Realistic student name generation
 
-### Course Completion JSON Format
+## 🔧 Configuration
+
+System configuration is stored in `config/micert.json`:
 
 ```json
 {
-  "issuer_id": "IU-CS",
-  "student_id": "STU001", 
-  "term_id": "Fall_2024",
-  "course_id": "CS101",
-  "course_name": "Introduction to Programming",
-  "attempt_no": 1,
-  "started_at": "2024-09-01T00:00:00Z",
-  "completed_at": "2024-12-15T00:00:00Z", 
-  "assessed_at": "2024-12-20T00:00:00Z",
-  "issued_at": "2024-12-25T00:00:00Z",
-  "grade": "A",
-  "credits": 3,
-  "instructor": "Prof. Johnson"
-}
-```
-
-### Verification Receipt Format
-
-```json
-{
-  "term_id": "Fall_2024",
-  "student_did": "did:example:student001",
-  "student_term_root": "9c456b11546e7cc696d5dae24db...",
-  "verkle_proof": "base64-encoded-proof-data",
-  "verkle_root": "6fd9649863592b48eea506bd93...", 
-  "published_at": "2024-12-31T23:59:59Z",
-  "revealed_courses": [...],
-  "merkle_proofs": {...},
-  "raw_timestamps": {...},
-  "metadata": {
-    "generated_at": "2025-01-15T10:30:00Z",
-    "total_courses": 4,
-    "revealed_courses": 2,
-    "verification_level": "selective"
+  "institution_id": "IU-Vietnam",
+  "version": "1.0.0",
+  "blockchain": {
+    "default_network": "sepolia",
+    "gas_limit": 500000,
+    "confirmation_blocks": 3
+  },
+  "output_paths": {
+    "receipts": "blockchain_ready/receipts",
+    "roots": "blockchain_ready/roots",
+    "transactions": "blockchain_ready/transactions"
   }
 }
 ```
 
-## 🔍 Understanding the Output
+## 📱 Web Interface
 
-### Merkle Tree Verification
-```
-✓ Student did:example:STU001: 4 courses, root: 9c456b11546e7cc6
-```
-- Each student's courses form a Merkle tree
-- Root hash represents all course completions for that term
-- Individual course proofs can be verified against this root
+The web interface provides:
 
-### Verkle Tree Aggregation
-```
-✅ Term published with Verkle root: 6fd9649863592b48
-```
-- All student term roots aggregated into single Verkle commitment
-- Enables efficient verification of any student's term without revealing others
-- Constant-size proofs regardless of student population
+- **Dashboard**: System overview and statistics
+- **Student Journey Viewer**: Interactive academic timeline
+- **Term Management**: Batch processing controls  
+- **Receipt Generator**: Credential creation tools
+- **Blockchain Monitor**: Transaction tracking
 
-### Verification Results
-```
-✅ Receipt verified successfully for did:example:STU001
-```
-- Cryptographic proof validation passed
-- Timeline consistency verified (started < completed < assessed < issued)
-- Anti-forgery checks passed (issued ≤ term publication time)
+Access at `http://localhost:3000` after starting the development server.
 
-## 🛡️ Security Features
+## 🔐 Security Features
 
-### Anti-forgery Protection
-1. **Timeline Validation**: Course timestamps must be in logical order
-2. **Publication Deadline**: All courses must be issued before term publication
-3. **Cryptographic Proofs**: Merkle and Verkle proofs prevent tampering
-4. **Hash Verification**: Course data integrity protected by cryptographic hashes
+- **Cryptographic Proofs**: Merkle/Verkle tree verification
+- **Immutable Records**: Blockchain anchoring
+- **Privacy Protection**: Selective disclosure
+- **Tamper Detection**: Hash-based integrity
+- **Audit Trail**: Complete transaction history
 
-### Privacy Features
-1. **Selective Disclosure**: Reveal only specific courses without exposing others
-2. **Zero Knowledge**: Verkle proofs don't reveal student population or other students' data
-3. **Granular Control**: Students choose exactly which achievements to share
+## 🚀 Production Deployment
 
-## 🧩 System Architecture
+For production use:
 
-```
-Course Completions
-       ↓
-Student-Term Merkle Trees (per student, per term)
-       ↓  
-Term-Level Verkle Tree (all students in term)
-       ↓
-Blockchain Storage (Verkle roots only)
-```
+1. **Environment Setup**
+   - Configure Ethereum mainnet/L2 network
+   - Set up proper key management
+   - Enable SSL/TLS for API server
 
-### Data Flow
-1. **Academic records** → Course completion entries
-2. **Student level** → Merkle tree of courses (with timestamps)
-3. **Term level** → Verkle tree of student term roots
-4. **Blockchain** → Term Verkle roots published on-chain
-5. **Verification** → Students generate receipts, verifiers validate proofs
+2. **Data Integration**  
+   - Connect to actual LMS/SIS systems
+   - Implement data validation pipelines
+   - Set up automated term processing
 
-## 🔧 Advanced Usage
-
-### Custom Configuration
-
-Create `~/.micert.yaml`:
-```yaml
-institution:
-  id: "IU-Vietnam"
-  name: "International University"
-
-blockchain:
-  network: "sepolia"
-  contract_address: "0x..."
-  
-verification:
-  require_timestamps: true
-  max_receipt_age_days: 30
-```
-
-### Batch Operations
-
-Process multiple students/terms:
-```bash
-# Add multiple terms
-for term in Fall_2024 Spring_2025; do
-  ./micert add-term "$term" "./data/${term,,}_completions.json"
-done
-
-# Generate receipts for all students  
-./micert generate-receipt "did:example:student001" "./receipts/student001.json"
-./micert generate-receipt "did:example:student002" "./receipts/student002.json"
-```
-
-### Integration with Learning Management Systems
-
-The CLI can process data from common LMS exports:
-
-```bash
-# From Canvas LMS export
-./micert add-term "Fall_2024" "./canvas_export.json" --format json
-
-# From CSV export (custom format)
-./micert add-term "Fall_2024" "./gradebook.csv" --format csv
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Build Errors:**
-```bash
-# Clean and rebuild
-go clean -cache
-go mod tidy
-go build -o micert ./cmd/
-```
-
-**Missing Dependencies:**
-```bash
-# Reinstall modules
-rm go.sum
-go mod download
-go mod tidy
-```
-
-**Test Failures:**
-```bash
-# Run with verbose output
-./micert test --verbose
-```
-
-### Error Messages
-
-| Error | Solution |
-|-------|----------|
-| `student not found in term` | Ensure student has course completions in specified term |
-| `verkle tree not published` | Run `publish-term` before generating receipts |
-| `invalid timestamp ordering` | Check course completion timeline (started < completed < assessed < issued) |
-| `merkle proof verification failed` | Data may be corrupted, regenerate student term tree |
-
-## 📚 Additional Resources
-
-- **Thesis Document**: Complete technical details and methodology
-- **Smart Contracts**: `../../contracts/src/` - On-chain verification logic  
-- **Test Data**: `../crypto/testdata/` - Example academic records
-- **Frontend**: `../client/` - Web interface for verification
-
-## 🤝 Contributing
-
-This is a research implementation for academic thesis work. For questions or issues, please refer to the thesis documentation or contact the author.
+3. **Monitoring**
+   - Add logging and metrics
+   - Configure alerting systems
+   - Monitor blockchain transaction costs
 
 ## 📄 License
 
-MIT License - See LICENSE file for details.
+MIT License - see LICENSE file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Make changes with tests
+4. Submit pull request
+
+## 📞 Support
+
+For technical support or questions:
+- Create GitHub issue
+- Contact: [Your contact information]
 
 ---
 
-**Author**: Le Tien Phat  
-**Institution**: International University - VNU HCMC  
-**Thesis**: "A Transparent and Granular Blockchain System for Verifiable Academic Micro-credential Provenance"
+**IU-MiCert Issuer System** - Securing Academic Excellence with Blockchain Technology

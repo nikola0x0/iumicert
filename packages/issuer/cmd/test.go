@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
 
 	"github.com/spf13/cobra"
 	"iumicert/crypto/merkle"
@@ -13,17 +15,80 @@ import (
 var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Run comprehensive testing of the hybrid credential system",
-	Long:  `Test the complete IU-MiCert system with generated test data`,
+	Long:  `Test the complete IU-MiCert system using the modular data generation and crypto integration programs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("🧪 Starting IU-MiCert Hybrid System Test")
-		fmt.Println("=" + string(make([]byte, 50)))
+		fmt.Println("🧪 Starting IU-MiCert Comprehensive System Test")
+		fmt.Println("=" + string(make([]byte, 60)))
 		
-		if err := runCompleteSystemTest(); err != nil {
-			log.Fatalf("❌ System test failed: %v", err)
+		useModular, _ := cmd.Flags().GetBool("modular")
+		if useModular {
+			if err := runModularSystemTest(); err != nil {
+				log.Fatalf("❌ Modular system test failed: %v", err)
+			}
+		} else {
+			if err := runCompleteSystemTest(); err != nil {
+				log.Fatalf("❌ Legacy system test failed: %v", err)
+			}
 		}
 		
 		fmt.Println("\n🎉 All tests passed successfully!")
 	},
+}
+
+func runModularSystemTest() error {
+	fmt.Println("\n🔧 Running Modular System Test (using separate programs)")
+	
+	// Step 1: Run data generation program
+	fmt.Println("\n📊 Step 1: Running data generation program...")
+	
+	dataCmd := exec.Command("./micert", "generate-data")
+	dataCmd.Stdout = os.Stdout
+	dataCmd.Stderr = os.Stderr
+	
+	if err := dataCmd.Run(); err != nil {
+		return fmt.Errorf("data generation program failed: %w", err)
+	}
+	
+	fmt.Println("✅ Data generation completed successfully!")
+	
+	// Step 2: Run crypto integration program
+	fmt.Println("\n🌳 Step 2: Running crypto integration program...")
+	
+	cryptoCmd := exec.Command("./micert", "test-crypto")
+	cryptoCmd.Stdout = os.Stdout  
+	cryptoCmd.Stderr = os.Stderr
+	
+	if err := cryptoCmd.Run(); err != nil {
+		return fmt.Errorf("crypto integration program failed: %w", err)
+	}
+	
+	fmt.Println("✅ Crypto integration completed successfully!")
+	
+	// Step 3: Validate results
+	fmt.Println("\n✅ Step 3: Validating modular test results...")
+	
+	// Check if expected output files exist
+	expectedFiles := []string{
+		"data/generated_student_data/system_summary.json",
+		"data/generated_student_data/integration_results/verkle_summary_Fall_2023.json",
+		"data/generated_student_data/integration_results/verkle_summary_Spring_2024.json",
+		"data/generated_student_data/integration_results/verkle_summary_Fall_2024.json", 
+		"data/generated_student_data/integration_results/verkle_summary_Spring_2025.json",
+	}
+	
+	for _, file := range expectedFiles {
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			return fmt.Errorf("expected output file not found: %s", file)
+		}
+		fmt.Printf("  ✓ Found expected file: %s\n", file)
+	}
+	
+	fmt.Println("\n🎯 Modular test summary:")
+	fmt.Println("  ✅ Data generation: SUCCESS")
+	fmt.Println("  ✅ Crypto integration: SUCCESS") 
+	fmt.Println("  ✅ Output validation: SUCCESS")
+	
+	return nil
 }
 
 func runCompleteSystemTest() error {
@@ -199,5 +264,6 @@ func getFirstKey(m map[string][]merkle.CourseCompletion) string {
 }
 
 func init() {
+	testCmd.Flags().Bool("modular", false, "Use modular test approach (run separate programs)")
 	rootCmd.AddCommand(testCmd)
 }
