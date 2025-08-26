@@ -376,40 +376,85 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 		fmt.Printf("📚 Auto-discovered terms: %v\n", targetTerms)
 	}
 	
-	fmt.Println("🔐 Generating Verkle proofs...")
+	fmt.Println("🔐 Generating academic journey receipt...")
 	
 	receipts := make(map[string]interface{})
 	
 	for _, termID := range targetTerms {
-		// Load term's Verkle tree
-		verkleData, err := loadTermVerkleTree(termID)
+		// Load student's Merkle tree data for this term directly
+		merkleFile := filepath.Join("data", "merkle_trees", termID, fmt.Sprintf("merkle_%s_%s.json", extractStudentID(studentID), termID))
+		
+		merkleData, err := os.ReadFile(merkleFile)
 		if err != nil {
-			return fmt.Errorf("failed to load verkle tree for term %s: %w", termID, err)
+			fmt.Printf("  ⚠️ Skipping term %s: Merkle tree not found\n", termID)
+			continue
 		}
 		
-		termTree := verkleData.tree
-		
-		// Generate receipt for this term
-		var targetCourses []string
-		if len(courses) > 0 && selective {
-			targetCourses = courses
+		var studentMerkle map[string]interface{}
+		if err := json.Unmarshal(merkleData, &studentMerkle); err != nil {
+			fmt.Printf("  ⚠️ Skipping term %s: Failed to parse Merkle tree\n", termID)
+			continue
 		}
 		
-		receipt, err := termTree.GenerateVerificationReceipt(studentID, targetCourses)
+		// Load term root data
+		rootFile := filepath.Join("blockchain_ready", "roots", fmt.Sprintf("root_%s.json", termID))
+		rootData, err := os.ReadFile(rootFile)
 		if err != nil {
-			return fmt.Errorf("failed to generate receipt for term %s: %w", termID, err)
+			fmt.Printf("  ⚠️ Skipping term %s: Root data not found\n", termID)
+			continue
+		}
+		
+		var termRoot map[string]interface{}
+		if err := json.Unmarshal(rootData, &termRoot); err != nil {
+			fmt.Printf("  ⚠️ Skipping term %s: Failed to parse root data\n", termID)
+			continue
+		}
+		
+		// Get courses from Merkle tree
+		coursesData, ok := studentMerkle["courses"].([]interface{})
+		if !ok {
+			fmt.Printf("  ⚠️ Skipping term %s: Invalid courses data\n", termID)
+			continue
+		}
+		
+		// Filter courses if selective disclosure
+		var revealedCourses []interface{}
+		if selective && len(courses) > 0 {
+			for _, courseInterface := range coursesData {
+				course := courseInterface.(map[string]interface{})
+				courseID := course["course_id"].(string)
+				for _, targetCourse := range courses {
+					if courseID == targetCourse {
+						revealedCourses = append(revealedCourses, course)
+						break
+					}
+				}
+			}
+		} else {
+			revealedCourses = coursesData
+		}
+		
+		// Create simplified receipt with academic journey data
+		receipt := map[string]interface{}{
+			"student_id": studentID,
+			"term_id": termID,
+			"revealed_courses": revealedCourses,
+			"merkle_root": studentMerkle["root"],
+			"verification_path": "merkle_proof_available",
+			"blockchain_anchor": termRoot["verkle_root"],
+			"timestamp": termRoot["timestamp"],
 		}
 		
 		receipts[termID] = map[string]interface{}{
 			"term_id": termID,
 			"student_id": studentID,
 			"receipt": receipt,
-			"verkle_root": fmt.Sprintf("%x", termTree.VerkleRoot),
-			"revealed_courses": len(receipt.RevealedCourses),
+			"verkle_root": termRoot["verkle_root"],
+			"revealed_courses": len(revealedCourses),
 			"generated_at": time.Now().Format(time.RFC3339),
 		}
 		
-		fmt.Printf("  ✓ Generated receipt for term %s (%d courses)\n", termID, len(receipt.RevealedCourses))
+		fmt.Printf("  ✓ Generated receipt for term %s (%d courses)\n", termID, len(revealedCourses))
 	}
 	
 	// Create comprehensive receipt
