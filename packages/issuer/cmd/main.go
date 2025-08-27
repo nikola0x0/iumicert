@@ -10,9 +10,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"iumicert/crypto/merkle"
-	"iumicert/crypto/verkle"
-	"iumicert/issuer/blockchain"
+		"iumicert/crypto/verkle"
+	blockchain "iumicert/issuer/blockchain_integration"
 	"iumicert/issuer/config"
 )
 
@@ -175,15 +174,15 @@ func initializeRepository(institutionID string) error {
 	// Create directory structure for blockchain integration
 	dirs := []string{
 		"data",
-		"data/terms",
-		"data/students", 
-		"data/merkle_trees",
-		"data/verkle_trees",
-		"blockchain_ready",
-		"blockchain_ready/receipts",
-		"blockchain_ready/proofs",
-		"blockchain_ready/roots",
-		"blockchain_ready/transactions",
+		"../data/terms",
+		"../data/students", 
+		"../data/merkle_trees",
+		"../data/verkle_trees",
+		"../publish_ready",
+		"../publish_ready/receipts",
+		"../publish_ready/proofs",
+		"../publish_ready/roots",
+		"../publish_ready/transactions",
 		"config",
 		"logs",
 	}
@@ -208,10 +207,10 @@ func initializeRepository(institutionID string) error {
 			"confirmation_blocks": 3,
 		},
 		"output_paths": map[string]string{
-			"receipts": "blockchain_ready/receipts",
-			"proofs": "blockchain_ready/proofs", 
-			"roots": "blockchain_ready/roots",
-			"transactions": "blockchain_ready/transactions",
+			"receipts": "../publish_ready/receipts",
+			"proofs": "../publish_ready/proofs", 
+			"roots": "../publish_ready/roots",
+			"transactions": "../publish_ready/transactions",
 		},
 	}
 	
@@ -252,7 +251,7 @@ func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 	}
 	
 	// Load data based on format
-	var completions []merkle.CourseCompletion
+	var completions []verkle.CourseCompletion
 	var err error
 	
 	switch format {
@@ -268,43 +267,13 @@ func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 	
 	fmt.Printf("📊 Loaded %d course completions\n", len(completions))
 	
-	// Build student-term Merkle trees
-	fmt.Println("🌳 Building student-term Merkle trees...")
-	studentCompletions := make(map[string][]merkle.CourseCompletion)
+	// Group completions by student for Verkle tree processing
+	fmt.Println("🌳 Organizing course completions by student...")
+	studentCompletions := make(map[string][]verkle.CourseCompletion)
 	
 	for _, completion := range completions {
 		studentDID := fmt.Sprintf("did:example:%s", completion.StudentID)
 		studentCompletions[studentDID] = append(studentCompletions[studentDID], completion)
-	}
-	
-	// Create Merkle trees for each student
-	merkleDir := filepath.Join("data", "merkle_trees", termID)
-	if err := os.MkdirAll(merkleDir, 0755); err != nil {
-		return fmt.Errorf("failed to create merkle directory: %w", err)
-	}
-	
-	studentTrees := make(map[string]*merkle.StudentTermMerkle)
-	for studentDID, courses := range studentCompletions {
-		tree, err := merkle.NewStudentTermMerkle(studentDID, termID, courses)
-		if err != nil {
-			return fmt.Errorf("failed to create merkle tree for %s: %w", studentDID, err)
-		}
-		
-		studentTrees[studentDID] = tree
-		
-		// Save Merkle tree
-		treeData, err := tree.SerializeToJSON()
-		if err != nil {
-			return fmt.Errorf("failed to serialize merkle tree: %w", err)
-		}
-		
-		filename := fmt.Sprintf("merkle_%s_%s.json", extractStudentID(studentDID), termID)
-		if err := os.WriteFile(filepath.Join(merkleDir, filename), treeData, 0644); err != nil {
-			return fmt.Errorf("failed to save merkle tree: %w", err)
-		}
-		
-		fmt.Printf("  ✓ Built Merkle tree for %s: %d courses, root: %x\n", 
-			studentDID, len(courses), tree.Root[:8])
 	}
 	
 	// Build term-level Verkle tree
@@ -312,9 +281,9 @@ func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 	termTree := verkle.NewTermVerkleTree(termID)
 	
 	for studentDID, courses := range studentCompletions {
-		err := termTree.AddStudent(studentDID, courses)
+		err := termTree.AddCourses(studentDID, courses)
 		if err != nil {
-			return fmt.Errorf("failed to add student %s to verkle tree: %w", studentDID, err)
+			return fmt.Errorf("failed to add courses for student %s to verkle tree: %w", studentDID, err)
 		}
 	}
 	
@@ -331,7 +300,7 @@ func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 	}
 	
 	// Save root for blockchain publishing
-	rootsDir := "blockchain_ready/roots"
+	rootsDir := "../publish_ready/roots"
 	rootData := map[string]interface{}{
 		"term_id": termID,
 		"verkle_root": fmt.Sprintf("%x", termTree.VerkleRoot),
@@ -384,23 +353,37 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 	receipts := make(map[string]interface{})
 	
 	for _, termID := range targetTerms {
-		// Load student's Merkle tree data for this term directly
-		merkleFile := filepath.Join("data", "merkle_trees", termID, fmt.Sprintf("merkle_%s_%s.json", extractStudentID(studentID), termID))
+		// Load term completion data directly from Verkle format
+		verkleTermFile := filepath.Join("../data/verkle_terms", fmt.Sprintf("%s_completions.json", termID))
 		
-		merkleData, err := os.ReadFile(merkleFile)
+		verkleData, err := os.ReadFile(verkleTermFile)
 		if err != nil {
-			fmt.Printf("  ⚠️ Skipping term %s: Merkle tree not found\n", termID)
+			fmt.Printf("  ⚠️ Skipping term %s: Verkle term data not found\n", termID)
 			continue
 		}
 		
-		var studentMerkle map[string]interface{}
-		if err := json.Unmarshal(merkleData, &studentMerkle); err != nil {
-			fmt.Printf("  ⚠️ Skipping term %s: Failed to parse Merkle tree\n", termID)
+		var completions []verkle.CourseCompletion
+		if err := json.Unmarshal(verkleData, &completions); err != nil {
+			fmt.Printf("  ⚠️ Skipping term %s: Failed to parse Verkle term data\n", termID)
+			continue
+		}
+		
+		// Filter completions for this student
+		var studentCourses []verkle.CourseCompletion
+		targetStudentID := extractStudentID(studentID)
+		for _, completion := range completions {
+			if completion.StudentID == targetStudentID {
+				studentCourses = append(studentCourses, completion)
+			}
+		}
+		
+		if len(studentCourses) == 0 {
+			fmt.Printf("  ⚠️ Skipping term %s: No courses found for student\n", termID)
 			continue
 		}
 		
 		// Load term root data
-		rootFile := filepath.Join("blockchain_ready", "roots", fmt.Sprintf("root_%s.json", termID))
+		rootFile := filepath.Join("..", "publish_ready", "roots", fmt.Sprintf("root_%s.json", termID))
 		rootData, err := os.ReadFile(rootFile)
 		if err != nil {
 			fmt.Printf("  ⚠️ Skipping term %s: Root data not found\n", termID)
@@ -413,38 +396,30 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 			continue
 		}
 		
-		// Get courses from Merkle tree
-		coursesData, ok := studentMerkle["courses"].([]interface{})
-		if !ok {
-			fmt.Printf("  ⚠️ Skipping term %s: Invalid courses data\n", termID)
-			continue
-		}
-		
-		// Filter courses if selective disclosure
-		var revealedCourses []interface{}
+		// Apply selective disclosure filter if requested
+		var revealedCourses []verkle.CourseCompletion
 		if selective && len(courses) > 0 {
-			for _, courseInterface := range coursesData {
-				course := courseInterface.(map[string]interface{})
-				courseID := course["course_id"].(string)
+			for _, completion := range studentCourses {
 				for _, targetCourse := range courses {
-					if courseID == targetCourse {
-						revealedCourses = append(revealedCourses, course)
+					if completion.CourseID == targetCourse {
+						revealedCourses = append(revealedCourses, completion)
 						break
 					}
 				}
 			}
 		} else {
-			revealedCourses = coursesData
+			revealedCourses = studentCourses
 		}
 		
-		// Create simplified receipt with academic journey data
+		// Create single Verkle receipt with course-level proofs
 		receipt := map[string]interface{}{
 			"student_id": studentID,
 			"term_id": termID,
 			"revealed_courses": revealedCourses,
-			"merkle_root": studentMerkle["root"],
-			"verification_path": "merkle_proof_available",
-			"blockchain_anchor": termRoot["verkle_root"],
+			"verkle_root": termRoot["verkle_root"],
+			"proof_type": "verkle_32_byte",
+			"selective_disclosure": selective,
+			"verification_path": "single_verkle_proof",
 			"timestamp": termRoot["timestamp"],
 		}
 		
@@ -454,10 +429,11 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 			"receipt": receipt,
 			"verkle_root": termRoot["verkle_root"],
 			"revealed_courses": len(revealedCourses),
+			"total_courses": len(studentCourses),
 			"generated_at": time.Now().Format(time.RFC3339),
 		}
 		
-		fmt.Printf("  ✓ Generated receipt for term %s (%d courses)\n", termID, len(revealedCourses))
+		fmt.Printf("  ✓ Generated receipt for term %s (%d/%d courses)\n", termID, len(revealedCourses), len(studentCourses))
 	}
 	
 	// Create comprehensive receipt
@@ -495,7 +471,7 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 	}
 	
 	// Also save to blockchain-ready directory for easy access
-	receiptDir := "blockchain_ready/receipts"
+	receiptDir := "../publish_ready/receipts"
 	blockchainFile := filepath.Join(receiptDir, fmt.Sprintf("receipt_%s_%s.json", 
 		extractStudentID(studentID), time.Now().Format("20060102_150405")))
 	
@@ -613,7 +589,7 @@ func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error
 	}
 	
 	// Load root data
-	rootFile := filepath.Join("blockchain_ready/roots", fmt.Sprintf("root_%s.json", termID))
+	rootFile := filepath.Join("../publish_ready/roots", fmt.Sprintf("root_%s.json", termID))
 	if _, err := os.Stat(rootFile); os.IsNotExist(err) {
 		return fmt.Errorf("root file not found: %s. Run 'add-term' first", rootFile)
 	}
@@ -647,21 +623,21 @@ func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error
 	fmt.Printf("⛽ Gas used: %d\n", result.GasUsed)
 	
 	fmt.Println("\n🎉 Blockchain integration completed!")
-	fmt.Printf("📄 Transaction record saved in blockchain_ready/transactions/\n")
+	fmt.Printf("📄 Transaction record saved in ../publish_ready/transactions/\n")
 	
 	return nil
 }
 
 // Helper Functions
 
-func loadCompletionsFromJSON(dataFile string) ([]merkle.CourseCompletion, error) {
+func loadCompletionsFromJSON(dataFile string) ([]verkle.CourseCompletion, error) {
 	// This is a simplified loader - in production you'd have more robust parsing
 	data, err := os.ReadFile(dataFile)
 	if err != nil {
 		return nil, err
 	}
 	
-	var completions []merkle.CourseCompletion
+	var completions []verkle.CourseCompletion
 	if err := json.Unmarshal(data, &completions); err != nil {
 		return nil, err
 	}
@@ -670,11 +646,11 @@ func loadCompletionsFromJSON(dataFile string) ([]merkle.CourseCompletion, error)
 }
 
 func discoverStudentTerms(studentID string) ([]string, error) {
-	// Look for existing Merkle trees for this student
-	merkleDir := "data/merkle_trees"
+	// Look for published Verkle tree roots to discover available terms
+	rootsDir := "../publish_ready/roots"
 	
 	var terms []string
-	err := filepath.Walk(merkleDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(rootsDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -684,14 +660,18 @@ func discoverStudentTerms(studentID string) ([]string, error) {
 		}
 		
 		filename := info.Name()
-		if strings.Contains(filename, extractStudentID(studentID)) && 
-		   strings.HasSuffix(filename, ".json") {
-			// Extract term ID from filename pattern: merkle_STU001_Fall_2024.json
-			parts := strings.Split(filename, "_")
-			if len(parts) >= 3 {
-				termID := strings.Join(parts[2:], "_")
-				termID = strings.TrimSuffix(termID, ".json")
-				terms = append(terms, termID)
+		if strings.HasPrefix(filename, "root_") && strings.HasSuffix(filename, ".json") {
+			// Extract term ID from filename pattern: root_Semester_1_2023.json
+			termID := strings.TrimPrefix(filename, "root_")
+			termID = strings.TrimSuffix(termID, ".json")
+			
+			// Check if this term has data for the requested student
+			verkleTermFile := filepath.Join("../data/verkle_terms", termID+"_completions.json")
+			if data, err := os.ReadFile(verkleTermFile); err == nil {
+				// Check if student has courses in this term
+				if strings.Contains(string(data), fmt.Sprintf("\"student_id\": \"%s\"", extractStudentID(studentID))) {
+					terms = append(terms, termID)
+				}
 			}
 		}
 		
@@ -709,53 +689,3 @@ func discoverStudentTerms(studentID string) ([]string, error) {
 	return terms, nil
 }
 
-type VerkleTreeData struct {
-	tree *verkle.TermVerkleTree
-	metadata map[string]interface{}
-}
-
-func loadTermVerkleTree(termID string) (*VerkleTreeData, error) {
-	// In a production system, this would load the actual Verkle tree state
-	// For now, we'll create a new tree and populate it with data
-	
-	// This is a simplified implementation - you'd need to persist and restore Verkle tree state
-	tree := verkle.NewTermVerkleTree(termID)
-	
-	// Load student data for this term from Merkle trees
-	merkleDir := filepath.Join("data", "merkle_trees", termID)
-	files, err := filepath.Glob(filepath.Join(merkleDir, "merkle_*.json"))
-	if err != nil {
-		return nil, err
-	}
-	
-	for _, file := range files {
-		data, err := os.ReadFile(file)
-		if err != nil {
-			continue // Skip problematic files
-		}
-		
-		var merkleTree merkle.StudentTermMerkle
-		if err := json.Unmarshal(data, &merkleTree); err != nil {
-			continue
-		}
-		
-		// Add student to Verkle tree
-		err = tree.AddStudent(merkleTree.StudentID, merkleTree.Courses)
-		if err != nil {
-			continue
-		}
-	}
-	
-	// Publish the tree
-	if err := tree.PublishTerm(); err != nil {
-		return nil, err
-	}
-	
-	return &VerkleTreeData{
-		tree: tree,
-		metadata: map[string]interface{}{
-			"term_id": termID,
-			"loaded_at": time.Now().Format(time.RFC3339),
-		},
-	}, nil
-}

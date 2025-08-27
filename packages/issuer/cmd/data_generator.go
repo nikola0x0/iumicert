@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"iumicert/crypto/merkle"
+	"iumicert/crypto/verkle"
 	"iumicert/crypto/testdata"
 )
 
@@ -51,7 +51,7 @@ func runStudentDataGeneration() error {
 		fmt.Printf("\n  📖 Generating data for term: %s\n", termID)
 		
 		// Generate variable course completions per student (3-6 courses each)
-		allCompletions := make([]merkle.CourseCompletion, 0)
+		allCompletions := make([]verkle.CourseCompletion, 0)
 		
 		for i := 0; i < numStudents; i++ {
 			// Random course count between min and max
@@ -131,7 +131,7 @@ func runStudentDataGeneration() error {
 	fmt.Println("\n💾 Step 3: Saving organized data...")
 	
 	// Create output directory
-	outputDir := "data/generated_student_data"
+	outputDir := "../data/student_journeys"
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
@@ -221,7 +221,7 @@ func calculateGPA(courses []interface{}) float64 {
 	return total / float64(len(courses))
 }
 
-func getUniqueCourses(completions []merkle.CourseCompletion) []string {
+func getUniqueCourses(completions []verkle.CourseCompletion) []string {
 	courseSet := make(map[string]bool)
 	for _, completion := range completions {
 		courseSet[completion.CourseID] = true

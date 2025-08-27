@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"iumicert/crypto/merkle"
+	"iumicert/crypto/verkle"
 )
 
 var convertDataCmd = &cobra.Command{
@@ -59,13 +59,13 @@ type CourseData struct {
 
 func convertStudentDataToMerkleFormat(termID string) error {
 	// Read all student journey files
-	studentsDir := "data/generated_student_data/students"
+	studentsDir := "../data/student_journeys/students"
 	files, err := filepath.Glob(filepath.Join(studentsDir, "journey_*.json"))
 	if err != nil {
 		return fmt.Errorf("failed to find student files: %w", err)
 	}
 
-	var allCompletions []merkle.CourseCompletion
+	var allCompletions []verkle.CourseCompletion
 
 	fmt.Printf("📚 Processing %d student files...\n", len(files))
 
@@ -84,7 +84,7 @@ func convertStudentDataToMerkleFormat(termID string) error {
 		if termData, exists := journey.Terms[termID]; exists {
 			// Convert each course to CourseCompletion format
 			for _, course := range termData.Courses {
-				completion := merkle.CourseCompletion{
+				completion := verkle.CourseCompletion{
 					IssuerID:    course.IssuerID,
 					StudentID:   extractStudentIDFromDID(journey.StudentID),
 					TermID:      termID,
@@ -110,7 +110,7 @@ func convertStudentDataToMerkleFormat(termID string) error {
 	}
 
 	// Create output directory
-	outputDir := "data/converted_terms"
+	outputDir := "../data/verkle_terms"
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}

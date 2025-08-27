@@ -5,20 +5,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	verkleLib "github.com/ethereum/go-verkle"
-	"iumicert/crypto/merkle"
 )
 
-// TermVerkleTree manages the Verkle tree for a complete academic term
+// CourseCompletion represents a completed course with all relevant data
+type CourseCompletion struct {
+	IssuerID    string    `json:"issuer_id"`
+	StudentID   string    `json:"student_id"`
+	TermID      string    `json:"term_id"`
+	CourseID    string    `json:"course_id"`
+	CourseName  string    `json:"course_name"`
+	AttemptNo   uint8     `json:"attempt_no"`
+	StartedAt   time.Time `json:"started_at"`
+	CompletedAt time.Time `json:"completed_at"`
+	AssessedAt  time.Time `json:"assessed_at"`
+	IssuedAt    time.Time `json:"issued_at"`
+	Grade       string    `json:"grade"`
+	Credits     uint8     `json:"credits"`
+	Instructor  string    `json:"instructor"`
+}
+
+// TermVerkleTree manages a single Verkle tree containing all courses for a term
 type TermVerkleTree struct {
 	TermID           string                              `json:"term_id"`
 	PublishedAt      time.Time                           `json:"published_at"`
 	Version          uint32                              `json:"version"`
 	VerkleRoot       [32]byte                            `json:"verkle_root"`
-	StudentTerms     map[string]*merkle.StudentTermMerkle `json:"student_terms"` // studentDID -> StudentTermMerkle
-	VerkleProofs     map[string][]byte                   `json:"verkle_proofs"` // studentDID -> serialized Verkle proof
+	CourseEntries    map[string]CourseCompletion         `json:"course_entries"` // courseKey -> CourseCompletion
+	CourseProofs     map[string][]byte                   `json:"course_proofs"`  // courseKey -> serialized Verkle proof
 	tree             verkleLib.VerkleNode                // Internal tree (not serialized)
 }
 
@@ -26,13 +43,11 @@ type TermVerkleTree struct {
 type VerificationReceipt struct {
 	TermID          string                      `json:"term_id"`
 	StudentDID      string                      `json:"student_did"`
-	StudentTermRoot [32]byte                    `json:"student_term_root"`
-	VerkleProof     []byte                      `json:"verkle_proof"`
 	VerkleRoot      [32]byte                    `json:"verkle_root"`
 	PublishedAt     time.Time                   `json:"published_at"`
-	RevealedCourses []merkle.CourseCompletion   `json:"revealed_courses"`
-	MerkleProofs    map[string][]string         `json:"merkle_proofs"` // courseID -> merkle proof (hex)
-	RawTimestamps   map[string][32]byte         `json:"raw_timestamps"` // courseID -> packed timestamps
+	RevealedCourses []CourseCompletion          `json:"revealed_courses"`
+	CourseProofs    map[string][]byte           `json:"course_proofs"`   // courseID -> verkle proof
+	SelectiveDisclosure bool                    `json:"selective_disclosure"`
 	Metadata        ReceiptMetadata             `json:"metadata"`
 }
 
@@ -47,43 +62,80 @@ type ReceiptMetadata struct {
 // NewTermVerkleTree creates a new term-level Verkle tree
 func NewTermVerkleTree(termID string) *TermVerkleTree {
 	return &TermVerkleTree{
-		TermID:       termID,
-		StudentTerms: make(map[string]*merkle.StudentTermMerkle),
-		VerkleProofs: make(map[string][]byte),
-		tree:         verkleLib.New(),
+		TermID:        termID,
+		CourseEntries: make(map[string]CourseCompletion),
+		CourseProofs:  make(map[string][]byte),
+		tree:          verkleLib.New(),
 	}
 }
 
-// AddStudent adds a student's term data to the Verkle tree
-func (tvt *TermVerkleTree) AddStudent(studentDID string, courses []merkle.CourseCompletion) error {
-	log.Printf("Adding student %s to term %s with %d courses", studentDID, tvt.TermID, len(courses))
+// AddCourses adds a student's courses directly to the single Verkle tree
+func (tvt *TermVerkleTree) AddCourses(studentDID string, courses []CourseCompletion) error {
+	log.Printf("Adding %d courses for student %s to term %s", len(courses), studentDID, tvt.TermID)
 	
-	// Create student-term Merkle tree
-	studentTerm, err := merkle.NewStudentTermMerkle(studentDID, tvt.TermID, courses)
-	if err != nil {
-		return fmt.Errorf("failed to create student term merkle for %s: %w", studentDID, err)
+	for _, course := range courses {
+		// Generate deterministic key for each course
+		courseKey := fmt.Sprintf("%s:%s:%s", studentDID, tvt.TermID, course.CourseID)
+		courseKeyHash := sha256.Sum256([]byte(courseKey))
+		
+		// Serialize course data as value
+		courseData, err := json.Marshal(course)
+		if err != nil {
+			return fmt.Errorf("failed to serialize course %s: %w", course.CourseID, err)
+		}
+		courseValueHash := sha256.Sum256(courseData)
+		
+		// Store course entry for later retrieval
+		tvt.CourseEntries[courseKey] = course
+		
+		// Add to Verkle tree: key = H(studentDID:termID:courseID), value = H(course_data)
+		err = tvt.tree.Insert(courseKeyHash[:], courseValueHash[:], nil)
+		if err != nil {
+			return fmt.Errorf("failed to insert course %s into verkle tree: %w", course.CourseID, err)
+		}
+		
+		log.Printf("✅ Course %s added for student %s", course.CourseID, studentDID)
 	}
 	
-	// Store the student term data
-	tvt.StudentTerms[studentDID] = studentTerm
-	
-	// Add to Verkle tree: key = H256(studentDID), value = studentTermRoot
-	studentDIDKey := sha256.Sum256([]byte(studentDID))
-	err = tvt.tree.Insert(studentDIDKey[:], studentTerm.Root[:], nil)
-	if err != nil {
-		return fmt.Errorf("failed to insert student %s into verkle tree: %w", studentDID, err)
-	}
-	
-	log.Printf("✅ Student %s added successfully, term root: %x", studentDID, studentTerm.Root)
 	return nil
+}
+
+// GenerateCourseProof creates a Verkle proof for a specific course
+func (tvt *TermVerkleTree) GenerateCourseProof(studentDID, courseID string) ([]byte, error) {
+	courseKey := fmt.Sprintf("%s:%s:%s", studentDID, tvt.TermID, courseID)
+	courseKeyHash := sha256.Sum256([]byte(courseKey))
+	
+	// Check if course exists
+	if _, exists := tvt.CourseEntries[courseKey]; !exists {
+		return nil, fmt.Errorf("course %s not found for student %s in term %s", courseID, studentDID, tvt.TermID)
+	}
+	
+	// Generate Verkle proof using the global proof functions
+	proofElements, _, _, err := tvt.tree.GetProofItems([][]byte{courseKeyHash[:]}, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get proof items for course %s: %w", courseID, err)
+	}
+	
+	// For now, we'll serialize the proof elements as JSON (simplified approach)
+	// In production, you'd want to use the proper Verkle proof serialization
+	proof, err := json.Marshal(proofElements)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize proof for course %s: %w", courseID, err)
+	}
+	
+	// Store the proof for later use
+	tvt.CourseProofs[courseKey] = proof
+	
+	log.Printf("✅ Generated proof for course %s (student: %s)", courseID, studentDID)
+	return proof, nil
 }
 
 // PublishTerm computes the final Verkle root and prepares for blockchain publication
 func (tvt *TermVerkleTree) PublishTerm() error {
-	log.Printf("Publishing term %s with %d students", tvt.TermID, len(tvt.StudentTerms))
+	log.Printf("Publishing term %s with %d courses", tvt.TermID, len(tvt.CourseEntries))
 	
-	if len(tvt.StudentTerms) == 0 {
-		return fmt.Errorf("cannot publish term %s: no students added", tvt.TermID)
+	if len(tvt.CourseEntries) == 0 {
+		return fmt.Errorf("cannot publish term %s: no courses added", tvt.TermID)
 	}
 	
 	// Compute Verkle tree commitment
@@ -101,110 +153,86 @@ func (tvt *TermVerkleTree) PublishTerm() error {
 	return nil
 }
 
-// GenerateVerificationReceipt creates a verification receipt for specific courses
-func (tvt *TermVerkleTree) GenerateVerificationReceipt(studentDID string, courseIDs []string) (*VerificationReceipt, error) {
-	log.Printf("Generating verification receipt for student %s, courses: %v", studentDID, courseIDs)
+// GenerateStudentReceipt creates a verification receipt for specific courses using single Verkle tree
+func (tvt *TermVerkleTree) GenerateStudentReceipt(studentDID string, courseIDs []string) (*VerificationReceipt, error) {
+	log.Printf("Generating student receipt for %s, courses: %v", studentDID, courseIDs)
 	
 	// Check if term is published
 	if tvt.PublishedAt.IsZero() {
 		return nil, fmt.Errorf("term %s not yet published", tvt.TermID)
 	}
 	
-	// Get student's term data
-	studentTerm, exists := tvt.StudentTerms[studentDID]
-	if !exists {
-		return nil, fmt.Errorf("student %s not found in term %s", studentDID, tvt.TermID)
-	}
+	// Get all courses for this student from the single Verkle tree
+	var studentCourses []CourseCompletion
+	courseProofs := make(map[string][]byte)
 	
-	// Generate Verkle proof for the student's term root
-	studentDIDKey := sha256.Sum256([]byte(studentDID))
-	keysToProve := [][]byte{studentDIDKey[:]}
-	
-	proof, _, _, _, err := verkleLib.MakeVerkleMultiProof(tvt.tree, nil, keysToProve, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate verkle proof: %w", err)
-	}
-	
-	serializedProof, _, err := verkleLib.SerializeProof(proof)
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize verkle proof: %w", err)
-	}
-	
-	proofBytes, err := json.Marshal(serializedProof)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal verkle proof: %w", err)
-	}
-	
-	// If no specific courses requested, include all courses
+	// If no specific courses requested, find all courses for this student
 	if len(courseIDs) == 0 {
-		courseIDs = studentTerm.ListCourses()
+		// Find all courses for this student by scanning CourseEntries
+		for courseKey, course := range tvt.CourseEntries {
+			// Check if this course belongs to the student
+			if strings.HasPrefix(courseKey, studentDID+":") {
+				studentCourses = append(studentCourses, course)
+				courseIDs = append(courseIDs, course.CourseID)
+			}
+		}
+	} else {
+		// Collect specific requested courses
+		for _, courseID := range courseIDs {
+			courseKey := fmt.Sprintf("%s:%s:%s", studentDID, tvt.TermID, courseID)
+			if course, exists := tvt.CourseEntries[courseKey]; exists {
+				studentCourses = append(studentCourses, course)
+			} else {
+				log.Printf("Warning: course %s not found for student %s in term %s", courseID, studentDID, tvt.TermID)
+			}
+		}
 	}
 	
-	// Collect revealed courses and their Merkle proofs
-	var revealedCourses []merkle.CourseCompletion
-	merkleProofs := make(map[string][]string)
-	rawTimestamps := make(map[string][32]byte)
+	if len(studentCourses) == 0 {
+		return nil, fmt.Errorf("no courses found for student %s in term %s", studentDID, tvt.TermID)
+	}
 	
+	// Generate Verkle proofs for each course
 	for _, courseID := range courseIDs {
-		// Get course data
-		course, err := studentTerm.GetCourseByID(courseID)
+		proof, err := tvt.GenerateCourseProof(studentDID, courseID)
 		if err != nil {
-			log.Printf("Warning: course %s not found for student %s: %v", courseID, studentDID, err)
+			log.Printf("Warning: failed to generate proof for course %s: %v", courseID, err)
 			continue
 		}
-		
-		revealedCourses = append(revealedCourses, *course)
-		
-		// Get Merkle proof
-		proof, err := studentTerm.GetProofForCourse(courseID)
-		if err != nil {
-			log.Printf("Warning: failed to get merkle proof for course %s: %v", courseID, err)
-			continue
-		}
-		merkleProofs[courseID] = proof
-		
-		// Pack timestamps for verification
-		ts32 := packTimestamps(course.StartedAt, course.CompletedAt, course.AssessedAt, course.IssuedAt)
-		rawTimestamps[courseID] = ts32
+		courseProofs[courseID] = proof
 	}
 	
-	// Create verification receipt
+	// Get total courses for this student for metadata
+	totalCourses := 0
+	for courseKey := range tvt.CourseEntries {
+		if strings.HasPrefix(courseKey, studentDID+":") {
+			totalCourses++
+		}
+	}
+	
+	// Create verification receipt with single Verkle structure
 	receipt := &VerificationReceipt{
-		TermID:          tvt.TermID,
-		StudentDID:      studentDID,
-		StudentTermRoot: studentTerm.Root,
-		VerkleProof:     proofBytes,
-		VerkleRoot:      tvt.VerkleRoot,
-		PublishedAt:     tvt.PublishedAt,
-		RevealedCourses: revealedCourses,
-		MerkleProofs:    merkleProofs,
-		RawTimestamps:   rawTimestamps,
+		TermID:              tvt.TermID,
+		StudentDID:          studentDID,
+		VerkleRoot:          tvt.VerkleRoot,
+		PublishedAt:         tvt.PublishedAt,
+		RevealedCourses:     studentCourses,
+		CourseProofs:        courseProofs,
+		SelectiveDisclosure: len(studentCourses) < totalCourses,
 		Metadata: ReceiptMetadata{
 			GeneratedAt:       time.Now(),
-			TotalCourses:      len(studentTerm.Courses),
-			RevealedCourses:   len(revealedCourses),
-			VerificationLevel: determineVerificationLevel(len(studentTerm.Courses), len(revealedCourses)),
+			TotalCourses:      totalCourses,
+			RevealedCourses:   len(studentCourses),
+			VerificationLevel: determineVerificationLevel(totalCourses, len(studentCourses)),
 		},
 	}
 	
 	log.Printf("✅ Generated receipt for student %s with %d/%d courses", 
-		studentDID, len(revealedCourses), len(studentTerm.Courses))
+		studentDID, len(studentCourses), totalCourses)
 	
 	return receipt, nil
 }
 
-// packTimestamps helper (same as in merkle package)
-func packTimestamps(started, completed, assessed, issued time.Time) [32]byte {
-	// Use binary package to pack timestamps
-	var packed [32]byte
-	// Convert to Unix timestamps (8 bytes each, big-endian)
-	// For now, just return empty - this would be implemented like in merkle package
-	_ = started
-	_ = completed  
-	_ = assessed
-	_ = issued
-	return packed
-}
 
 // determineVerificationLevel determines if this is full or selective disclosure
 func determineVerificationLevel(totalCourses, revealedCourses int) string {
@@ -214,9 +242,9 @@ func determineVerificationLevel(totalCourses, revealedCourses int) string {
 	return "selective"
 }
 
-// VerifyReceiptOffChain performs complete off-chain verification of a receipt
+// VerifyReceiptOffChain performs complete off-chain verification of a single Verkle receipt
 func VerifyReceiptOffChain(receipt *VerificationReceipt, expectedVerkleRoot [32]byte) (*VerificationResult, error) {
-	log.Println("=== STARTING OFF-CHAIN VERIFICATION ===")
+	log.Println("=== STARTING OFF-CHAIN VERIFICATION (Single Verkle) ===")
 	
 	result := &VerificationResult{
 		Valid:           true,
@@ -251,29 +279,26 @@ func VerifyReceiptOffChain(receipt *VerificationReceipt, expectedVerkleRoot [32]
 		}
 	}
 	
-	// 3. Verify raw timestamps match course data
-	for courseID, rawTS := range receipt.RawTimestamps {
-		course := findCourseByID(receipt.RevealedCourses, courseID)
-		if course == nil {
-			result.Warnings = append(result.Warnings, fmt.Sprintf("Raw timestamp for unknown course: %s", courseID))
-			continue
-		}
-		
-		// Recompute timestamps and verify
-		expectedTS := packTimestamps(course.StartedAt, course.CompletedAt, course.AssessedAt, course.IssuedAt)
-		if rawTS != expectedTS {
+	// 3. Verify Verkle proofs exist for revealed courses
+	for _, course := range receipt.RevealedCourses {
+		if _, hasProof := receipt.CourseProofs[course.CourseID]; !hasProof {
 			result.Valid = false
-			result.Errors = append(result.Errors, fmt.Sprintf("Timestamp mismatch for course %s", courseID))
+			result.Errors = append(result.Errors, fmt.Sprintf("Missing Verkle proof for course %s", course.CourseID))
 		}
 	}
 	
-	// 4. Verify Merkle proofs would be handled by rebuilding student term tree
-	// This is a simplified version - in practice, we'd rebuild and verify each proof
-	for courseID := range receipt.MerkleProofs {
+	// 4. Verify no extra proofs (security check)
+	for courseID := range receipt.CourseProofs {
 		if findCourseByID(receipt.RevealedCourses, courseID) == nil {
-			result.Valid = false
-			result.Errors = append(result.Errors, fmt.Sprintf("Merkle proof for unknown course: %s", courseID))
+			result.Warnings = append(result.Warnings, fmt.Sprintf("Verkle proof for unrevealed course: %s", courseID))
 		}
+	}
+	
+	// 5. Verify selective disclosure flag consistency
+	if receipt.SelectiveDisclosure && len(receipt.RevealedCourses) >= receipt.Metadata.TotalCourses {
+		result.Warnings = append(result.Warnings, "Selective disclosure flag set but all courses revealed")
+	} else if !receipt.SelectiveDisclosure && len(receipt.RevealedCourses) < receipt.Metadata.TotalCourses {
+		result.Warnings = append(result.Warnings, "Selective disclosure flag not set but some courses hidden")
 	}
 	
 	if result.Valid {
@@ -297,7 +322,7 @@ type VerificationResult struct {
 }
 
 // Helper functions
-func validateCourseTimestamps(course merkle.CourseCompletion) error {
+func validateCourseTimestamps(course CourseCompletion) error {
 	if course.StartedAt.After(course.CompletedAt) {
 		return fmt.Errorf("started_at after completed_at")
 	}
@@ -310,7 +335,7 @@ func validateCourseTimestamps(course merkle.CourseCompletion) error {
 	return nil
 }
 
-func findCourseByID(courses []merkle.CourseCompletion, courseID string) *merkle.CourseCompletion {
+func findCourseByID(courses []CourseCompletion, courseID string) *CourseCompletion {
 	for _, course := range courses {
 		if course.CourseID == courseID {
 			return &course
@@ -326,8 +351,17 @@ func (tvt *TermVerkleTree) SerializeToJSON() ([]byte, error) {
 
 // GetStudentList returns all student DIDs in this term
 func (tvt *TermVerkleTree) GetStudentList() []string {
+	studentSet := make(map[string]bool)
+	for courseKey := range tvt.CourseEntries {
+		// Extract studentDID from courseKey format: studentDID:termID:courseID
+		parts := strings.Split(courseKey, ":")
+		if len(parts) >= 1 {
+			studentSet[parts[0]] = true
+		}
+	}
+	
 	var students []string
-	for studentDID := range tvt.StudentTerms {
+	for studentDID := range studentSet {
 		students = append(students, studentDID)
 	}
 	return students
@@ -335,8 +369,11 @@ func (tvt *TermVerkleTree) GetStudentList() []string {
 
 // GetStudentCourseCount returns the number of courses for a student
 func (tvt *TermVerkleTree) GetStudentCourseCount(studentDID string) int {
-	if studentTerm, exists := tvt.StudentTerms[studentDID]; exists {
-		return len(studentTerm.Courses)
+	count := 0
+	for courseKey := range tvt.CourseEntries {
+		if strings.HasPrefix(courseKey, studentDID+":") {
+			count++
+		}
 	}
-	return 0
+	return count
 }

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-
-	"iumicert/crypto/merkle"
+	
+	"iumicert/crypto/verkle"
 )
 
 // TestDataGenerator generates realistic academic data for testing
@@ -84,12 +84,12 @@ func NewTestDataGenerator() *TestDataGenerator {
 }
 
 // GenerateTermData generates course completions for a specific term
-func (g *TestDataGenerator) GenerateTermData(termID string, numStudents, coursesPerStudent int) ([]merkle.CourseCompletion, error) {
+func (g *TestDataGenerator) GenerateTermData(termID string, numStudents, coursesPerStudent int) ([]verkle.CourseCompletion, error) {
 	if numStudents > len(g.students) {
 		numStudents = len(g.students)
 	}
 	
-	var completions []merkle.CourseCompletion
+	var completions []verkle.CourseCompletion
 	termStart, termEnd, err := g.getTermDates(termID)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (g *TestDataGenerator) GenerateTermData(termID string, numStudents, courses
 }
 
 // generateCourseCompletion creates a single course completion with realistic timestamps
-func (g *TestDataGenerator) generateCourseCompletion(student StudentInfo, course CourseInfo, termID string, termStart, termEnd time.Time) merkle.CourseCompletion {
+func (g *TestDataGenerator) generateCourseCompletion(student StudentInfo, course CourseInfo, termID string, termStart, termEnd time.Time) verkle.CourseCompletion {
 	// Generate realistic timeline within term, ensuring all timestamps are valid
 	duration := termEnd.Sub(termStart)
 	
@@ -155,7 +155,7 @@ func (g *TestDataGenerator) generateCourseCompletion(student StudentInfo, course
 		}
 	}
 	
-	return merkle.CourseCompletion{
+	return verkle.CourseCompletion{
 		IssuerID:    g.getRandomInstitution(),
 		StudentID:   student.StudentID,
 		TermID:      termID,
@@ -231,13 +231,13 @@ func (g *TestDataGenerator) generateRandomName() string {
 }
 
 // GenerateMultiTermJourney generates a complete academic journey across multiple terms
-func (g *TestDataGenerator) GenerateMultiTermJourney(studentIndex int, termIDs []string, coursesPerTerm int) (map[string][]merkle.CourseCompletion, error) {
+func (g *TestDataGenerator) GenerateMultiTermJourney(studentIndex int, termIDs []string, coursesPerTerm int) (map[string][]verkle.CourseCompletion, error) {
 	if studentIndex >= len(g.students) {
 		return nil, fmt.Errorf("student index %d out of range", studentIndex)
 	}
 	
 	student := g.students[studentIndex]
-	journey := make(map[string][]merkle.CourseCompletion)
+	journey := make(map[string][]verkle.CourseCompletion)
 	
 	for _, termID := range termIDs {
 		completions, err := g.generateStudentTermCompletions(student, termID, coursesPerTerm)
@@ -251,14 +251,14 @@ func (g *TestDataGenerator) GenerateMultiTermJourney(studentIndex int, termIDs [
 }
 
 // generateStudentTermCompletions generates completions for one student in one term
-func (g *TestDataGenerator) generateStudentTermCompletions(student StudentInfo, termID string, courseCount int) ([]merkle.CourseCompletion, error) {
+func (g *TestDataGenerator) generateStudentTermCompletions(student StudentInfo, termID string, courseCount int) ([]verkle.CourseCompletion, error) {
 	termStart, termEnd, err := g.getTermDates(termID)
 	if err != nil {
 		return nil, err
 	}
 	
 	courses := g.getRandomCourses(courseCount)
-	var completions []merkle.CourseCompletion
+	var completions []verkle.CourseCompletion
 	
 	for _, course := range courses {
 		completion := g.generateCourseCompletion(student, course, termID, termStart, termEnd)

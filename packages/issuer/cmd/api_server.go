@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
-	"iumicert/crypto/merkle"
+	"iumicert/crypto/verkle"
 )
 
 var serveCmd = &cobra.Command{
@@ -39,7 +39,7 @@ type APIResponse struct {
 type TermRequest struct {
 	TermID     string                    `json:"term_id"`
 	DataFile   string                    `json:"data_file,omitempty"`
-	Courses    []merkle.CourseCompletion `json:"courses,omitempty"`
+	Courses    []verkle.CourseCompletion `json:"courses,omitempty"`
 	Format     string                    `json:"format"`
 	Validate   bool                      `json:"validate"`
 }
@@ -198,7 +198,7 @@ func handleAddTerm(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Use provided courses data or load from file
-	var completions []merkle.CourseCompletion
+	var completions []verkle.CourseCompletion
 	var err error
 	
 	if len(req.Courses) > 0 {
