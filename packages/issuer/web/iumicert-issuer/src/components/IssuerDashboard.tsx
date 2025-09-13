@@ -10,6 +10,7 @@ import {
   getTermRootHistory, 
   estimatePublishGas, 
   formatEther,
+  verifyReceiptAnchor,
   type TermRootData,
   type PublishResult 
 } from '@/lib/blockchain';
@@ -208,6 +209,11 @@ function ReceiptsTab({ selectedTerm, receipts, isLoading }: {
 }) {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; termId: string; publishedAt: number } | null>(null);
+  const [verifyingReceipt, setVerifyingReceipt] = useState<string | null>(null);
+  const [blockchainAnchorInput, setBlockchainAnchorInput] = useState<string>('');
+  const [uploadedReceipt, setUploadedReceipt] = useState<any>(null);
+  const [courseVerificationResult, setCourseVerificationResult] = useState<any>(null);
   
   if (!selectedTerm) {
     return (
@@ -253,6 +259,73 @@ function ReceiptsTab({ selectedTerm, receipts, isLoading }: {
     alert(`Generating receipts for all students in ${selectedTerm.name}...`);
   };
 
+  const handleReceiptUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const receipt = JSON.parse(e.target?.result as string);
+        setUploadedReceipt(receipt);
+        setCourseVerificationResult(null);
+      } catch (error) {
+        alert('Invalid receipt file format');
+      }
+    };
+    reader.readAsText(file);
+  };
+  
+  const verifyCourse = async (termId: string, courseId: string) => {
+    if (!uploadedReceipt) return;
+    
+    try {
+      const response = await fetch('http://localhost:8080/api/receipts/verify-course', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receipt: uploadedReceipt,
+          course_id: courseId,
+          term_id: termId
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        setCourseVerificationResult(result.data);
+      } else {
+        alert(`Verification failed: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Course verification failed:', error);
+      alert('Failed to verify course');
+    }
+  };
+
+  const handleVerifyOnChain = async (blockchainAnchor: string) => {
+    if (!blockchainAnchor) {
+      alert('Please provide a blockchain anchor to verify');
+      return;
+    }
+
+    setVerifyingReceipt(blockchainAnchor);
+    try {
+      const result = await verifyReceiptAnchor(blockchainAnchor);
+      setVerificationResult(result);
+      
+      if (result.isValid) {
+        alert(`✅ Valid on blockchain!\n\nTerm: ${result.termId}\nPublished: ${new Date(result.publishedAt * 1000).toLocaleString()}`);
+      } else {
+        alert('❌ This anchor is not found on the blockchain');
+      }
+    } catch (error) {
+      console.error('Verification failed:', error);
+      alert(`❌ Verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setVerifyingReceipt(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Term Publishing Actions */}
@@ -292,6 +365,115 @@ function ReceiptsTab({ selectedTerm, receipts, isLoading }: {
             <li><strong>4.</strong> Publish complete term to Sepolia blockchain</li>
           </ol>
         </div>
+      </div>
+
+      {/* Course Verification Section */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          📚 Course Verification
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Upload a student receipt and verify specific courses
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload Receipt JSON
+            </label>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleReceiptUpload}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100"
+            />
+          </div>
+          
+          {uploadedReceipt && (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <p className="text-sm font-medium text-gray-900 mb-2">
+                Student: {uploadedReceipt.student_id}
+              </p>
+              <div className="space-y-2">
+                {Object.keys(uploadedReceipt.term_receipts || {}).map(termId => (
+                  <div key={termId} className="text-sm">
+                    <span className="font-medium">{termId}:</span>
+                    {' '}
+                    {uploadedReceipt.term_receipts[termId].receipt?.revealed_courses?.map((c: any) => (
+                      <button
+                        key={c.course_id}
+                        onClick={() => verifyCourse(termId, c.course_id)}
+                        className="inline-block mx-1 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                      >
+                        {c.course_id}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {courseVerificationResult && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="font-medium text-green-900">✅ Course Verified</p>
+              <p className="text-sm text-green-800 mt-1">
+                {courseVerificationResult.course.course_name} ({courseVerificationResult.course.course_id})
+              </p>
+              <p className="text-sm text-green-800">
+                Grade: {courseVerificationResult.course.grade} | Credits: {courseVerificationResult.course.credits}
+              </p>
+              <div className="mt-2 text-xs text-green-700">
+                <p>✓ IPA proof verified</p>
+                <p>✓ State diff verified</p>
+                <p>✓ Blockchain anchored</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Blockchain Verification Section */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          🔍 Blockchain Root Verification
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Verify if a Verkle root exists on the Sepolia network
+        </p>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            placeholder="Enter Verkle root (e.g., 0x123...)"
+            value={blockchainAnchorInput}
+            onChange={(e) => setBlockchainAnchorInput(e.target.value)}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={() => handleVerifyOnChain(blockchainAnchorInput)}
+            disabled={verifyingReceipt !== null}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {verifyingReceipt ? '🔄 Verifying...' : '🔗 Verify on Blockchain'}
+          </button>
+        </div>
+        {verificationResult && (
+          <div className={`mt-4 p-4 rounded-lg ${verificationResult.isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <p className={`font-medium ${verificationResult.isValid ? 'text-green-900' : 'text-red-900'}`}>
+              {verificationResult.isValid ? '✅ Valid Root' : '❌ Invalid Root'}
+            </p>
+            {verificationResult.isValid && (
+              <>
+                <p className="text-sm text-green-800 mt-1">Term: {verificationResult.termId}</p>
+                <p className="text-sm text-green-800">Published: {new Date(verificationResult.publishedAt * 1000).toLocaleString()}</p>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Student Receipts */}
@@ -529,7 +711,7 @@ function BlockchainTab({ terms }: { terms: Term[] }) {
                   {publishingStatus === 'confirming' && '⏳ Waiting for blockchain confirmation...'}
                 </p>
                 <p className="text-sm text-blue-700">
-                  Publishing Fall 2024 credentials for 5 students
+                  Publishing {selectedTerm?.name || 'term'} credentials for {selectedTerm?.student_count || 0} students
                 </p>
               </div>
             </div>

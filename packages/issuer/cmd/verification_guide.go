@@ -52,7 +52,7 @@ func showVerificationGuide(receiptFile string) error {
 	fmt.Println("✅ This will verify:")
 	fmt.Println("   • Cryptographic integrity of all proofs")
 	fmt.Println("   • Temporal consistency of course completions")
-	fmt.Println("   • Merkle tree structure and student data")
+	fmt.Println("   • Verkle tree structure and student data")
 	fmt.Println("   • Term root hashes match blockchain anchors")
 	fmt.Println()
 	
@@ -65,21 +65,21 @@ func showVerificationGuide(receiptFile string) error {
 	
 	for termID, termData := range termReceipts {
 		termCount++
-		termReceipt := termData.(map[string]interface{})["receipt"].(map[string]interface{})
-		blockchainAnchor := termReceipt["blockchain_anchor"].(string)
-		timestamp := termReceipt["timestamp"].(string)
+		termDataMap := termData.(map[string]interface{})
+		verkleRoot := termDataMap["verkle_root"].(string)
+		generatedAt := termDataMap["generated_at"].(string)
 		
 		fmt.Printf("[%d] 📚 Term: %s\n", termCount, termID)
-		fmt.Printf("    🔗 Verkle Root: %s\n", blockchainAnchor)
-		fmt.Printf("    📅 Published: %s\n", timestamp)
+		fmt.Printf("    🔗 Verkle Root: %s\n", verkleRoot)
+		fmt.Printf("    📅 Generated: %s\n", generatedAt)
 		fmt.Printf("    🌐 Network: Sepolia Testnet\n")
 		fmt.Println()
 		
 		fmt.Println("    🔍 Manual Blockchain Verification:")
 		fmt.Printf("    • Visit: https://sepolia.etherscan.io/\n")
-		fmt.Printf("    • Search for transaction containing root: %s...\n", blockchainAnchor[:16])
+		fmt.Printf("    • Search for transaction containing root: %s...\n", verkleRoot[:16])
 		fmt.Printf("    • Verify publisher is authorized university wallet\n")
-		fmt.Printf("    • Confirm timestamp matches: %s\n", timestamp[:10])
+		fmt.Printf("    • Confirm timestamp matches: %s\n", generatedAt[:10])
 		fmt.Println()
 	}
 	
@@ -105,7 +105,7 @@ func showVerificationGuide(receiptFile string) error {
 		revealedCourses := termReceipt["revealed_courses"].([]interface{})
 		
 		fmt.Printf("📚 %s:\n", termID)
-		fmt.Printf("   🌳 Merkle Tree: Proves %d courses belong to student\n", len(revealedCourses))
+		fmt.Printf("   🌳 Verkle Tree: Proves %d courses belong to student\n", len(revealedCourses))
 		fmt.Printf("   🔗 Verkle Proof: Links student data to blockchain root\n")
 		fmt.Printf("   🕐 Timestamps: Proves when courses were completed\n")
 		fmt.Printf("   📋 Course Hashes: Ensures course data hasn't been tampered\n")
@@ -139,7 +139,7 @@ func showVerificationGuide(receiptFile string) error {
 	fmt.Printf("🎓 Student: %s\n", studentID)
 	fmt.Printf("📚 Terms to verify: %d\n", len(termReceipts))
 	fmt.Println("⛓️  Blockchain: Sepolia Testnet")
-	fmt.Println("🔐 Cryptography: Merkle + Verkle Trees")
+	fmt.Println("🔐 Cryptography: Single Verkle Trees")
 	fmt.Println("✅ Status: Ready for third-party verification")
 	fmt.Println()
 	

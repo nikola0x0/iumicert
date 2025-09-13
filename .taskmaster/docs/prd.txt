@@ -1,0 +1,466 @@
+<context>
+# Overview  
+IU-MiCert is a privacy-preserving academic credential management system designed for universities to issue, manage, and verify student achievements using cutting-edge cryptographic technologies. The system leverages Verkle trees for efficient proof generation, blockchain for immutable record keeping, and zero-knowledge proofs for selective disclosure of academic achievements. This solution addresses the critical need for tamper-proof, privacy-preserving, and independently verifiable academic credentials in higher education.
+
+# Core Features  
+
+## Verkle Tree-Based Credential Storage
+- Stores academic achievements in Verkle trees (one tree per academic term)
+- Generates constant-size 32-byte cryptographic proofs regardless of data volume
+- Enables efficient verification with minimal computational overhead
+- Provides course-level selective disclosure for privacy protection
+
+## Blockchain Integration
+- Publishes Verkle root commitments to Ethereum blockchain
+- Creates immutable audit trail of academic records
+- Enables trustless verification without contacting the institution
+- Supports multi-chain deployment (Sepolia testnet, mainnet ready)
+
+## Privacy-Preserving Verification
+- Zero-knowledge proofs for credential verification
+- Students control which achievements to disclose
+- No exposure of unnecessary academic information
+- Cryptographically secure proof generation and validation
+
+## Multi-Interface Access
+- Command-line interface for administrators
+- REST API for programmatic integration
+- Web interface with MetaMask wallet integration
+- Mobile-ready verification system (future enhancement)
+
+## Academic Data Management
+- Comprehensive student journey tracking
+- Support for multiple academic terms and course structures
+- Grade recording with instructor and timestamp metadata
+- Batch processing capabilities for institutional scale
+
+# User Experience  
+
+## User Personas
+
+### University Administrator
+- Needs: Efficient credential issuance, batch processing, audit compliance
+- Goals: Streamline credential management, reduce fraud, maintain privacy
+- Pain points: Manual verification requests, paper-based systems, forgery risks
+
+### Student
+- Needs: Portable credentials, selective disclosure, instant verification
+- Goals: Share achievements selectively, maintain privacy, prove qualifications
+- Pain points: Slow verification processes, privacy concerns, credential portability
+
+### Verifier (Employer/Institution)
+- Needs: Trustworthy verification, quick validation, fraud prevention
+- Goals: Verify credentials instantly, ensure authenticity, streamline hiring
+- Pain points: Fake credentials, slow manual verification, inconsistent formats
+
+## Key User Flows
+
+### Credential Issuance Flow
+1. Administrator generates student academic data
+2. System processes data into Verkle trees per term
+3. Cryptographic proofs generated for each achievement
+4. Root commitments published to blockchain
+5. Student receipts generated with verification proofs
+
+### Verification Flow
+1. Student presents credential receipt
+2. Verifier accesses verification interface
+3. System validates cryptographic proof
+4. Blockchain anchor verified for authenticity
+5. Achievement confirmed without exposing other records
+
+### Selective Disclosure Flow
+1. Student chooses specific courses/terms to share
+2. System generates minimal proof set
+3. Verifier receives only requested information
+4. Privacy maintained for undisclosed achievements
+5. Full cryptographic security preserved
+
+## UI/UX Considerations
+- Intuitive dashboard for credential management
+- Clear visual feedback for blockchain transactions
+- Mobile-responsive design for accessibility
+- Minimal technical knowledge required for basic operations
+- Progressive disclosure of advanced features
+</context>
+<PRD>
+# Technical Architecture  
+
+## System Components
+
+### Core Backend Services
+- Go-based CLI application using Cobra framework
+- Verkle tree implementation using ethereum/go-verkle library
+- RESTful API server with CORS support
+- Batch processing engine for large-scale operations
+- Cryptographic proof generation and validation engine
+
+### Blockchain Layer
+- Smart contract registry (IUMiCertRegistry)
+- Sepolia testnet deployment (mainnet ready)
+- Gas-optimized contract operations
+- Event-driven architecture for state changes
+- Multi-signature support for institutional control
+
+### Data Storage Layer
+- JSON-based academic data storage
+- Verkle tree persistence mechanism
+- Receipt and proof archival system
+- Transaction log management
+- Backup and recovery procedures
+
+### Frontend Applications
+- Next.js web application with TypeScript
+- Wagmi/Viem for Web3 integration
+- MetaMask wallet connectivity
+- Responsive Material-UI components
+- Real-time blockchain status updates
+
+## Data Models
+
+### Student Journey Model
+- Student identifier and personal information
+- Course enrollment records per term
+- Grade and credit hour tracking
+- Instructor and timestamp metadata
+- Academic progression history
+
+### Verkle Tree Model
+- Term-based tree structure
+- Course completion entries
+- Cryptographic commitment generation
+- Proof path computation
+- Root hash aggregation
+
+### Receipt Model
+- Student identification
+- Selected course achievements
+- Verkle proof data (32-byte)
+- Blockchain anchor reference
+- Timestamp and metadata
+
+## APIs and Integrations
+
+### REST API Endpoints
+- GET /api/terms - List academic terms
+- GET /api/students/{id}/journey - Student history
+- POST /api/receipts - Generate receipt
+- POST /api/receipts/verify - Verify receipt
+- POST /api/blockchain/publish - Publish roots
+
+### Blockchain Integration
+- Web3 provider connectivity
+- Smart contract ABI interface
+- Transaction management
+- Event listener implementation
+- Gas price optimization
+
+### Future LMS Integration
+- Student Information System connectors
+- Grade import automation
+- Real-time data synchronization
+- Webhook support for updates
+- API authentication mechanisms
+
+## Infrastructure Requirements
+
+### Development Environment
+- Go 1.21+ runtime
+- Node.js 18+ for frontend
+- Ethereum node access (Infura/Alchemy)
+- PostgreSQL database (future)
+- Redis cache layer (future)
+
+### Production Environment
+- Kubernetes orchestration
+- Load-balanced API servers
+- Redundant blockchain nodes
+- CDN for static assets
+- HSM for key management
+
+### Security Requirements
+- Private key encryption
+- API rate limiting
+- DDoS protection
+- Audit logging
+- Compliance monitoring
+
+# Development Roadmap  
+
+## MVP Requirements (Phase 1)
+
+### Core Credential System
+- Basic Verkle tree implementation for single institution
+- Manual data entry and processing capabilities
+- Local proof generation and verification
+- Command-line interface for administrators
+- Basic receipt generation with JSON output
+
+### Essential Blockchain Features
+- Single-chain deployment (Sepolia testnet)
+- Manual root publication process
+- Basic smart contract for root storage
+- Transaction logging and monitoring
+- Gas estimation and optimization
+
+### Minimal Web Interface
+- Simple dashboard for term management
+- MetaMask connection for transactions
+- Basic receipt display and download
+- Manual verification interface
+- Error handling and user feedback
+
+## Enhanced Features (Phase 2)
+
+### Advanced Credential Management
+- Batch processing for multiple institutions
+- Automated data import from CSV/Excel
+- Scheduled term processing
+- Bulk receipt generation
+- Archive and backup systems
+
+### Improved Verification System
+- QR code generation for receipts
+- Mobile verification application
+- Public verification portal
+- API for third-party integration
+- Verification analytics dashboard
+
+### User Experience Enhancements
+- Role-based access control
+- Multi-language support
+- Email notification system
+- PDF receipt generation
+- Customizable institution branding
+
+## Enterprise Features (Phase 3)
+
+### Institutional Scaling
+- Multi-tenant architecture
+- Institution-specific configurations
+- Hierarchical permission system
+- Federated credential networks
+- Cross-institution verification
+
+### Advanced Privacy Features
+- Selective attribute disclosure
+- Time-bound credential sharing
+- Revocation mechanisms
+- Anonymous credentials
+- Threshold signatures
+
+### Integration Ecosystem
+- LMS plugin development
+- HR system connectors
+- Government registry integration
+- International credential standards
+- Blockchain interoperability
+
+## Innovation Features (Phase 4)
+
+### AI-Enhanced Capabilities
+- Fraud detection algorithms
+- Credential recommendation engine
+- Automated verification workflows
+- Natural language queries
+- Predictive analytics
+
+### Decentralized Extensions
+- IPFS integration for data storage
+- Peer-to-peer verification network
+- Decentralized identity integration
+- Cross-chain bridges
+- DAO governance model
+
+# Logical Dependency Chain
+
+## Foundation Layer (Must Build First)
+1. Verkle tree core implementation with cryptographic proofs
+2. Basic data models for students and courses
+3. Command-line interface for system operations
+4. Local verification mechanism
+5. JSON-based data persistence
+
+## Blockchain Integration Layer (Depends on Foundation)
+1. Smart contract development and deployment
+2. Web3 connectivity and transaction management
+3. Root commitment publication mechanism
+4. Gas optimization strategies
+5. Transaction monitoring and logging
+
+## API Service Layer (Depends on Blockchain)
+1. REST API server implementation
+2. CORS and security configurations
+3. Endpoint authentication
+4. Rate limiting and caching
+5. API documentation
+
+## Web Interface Layer (Depends on API)
+1. Frontend application setup
+2. MetaMask integration
+3. Dashboard components
+4. Verification interface
+5. User feedback systems
+
+## Batch Processing Layer (Depends on Web Interface)
+1. Bulk data import mechanisms
+2. Scheduled processing jobs
+3. Queue management system
+4. Progress tracking
+5. Error recovery procedures
+
+## Verification Portal (Depends on Batch Processing)
+1. Public verification website
+2. QR code scanning
+3. Mobile responsiveness
+4. Analytics dashboard
+5. Verification certificates
+
+## Integration Layer (Depends on Verification Portal)
+1. LMS connectors
+2. Third-party API
+3. Webhook systems
+4. Data synchronization
+5. External authentication
+
+## Advanced Features (Depends on Integration)
+1. Multi-institutional support
+2. Privacy enhancements
+3. AI/ML capabilities
+4. Decentralized features
+5. Governance mechanisms
+
+# Risks and Mitigations  
+
+## Technical Challenges
+
+### Verkle Tree Implementation Complexity
+- Risk: Complex cryptographic implementation prone to errors
+- Mitigation: Use established ethereum/go-verkle library
+- Mitigation: Extensive unit testing and formal verification
+- Mitigation: Security audits before production deployment
+
+### Blockchain Scalability
+- Risk: High gas costs on mainnet deployment
+- Mitigation: Batch root publications to minimize transactions
+- Mitigation: Layer 2 solutions investigation
+- Mitigation: Multi-chain deployment strategy
+
+### Data Privacy Concerns
+- Risk: Accidental exposure of sensitive academic data
+- Mitigation: Zero-knowledge proof implementation
+- Mitigation: Encryption at rest and in transit
+- Mitigation: Regular security assessments
+
+## Operational Challenges
+
+### Institution Adoption Barriers
+- Risk: Resistance to new technology adoption
+- Mitigation: Comprehensive training programs
+- Mitigation: Gradual rollout strategy
+- Mitigation: Clear ROI demonstrations
+
+### Regulatory Compliance
+- Risk: Varying international education regulations
+- Mitigation: Modular compliance framework
+- Mitigation: Legal consultation per jurisdiction
+- Mitigation: Configurable privacy settings
+
+## Resource Constraints
+
+### Development Timeline
+- Risk: Complex features delaying MVP launch
+- Mitigation: Strict MVP scope definition
+- Mitigation: Agile development methodology
+- Mitigation: Parallel workstream organization
+
+### Budget Limitations
+- Risk: Blockchain transaction costs
+- Mitigation: Testnet deployment for development
+- Mitigation: Gas optimization strategies
+- Mitigation: Sponsored transaction models
+
+### Technical Expertise
+- Risk: Specialized blockchain knowledge requirements
+- Mitigation: Partner with blockchain experts
+- Mitigation: Comprehensive documentation
+- Mitigation: Developer training programs
+
+# Appendix  
+
+## Research Findings
+
+### Market Analysis
+- Growing demand for digital credentials post-COVID
+- Increasing credential fraud concerns globally
+- Shift towards competency-based education
+- Need for international credential portability
+- Privacy regulations driving zero-knowledge adoption
+
+### Competitive Landscape
+- Traditional credential services lack privacy features
+- Blockchain solutions often too complex for institutions
+- No comprehensive Verkle tree implementation for education
+- Market gap for privacy-preserving verification
+- Opportunity for first-mover advantage
+
+### User Research
+- 73% of students concerned about transcript privacy
+- 89% of employers want instant verification
+- 67% of institutions report credential fraud attempts
+- 95% support for selective disclosure features
+- Strong demand for mobile verification
+
+## Technical Specifications
+
+### Verkle Tree Parameters
+- Tree depth: 256 levels maximum
+- Proof size: Constant 32 bytes
+- Commitment scheme: IPA (Inner Product Argument)
+- Field: BLS12-381 curve
+- Security level: 128-bit
+
+### Smart Contract Specifications
+- Solidity version: 0.8.19+
+- Gas optimization: Assembly optimizations
+- Storage pattern: Mapping-based roots
+- Access control: OpenZeppelin contracts
+- Upgradeability: Proxy pattern
+
+### API Specifications
+- Protocol: REST over HTTPS
+- Authentication: JWT tokens
+- Rate limiting: 100 requests/minute
+- Response format: JSON
+- Compression: gzip enabled
+
+### Performance Targets
+- Proof generation: < 100ms
+- Verification time: < 50ms
+- API response time: < 200ms
+- Blockchain confirmation: 1-2 blocks
+- System uptime: 99.9% SLA
+
+## Security Considerations
+
+### Cryptographic Security
+- Verkle tree collision resistance
+- Proof non-malleability
+- Random oracle assumptions
+- Side-channel attack prevention
+- Key generation entropy
+
+### Operational Security
+- Private key management with HSM
+- Multi-signature requirements
+- Audit trail completeness
+- Incident response procedures
+- Disaster recovery planning
+
+### Compliance Requirements
+- GDPR compliance for EU
+- FERPA compliance for US
+- Local privacy regulations
+- Data retention policies
+- Right to erasure support
+</PRD>

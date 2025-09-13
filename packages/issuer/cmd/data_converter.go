@@ -7,13 +7,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/spf13/cobra"
 	"iumicert/crypto/verkle"
+
+	"github.com/spf13/cobra"
 )
 
 var convertDataCmd = &cobra.Command{
 	Use:   "convert-data [term-id]",
-	Short: "Convert generated student data to Merkle tree format",
+	Short: "Convert generated student data to Verkle tree format",
 	Long:  `Convert the generated student journey data into the format expected by the add-term command`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
