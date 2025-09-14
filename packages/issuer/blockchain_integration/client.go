@@ -10,6 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	
+	"iumicert/issuer/config"
 )
 
 // BlockchainClient manages Ethereum blockchain interactions
@@ -56,14 +58,20 @@ func GetNetworkConfig(network string) (*NetworkConfig, error) {
 
 // NewBlockchainClient creates a new blockchain client
 func NewBlockchainClient(network, privateKeyHex string) (*BlockchainClient, error) {
-	// Get network configuration
-	config, err := GetNetworkConfig(network)
+	// Load configuration from environment
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get network config: %w", err)
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Get RPC URL from configuration
+	rpcURL, err := cfg.GetRPCURL(network)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get RPC URL: %w", err)
 	}
 
 	// Connect to Ethereum client
-	client, err := ethclient.Dial(config.RPC_URL)
+	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Ethereum client: %w", err)
 	}
@@ -74,11 +82,24 @@ func NewBlockchainClient(network, privateKeyHex string) (*BlockchainClient, erro
 		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
 
+	// Get chain ID based on network
+	var chainID *big.Int
+	switch network {
+	case "sepolia":
+		chainID = big.NewInt(11155111) // Sepolia chain ID
+	case "mainnet":
+		chainID = big.NewInt(1) // Mainnet chain ID
+	case "localhost", "local":
+		chainID = big.NewInt(1337) // Local development chain ID
+	default:
+		return nil, fmt.Errorf("unsupported network: %s", network)
+	}
+
 	return &BlockchainClient{
 		client:     client,
 		privateKey: privateKey,
-		chainID:    config.ChainID,
-		gasLimit:   config.GasLimit,
+		chainID:    chainID,
+		gasLimit:   cfg.DefaultGasLimit,
 	}, nil
 }
 

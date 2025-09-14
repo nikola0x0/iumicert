@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -165,8 +166,8 @@ func handleSystemStatus(w http.ResponseWriter, r *http.Request) {
 	// Count storage items
 	if dirs := []struct{path string; count *int}{
 		{"data/merkle_trees", &status.Storage.Terms},
-		{"blockchain_ready/receipts", &status.Storage.Receipts},
-		{"blockchain_ready/transactions", &status.Storage.Transactions},
+		{"publish_ready/receipts", &status.Storage.Receipts},
+		{"publish_ready/transactions", &status.Storage.Transactions},
 	}; len(dirs) > 0 {
 		for _, dir := range dirs {
 			if files, err := filepath.Glob(filepath.Join(dir.path, "*")); err == nil {
@@ -610,7 +611,7 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 func handleListReceipts(w http.ResponseWriter, r *http.Request) {
 	receipts := []map[string]interface{}{}
 	
-	if files, err := filepath.Glob("blockchain_ready/receipts/receipt_*.json"); err == nil {
+	if files, err := filepath.Glob("publish_ready/receipts/receipt_*.json"); err == nil {
 		for _, file := range files {
 			if receiptData, err := os.ReadFile(file); err == nil {
 				var receipt map[string]interface{}
@@ -651,22 +652,78 @@ func handlePublishRoots(w http.ResponseWriter, r *http.Request) {
 		gasLimit = 500000
 	}
 	
+	// Check if we already have a transaction record for this term first
+	fmt.Printf("🔍 API: Checking for existing transaction for %s\n", req.TermID)
+	if files, err := filepath.Glob("publish_ready/transactions/tx_*.json"); err == nil && len(files) > 0 {
+		// Sort files by modification time to get the most recent
+		sort.Slice(files, func(i, j int) bool {
+			infoI, errI := os.Stat(files[i])
+			infoJ, errJ := os.Stat(files[j])
+			if errI != nil || errJ != nil {
+				return false
+			}
+			return infoI.ModTime().After(infoJ.ModTime())
+		})
+		
+		// Look for existing transaction for this term
+		for _, file := range files {
+			if txData, err := os.ReadFile(file); err == nil {
+				var tx map[string]interface{}
+				if err := json.Unmarshal(txData, &tx); err == nil {
+					// Check if this transaction is for our term
+					if rootPath, ok := tx["root_file_path"].(string); ok {
+						expectedRootFile := fmt.Sprintf("root_%s.json", req.TermID)
+						if strings.Contains(rootPath, expectedRootFile) {
+							// Found existing transaction
+							fmt.Printf("✅ API: Found existing transaction for %s\n", req.TermID)
+							tx["term_id"] = req.TermID
+							respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: tx})
+							return
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Call existing publishTermRoots function
+	fmt.Printf("🔄 API: About to call publishTermRoots for %s\n", req.TermID)
 	if err := publishTermRoots(req.TermID, network, "", gasLimit); err != nil {
+		fmt.Printf("❌ API: publishTermRoots failed: %v\n", err)
 		respondJSON(w, http.StatusInternalServerError, APIResponse{Success: false, Error: err.Error()})
 		return
 	}
+	fmt.Printf("✅ API: publishTermRoots completed successfully\n")
 	
 	// Find the latest transaction file for this term
-	pattern := fmt.Sprintf("blockchain_ready/transactions/tx_%s_*.json", req.TermID)
-	if files, err := filepath.Glob(pattern); err == nil && len(files) > 0 {
-		// Get the most recent file
-		latestFile := files[len(files)-1]
-		if txData, err := os.ReadFile(latestFile); err == nil {
-			var tx map[string]interface{}
-			if err := json.Unmarshal(txData, &tx); err == nil {
-				respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: tx})
-				return
+	// Note: Transaction files are named by hash, so we need to search through them
+	if files, err := filepath.Glob("publish_ready/transactions/tx_*.json"); err == nil && len(files) > 0 {
+		// Sort files by modification time to get the most recent
+		sort.Slice(files, func(i, j int) bool {
+			infoI, errI := os.Stat(files[i])
+			infoJ, errJ := os.Stat(files[j])
+			if errI != nil || errJ != nil {
+				return false
+			}
+			return infoI.ModTime().After(infoJ.ModTime())
+		})
+		
+		// Look through recent transaction files to find one for this term
+		for _, file := range files {
+			if txData, err := os.ReadFile(file); err == nil {
+				var tx map[string]interface{}
+				if err := json.Unmarshal(txData, &tx); err == nil {
+					// Check if this transaction is for our term
+					if rootPath, ok := tx["root_file_path"].(string); ok {
+						expectedRootFile := fmt.Sprintf("root_%s.json", req.TermID)
+						if strings.Contains(rootPath, expectedRootFile) {
+							// Add the term_id to the response for clarity
+							tx["term_id"] = req.TermID
+							respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: tx})
+							return
+						}
+					}
+				}
 			}
 		}
 	}
@@ -685,7 +742,7 @@ func handlePublishRoots(w http.ResponseWriter, r *http.Request) {
 func handleListTransactions(w http.ResponseWriter, r *http.Request) {
 	transactions := []map[string]interface{}{}
 	
-	if files, err := filepath.Glob("blockchain_ready/transactions/tx_*.json"); err == nil {
+	if files, err := filepath.Glob("publish_ready/transactions/tx_*.json"); err == nil {
 		for _, file := range files {
 			if txData, err := os.ReadFile(file); err == nil {
 				var tx map[string]interface{}
@@ -712,7 +769,7 @@ func handleGetTransaction(w http.ResponseWriter, r *http.Request) {
 	txHash := vars["tx_hash"]
 	
 	// Find transaction file by hash
-	if files, err := filepath.Glob("blockchain_ready/transactions/tx_*.json"); err == nil {
+	if files, err := filepath.Glob("publish_ready/transactions/tx_*.json"); err == nil {
 		for _, file := range files {
 			if txData, err := os.ReadFile(file); err == nil {
 				var tx map[string]interface{}

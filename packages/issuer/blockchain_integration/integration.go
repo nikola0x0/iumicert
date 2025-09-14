@@ -245,7 +245,7 @@ func (bi *BlockchainIntegration) PublishTermRootFromFile(ctx context.Context, ro
 	return result, nil
 }
 
-// saveTransactionRecord saves the transaction record to the blockchain_ready/transactions directory
+// saveTransactionRecord saves the transaction record to the publish_ready/transactions directory
 func (bi *BlockchainIntegration) saveTransactionRecord(result *PublishResult, rootFilePath string) error {
 	// Create transaction record
 	txRecord := map[string]interface{}{
@@ -259,7 +259,7 @@ func (bi *BlockchainIntegration) saveTransactionRecord(result *PublishResult, ro
 	}
 
 	// Ensure transactions directory exists
-	txDir := "blockchain_ready/transactions"
+	txDir := "publish_ready/transactions"
 	if err := os.MkdirAll(txDir, 0755); err != nil {
 		return fmt.Errorf("failed to create transactions directory: %w", err)
 	}

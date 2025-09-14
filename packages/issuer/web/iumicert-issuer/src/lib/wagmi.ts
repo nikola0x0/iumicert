@@ -18,13 +18,9 @@ export const config = createConfig(
 
     // Required dApp metadata
     appName: "IU-MiCert Issuer",
-    appDescription: "Academic credential issuance system with blockchain integration",
+    appDescription:
+      "Academic credential issuance system with blockchain integration",
     appUrl: "http://localhost:3000",
     appIcon: "/next.svg",
-    
-    // Disable Coinbase Wallet to prevent analytics errors
-    options: {
-      enforceSupportedChains: false,
-    },
-  }),
+  })
 );

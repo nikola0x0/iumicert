@@ -312,8 +312,8 @@ func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 		return fmt.Errorf("failed to publish term: %w", err)
 	}
 
-	// Save complete Verkle tree for receipt generation
-	verkleDir := filepath.Join("data", "verkle_trees")
+    // Save complete Verkle tree for receipt generation (project-level data dir)
+    verkleDir := filepath.Join("..", "data", "verkle_trees")
 	if err := os.MkdirAll(verkleDir, 0755); err != nil {
 		return fmt.Errorf("failed to create verkle directory: %w", err)
 	}
@@ -383,7 +383,8 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 	
 	for _, termID := range targetTerms {
 		// Load the complete TermVerkleTree saved during term addition
-		verkleTreeFile := filepath.Join("data", "verkle_trees", fmt.Sprintf("%s_verkle_tree.json", termID))
+    // Load the complete TermVerkleTree saved during term addition (project-level data dir)
+    verkleTreeFile := filepath.Join("..", "data", "verkle_trees", fmt.Sprintf("%s_verkle_tree.json", termID))
 		
 		verkleTreeData, err := os.ReadFile(verkleTreeFile)
 		if err != nil {
@@ -580,6 +581,27 @@ func verifyReceiptLocally(receiptFile string) error {
 func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error {
 	fmt.Printf("⛓️  Publishing roots for term: %s\n", termID)
 	
+	// Check if we already have a successful transaction for this term
+	if files, err := filepath.Glob("publish_ready/transactions/tx_*.json"); err == nil && len(files) > 0 {
+		for _, file := range files {
+			if txData, err := os.ReadFile(file); err == nil {
+				var tx map[string]interface{}
+				if err := json.Unmarshal(txData, &tx); err == nil {
+					if rootPath, ok := tx["root_file_path"].(string); ok {
+						expectedRootFile := fmt.Sprintf("root_%s.json", termID)
+						if strings.Contains(rootPath, expectedRootFile) {
+							if status, ok := tx["status"].(string); ok && status == "success" {
+								fmt.Printf("✅ Term %s already published to blockchain\n", termID)
+								fmt.Printf("🔗 Existing transaction: %s\n", tx["transaction_hash"])
+								return nil // Success - already published
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	// Load configuration
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -610,10 +632,15 @@ func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error
 		return err
 	}
 	
-	// Load root data
-	rootFile := filepath.Join("../publish_ready/roots", fmt.Sprintf("root_%s.json", termID))
+	// Load root data - try both relative paths for CLI and API server contexts
+	rootFile := filepath.Join("publish_ready/roots", fmt.Sprintf("root_%s.json", termID))
 	if _, err := os.Stat(rootFile); os.IsNotExist(err) {
-		return fmt.Errorf("root file not found: %s. Run 'add-term' first", rootFile)
+		// Try alternative path for different working directory contexts
+		altRootFile := filepath.Join("../publish_ready/roots", fmt.Sprintf("root_%s.json", termID))
+		if _, err := os.Stat(altRootFile); os.IsNotExist(err) {
+			return fmt.Errorf("root file not found: %s (also tried %s). Run 'add-term' first", rootFile, altRootFile)
+		}
+		rootFile = altRootFile
 	}
 	
 	fmt.Printf("🌐 Target network: %s\n", cfg.Network)

@@ -583,6 +583,7 @@ For blockchain operations, you'll need Sepolia testnet ETH:
    ```
 
 3. **Verify Locally**
+
    ```bash
 
    ```
