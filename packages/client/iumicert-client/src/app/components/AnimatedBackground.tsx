@@ -55,7 +55,7 @@ export default function AnimatedBackground({
 
   return (
     <div
-      className={`absolute inset-0 bg-gradient-to-br ${gradient} ${className} noise`}
+      className={`fixed inset-0 bg-gradient-to-br ${gradient} ${className} noise`}
     >
       <div className="absolute inset-0 bg-black/20"></div>
       {/* Floating particles */}

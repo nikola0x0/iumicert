@@ -79,34 +79,43 @@ type SystemStatus struct {
 func startAPIServer(port string, corsEnabled bool) error {
 	r := mux.NewRouter()
 	
-	// API routes
+	// API routes with issuer/verifier separation
 	api := r.PathPrefix("/api").Subrouter()
 	
-	// System endpoints
+	// System endpoints (public)
 	api.HandleFunc("/status", handleSystemStatus).Methods("GET")
 	api.HandleFunc("/health", handleHealth).Methods("GET")
 	
-	// Term management
-	api.HandleFunc("/terms", handleAddTerm).Methods("POST")
-	api.HandleFunc("/terms", handleListTerms).Methods("GET")
-	api.HandleFunc("/terms/{term_id}/receipts", handleGetTermReceipts).Methods("GET")
-	api.HandleFunc("/terms/{term_id}/roots", handleGetTermRoot).Methods("GET")
+	// Issuer-only endpoints (for institution dashboard)
+	issuer := api.PathPrefix("/issuer").Subrouter()
+	issuer.HandleFunc("/terms", handleAddTerm).Methods("POST")
+	issuer.HandleFunc("/terms", handleListTerms).Methods("GET")  
+	issuer.HandleFunc("/terms/{term_id}/receipts", handleGetTermReceipts).Methods("GET")
+	issuer.HandleFunc("/terms/{term_id}/roots", handleGetTermRoot).Methods("GET")
+	issuer.HandleFunc("/receipts", handleGenerateReceipt).Methods("POST")
+	issuer.HandleFunc("/receipts", handleListReceipts).Methods("GET")
+	issuer.HandleFunc("/blockchain/publish", handlePublishRoots).Methods("POST")
+	issuer.HandleFunc("/blockchain/transactions", handleListTransactions).Methods("GET")
+	issuer.HandleFunc("/blockchain/transactions/{tx_hash}", handleGetTransaction).Methods("GET")
+	issuer.HandleFunc("/students", handleListStudents).Methods("GET")
+	issuer.HandleFunc("/students/{student_id}/terms", handleGetStudentTerms).Methods("GET")
+	issuer.HandleFunc("/students/{student_id}/journey", handleGetStudentJourney).Methods("GET")
 	
-	// Receipt generation
-	api.HandleFunc("/receipts", handleGenerateReceipt).Methods("POST")
+	// Verifier endpoints (public - for students/employers)
+	verifier := api.PathPrefix("/verifier").Subrouter()
+	verifier.HandleFunc("/receipt", handleVerifyReceipt).Methods("POST")
+	verifier.HandleFunc("/course", handleVerifyCourse).Methods("POST")
+	verifier.HandleFunc("/receipt/{receipt_id}", handleGetReceiptByID).Methods("GET")
+	verifier.HandleFunc("/journey/{student_id}", handleGetStudentJourney).Methods("GET")
+	verifier.HandleFunc("/blockchain/transaction/{tx_hash}", handleGetTransaction).Methods("GET")
+	
+	// Legacy endpoints (maintain backward compatibility for current issuer dashboard)
+	api.HandleFunc("/terms", handleListTerms).Methods("GET")
+	api.HandleFunc("/terms/{term_id}/roots", handleGetTermRoot).Methods("GET")
 	api.HandleFunc("/receipts/verify", handleVerifyReceipt).Methods("POST")
 	api.HandleFunc("/receipts/verify-course", handleVerifyCourse).Methods("POST")
-	api.HandleFunc("/receipts", handleListReceipts).Methods("GET")
-	
-	// Blockchain operations
 	api.HandleFunc("/blockchain/publish", handlePublishRoots).Methods("POST")
 	api.HandleFunc("/blockchain/transactions", handleListTransactions).Methods("GET")
-	api.HandleFunc("/blockchain/transactions/{tx_hash}", handleGetTransaction).Methods("GET")
-	
-	// Student data operations
-	api.HandleFunc("/students", handleListStudents).Methods("GET")
-	api.HandleFunc("/students/{student_id}/terms", handleGetStudentTerms).Methods("GET")
-	api.HandleFunc("/students/{student_id}/journey", handleGetStudentJourney).Methods("GET")
 	
 	// Setup CORS if enabled
 	var handler http.Handler = r
@@ -628,6 +637,38 @@ func handleListReceipts(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: receipts})
+}
+
+func handleGetReceiptByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	receiptID := vars["receipt_id"]
+	
+	if receiptID == "" {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "receipt_id is required"})
+		return
+	}
+	
+	// Look for receipt file
+	receiptPath := fmt.Sprintf("publish_ready/receipts/receipt_%s.json", receiptID)
+	if receiptData, err := os.ReadFile(receiptPath); err == nil {
+		var receipt map[string]interface{}
+		if err := json.Unmarshal(receiptData, &receipt); err == nil {
+			respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: receipt})
+			return
+		}
+	}
+	
+	// Also look for journey files
+	journeyPath := fmt.Sprintf("publish_ready/receipts/%s_journey.json", receiptID)
+	if journeyData, err := os.ReadFile(journeyPath); err == nil {
+		var journey map[string]interface{}
+		if err := json.Unmarshal(journeyData, &journey); err == nil {
+			respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: journey})
+			return
+		}
+	}
+	
+	respondJSON(w, http.StatusNotFound, APIResponse{Success: false, Error: "Receipt not found"})
 }
 
 func handlePublishRoots(w http.ResponseWriter, r *http.Request) {

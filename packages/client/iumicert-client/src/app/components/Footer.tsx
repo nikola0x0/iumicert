@@ -17,7 +17,7 @@ export default function Footer() {
             <div className="w-px h-4 bg-white/30"></div>
 
             <span className="text-sm bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent font-inter">
-              By devniko (on Sepolia Testnet)
+              By nikola0x0 (Sepolia Testnet)
             </span>
           </div>
 

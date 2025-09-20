@@ -2,6 +2,16 @@
 
 A comprehensive academic credential management system for educational institutions using Verkle tree architecture with blockchain integration and zero-knowledge proofs.
 
+## 📋 Current System Status
+
+✅ **Fully Operational** - All core features implemented and tested  
+✅ **API Restructured** - Issuer/Verifier endpoint separation complete  
+✅ **Frontend Fixed** - Blockchain publishing shows success instead of 500 errors  
+✅ **Duplicate Prevention** - Smart contract rejects already-published terms gracefully  
+🔧 **Ready for Extensions** - Verifier interface and authentication middleware ready to implement  
+
+**Last Updated**: September 2025 - System running on `issuer_v2` branch with single Verkle tree architecture
+
 ## 🎓 Overview
 
 The IU-MiCert Issuer System enables universities to:
@@ -590,39 +600,58 @@ For blockchain operations, you'll need Sepolia testnet ETH:
 
 ## 🌐 API Endpoints
 
-The REST API provides programmatic access to all system functionality:
+The REST API provides programmatic access with user-type separation:
 
-### System
+### **Issuer Endpoints** (`/api/issuer/*`)
+*For institutional dashboard and administrative operations*
 
+**Terms Management**
+- `GET /api/issuer/terms` - List all processed academic terms
+- `POST /api/issuer/terms` - Process new academic term  
+- `GET /api/issuer/terms/{term_id}/receipts` - Get all receipts for term
+- `GET /api/issuer/terms/{term_id}/roots` - Get term Verkle root commitment
+
+**Receipt Generation**
+- `POST /api/issuer/receipts` - Generate new student receipt
+- `GET /api/issuer/receipts` - List all generated receipts
+
+**Student Management** 
+- `GET /api/issuer/students` - List all students in system
+- `GET /api/issuer/students/{student_id}/journey` - Complete academic journey
+- `GET /api/issuer/students/{student_id}/terms` - Student's completed terms
+
+**Blockchain Operations**
+- `POST /api/issuer/blockchain/publish` - Publish term roots to blockchain
+- `GET /api/issuer/blockchain/transactions` - List all blockchain transactions
+- `GET /api/issuer/blockchain/transactions/{tx_hash}` - Get transaction details
+
+### **Verifier Endpoints** (`/api/verifier/*`) 
+*Public endpoints for students, employers, and third-party verifiers*
+
+**Receipt Verification**
+- `POST /api/verifier/receipt` - Verify receipt cryptographic proofs  
+- `POST /api/verifier/course` - Verify specific course completion
+- `GET /api/verifier/receipt/{receipt_id}` - Retrieve specific receipt by ID
+
+**Student Data Access**
+- `GET /api/verifier/journey/{student_id}` - Get student academic journey (if public)
+
+**Blockchain Verification**
+- `GET /api/verifier/blockchain/transaction/{tx_hash}` - Check transaction status
+
+### **System Endpoints** (Public)
+
+- `GET /api/health` - Health check endpoint  
 - `GET /api/status` - System status and configuration
-- `GET /api/health` - Health check endpoint
-- `GET /api/version` - Application version information
 
-### Terms
+### **Legacy Endpoints** (Backward Compatibility)
 
-- `GET /api/terms` - List all processed academic terms
-- `POST /api/terms` - Process new academic term
-- `GET /api/terms/{term_id}/receipts` - Get all receipts for term
-- `GET /api/terms/{term_id}/roots` - Get term Verkle root commitment
-
-### Students
-
-- `GET /api/students` - List all students in system
-- `GET /api/students/{student_id}/journey` - Complete academic journey
-- `GET /api/students/{student_id}/terms` - Student's completed terms
-
-### Receipts
-
-- `POST /api/receipts` - Generate new student receipt
-- `GET /api/receipts/{receipt_id}` - Retrieve specific receipt
-- `POST /api/receipts/verify` - Verify receipt cryptographic proofs
-
-### Blockchain
-
-- `POST /api/blockchain/publish` - Publish term roots to blockchain
-- `GET /api/blockchain/status/{tx_hash}` - Check transaction status
-- `GET /api/blockchain/verify/{receipt_id}` - On-chain receipt verification
-- `GET /api/blockchain/transactions` - List all blockchain transactions
+- `GET /api/terms` - List terms (legacy)
+- `GET /api/terms/{term_id}/roots` - Get term roots (legacy) 
+- `POST /api/receipts/verify` - Verify receipt (legacy)
+- `POST /api/receipts/verify-course` - Verify course (legacy)
+- `POST /api/blockchain/publish` - Publish to blockchain (legacy)
+- `GET /api/blockchain/transactions` - List transactions (legacy)
 
 ## 🎓 Academic Data Sample
 
@@ -665,6 +694,12 @@ The Next.js web interface provides:
 - **Verification Portal**: Local and blockchain-based proof verification
 - **Blockchain Monitor**: Real-time transaction tracking and status
 
+### Recent Improvements ✨
+
+- **Fixed Frontend Error Handling**: Blockchain publishing now shows success messages instead of 500 errors
+- **Duplicate Transaction Prevention**: System prevents republishing already-published terms
+- **Graceful Error Recovery**: Backend API failures no longer interfere with successful blockchain transactions
+
 Start with:
 
 ```bash
@@ -672,6 +707,15 @@ cd web/iumicert-issuer && npm install && npm run dev
 ```
 
 Access at `http://localhost:3000`
+
+### API Architecture Update 🏗️
+
+The system now supports dual interfaces:
+
+- **Issuer Dashboard** (Port 3000): For institution administrators - uses legacy and new `/api/issuer/*` endpoints
+- **Verifier Interface** (Future): For students/employers - will use new `/api/verifier/*` endpoints
+
+Both interfaces are served by a single backend API server with clear endpoint separation for security and scalability.
 
 ## 🔐 Security & Privacy
 
@@ -727,6 +771,44 @@ Access at `http://localhost:3000`
 2. **Data Pipeline**: Set up automated term processing workflows
 3. **Monitoring**: Add comprehensive logging and alerting
 4. **Scaling**: Configure load balancing for high-volume operations
+
+## 🔧 Troubleshooting
+
+### Common Issues & Recent Fixes
+
+**❌ "Publishing failed: API Error: 500 Internal Server Error" (FIXED ✅)**
+- **Issue**: Frontend showed error despite successful blockchain transactions
+- **Solution**: Fixed frontend error handling to separate blockchain success from API failures
+- **Status**: Resolved - now shows success messages correctly
+
+**❌ Duplicate Term Publishing Errors (FIXED ✅)**  
+- **Issue**: Smart contract rejected already-published terms causing 500 errors
+- **Solution**: Added duplicate detection logic in both CLI and API
+- **Status**: Resolved - gracefully handles republication attempts
+
+**❌ Transaction History Not Clearing**
+- **Issue**: `reset.sh` doesn't clear blockchain transaction records 
+- **Solution**: Transaction files in `publish_ready/transactions/` persist intentionally
+- **Workaround**: Manually delete files if needed: `rm publish_ready/transactions/tx_*.json`
+
+### Development Tips
+
+- **API Server**: Always rebuild binary after code changes: `go build -o micert ./cmd`
+- **Frontend**: Uses legacy endpoints by default - new structured endpoints available  
+- **Blockchain**: Set `ISSUER_PRIVATE_KEY` environment variable for publishing
+- **Testing**: Use `curl` to test API endpoints directly: `curl localhost:8080/api/health`
+
+### Port Conflicts  
+
+If you see "port already in use" errors:
+```bash
+# Kill existing processes
+pkill -f "micert serve"
+lsof -ti:8080 | xargs kill -9
+
+# Restart cleanly  
+./dev.sh
+```
 
 ## � Complete CLI Command Reference
 

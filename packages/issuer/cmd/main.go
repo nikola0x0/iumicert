@@ -174,6 +174,7 @@ func init() {
 	rootCmd.AddCommand(generateReceiptCmd)
 	rootCmd.AddCommand(verifyLocalCmd)
 	rootCmd.AddCommand(publishRootsCmd)
+	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(testVerifyCmd)
 }

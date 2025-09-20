@@ -27,7 +27,7 @@ const StudentJourneyVisualization = () => {
     }
   };
 
-  const loadStudentJourney = async (studentId) => {
+  const loadStudentJourney = async (studentId: string) => {
     if (!studentId) return;
     
     setLoading(true);
@@ -53,13 +53,13 @@ const StudentJourneyVisualization = () => {
     }
   };
 
-  const handleStudentChange = (studentId) => {
+  const handleStudentChange = (studentId: string) => {
     setSelectedStudentId(studentId);
     loadStudentJourney(studentId);
   };
 
-  const getGradeColor = (grade) => {
-    const gradeColors = {
+  const getGradeColor = (grade: string) => {
+    const gradeColors: Record<string, string> = {
       'A+': 'bg-green-500', 'A': 'bg-green-500', 'A-': 'bg-green-400',
       'B+': 'bg-blue-400', 'B': 'bg-blue-400', 'B-': 'bg-blue-300',
       'C+': 'bg-yellow-400', 'C': 'bg-yellow-400', 'C-': 'bg-yellow-300',
@@ -69,8 +69,8 @@ const StudentJourneyVisualization = () => {
     return gradeColors[grade] || 'bg-gray-400';
   };
 
-  const calculateTermGPA = (courses) => {
-    const gradePoints = {
+  const calculateTermGPA = (courses: { grade: string; credits?: number }[]) => {
+    const gradePoints: Record<string, number> = {
       'A+': 4.0, 'A': 4.0, 'A-': 3.7,
       'B+': 3.3, 'B': 3.0, 'B-': 2.7,
       'C+': 2.3, 'C': 2.0, 'C-': 1.7,
@@ -81,7 +81,7 @@ const StudentJourneyVisualization = () => {
     return (total / courses.length).toFixed(2);
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'short'
@@ -222,7 +222,7 @@ const StudentJourneyVisualization = () => {
             <div className="flex items-end space-x-2 h-32">
               {Object.entries(studentJourney.terms || {})
                 .sort(([a], [b]) => a.localeCompare(b))
-                .map(([termId, termData], index) => {
+                .map(([termId, termData]) => {
                   const gpa = parseFloat(calculateTermGPA(termData.courses || []));
                   const height = (gpa / 4.0) * 100;
                   return (
