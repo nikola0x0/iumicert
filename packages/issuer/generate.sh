@@ -29,7 +29,7 @@ cd ..
 
 # Step 2: Process each term with single Verkle approach
 echo -e "\n${YELLOW}🌳 Step 2: Processing terms with single Verkle trees...${NC}"
-terms=("Semester_1_2023" "Semester_2_2023" "Summer_2023" "Semester_1_2024" "Semester_2_2024" "Summer_2024")
+terms=("Semester_1_2023" "Semester_2_2023" "Summer_2023" "Semester_1_2024" "Semester_2_2024" "Summer_2024" "Semester_1_2025")
 
 processed_terms=0
 for term in "${terms[@]}"; do

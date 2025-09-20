@@ -34,8 +34,12 @@ func runStudentDataGeneration() error {
 	fmt.Println("\n🔧 Step 1: Initializing test data generator...")
 	generator := testdata.NewTestDataGenerator()
 	
-	// Configuration for IU Vietnam realistic data generation - 6 specific terms only
-	terms := []string{"Semester_1_2023", "Semester_1_2024", "Semester_2_2023", "Semester_2_2024", "Summer_2023", "Summer_2024"}
+	// Configuration for IU Vietnam realistic data generation - Extended to 2025
+	terms := []string{
+		"Semester_1_2023", "Semester_2_2023", "Summer_2023",
+		"Semester_1_2024", "Semester_2_2024", "Summer_2024", 
+		"Semester_1_2025", "Semester_2_2025",
+	}
 	numStudents := 5  // Generate 5 students for demo
 	minCoursesPerTerm := 3
 	maxCoursesPerTerm := 6

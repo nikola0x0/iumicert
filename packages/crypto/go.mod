@@ -5,7 +5,6 @@ go 1.22
 toolchain go1.24.4
 
 require (
-	github.com/cbergoon/merkletree v0.2.0
 	github.com/ethereum/go-verkle v0.2.2
 )
 

@@ -77,6 +77,7 @@ func NewTestDataGenerator() *TestDataGenerator {
 		terms: []string{
 			"Semester_1_2023", "Semester_2_2023", "Summer_2023", 
 			"Semester_1_2024", "Semester_2_2024", "Summer_2024",
+			"Semester_1_2025", "Semester_2_2025",
 		},
 		grades: []string{"A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D"},
 		rand:   rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -193,6 +194,12 @@ func (g *TestDataGenerator) getTermDates(termID string) (time.Time, time.Time, e
 	case "Summer_2024":
 		return time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), 
 			   time.Date(2024, 7, 31, 23, 59, 59, 0, time.UTC), nil
+	case "Semester_1_2025":
+		return time.Date(2025, 8, 15, 0, 0, 0, 0, time.UTC), 
+			   time.Date(2025, 12, 20, 23, 59, 59, 0, time.UTC), nil
+	case "Semester_2_2025":
+		return time.Date(2026, 1, 8, 0, 0, 0, 0, time.UTC), 
+			   time.Date(2026, 5, 15, 23, 59, 59, 0, time.UTC), nil
 	default:
 		return time.Time{}, time.Time{}, fmt.Errorf("unknown term: %s", termID)
 	}
