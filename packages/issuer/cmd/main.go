@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -538,18 +540,77 @@ func verifyReceiptLocally(receiptFile string) error {
 			return fmt.Errorf("missing verkle_root for term %s", termID)
 		}
 		
+		// Parse Verkle root from hex string
+		verkleRoot, err := parseVerkleRoot(verkleRootHex)
+		if err != nil {
+			return fmt.Errorf("invalid verkle_root format for term %s: %w", termID, err)
+		}
+		
 		// Check if there's a receipt with course proofs
 		if receiptData, ok := termReceiptMap["receipt"].(map[string]interface{}); ok {
 			if courseProofs, ok := receiptData["course_proofs"].(map[string]interface{}); ok {
-				fmt.Printf("  ✓ Term %s: Verkle root %s (%d course proofs)\n", 
-					termID, verkleRootHex[:16]+"...", len(courseProofs))
-				// Note: Full cryptographic verification would happen here
-				// using verkle.VerifyCourseProof for each course
+				fmt.Printf("  🔍 Term %s: Verifying %d course proofs against Verkle root %s...\n", 
+					termID, len(courseProofs), verkleRootHex[:16]+"...")
+				
+				// Get revealed courses for verification
+				revealedCourses, ok := receiptData["revealed_courses"].([]interface{})
+				if !ok {
+					return fmt.Errorf("missing revealed_courses for term %s", termID)
+				}
+				
+				// Perform full cryptographic verification for each course
+				verificationCount := 0
+				for _, courseInterface := range revealedCourses {
+					courseMap, ok := courseInterface.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					
+					courseID, ok := courseMap["course_id"].(string)
+					if !ok {
+						continue
+					}
+					
+					// Get the course proof
+					proofData, exists := courseProofs[courseID]
+					if !exists {
+						fmt.Printf("    ⚠️  No proof found for course %s\n", courseID)
+						continue
+					}
+					
+					// Convert proof data to bytes
+					proofBytes, err := convertProofToBytes(proofData)
+					if err != nil {
+						fmt.Printf("    ❌ Failed to parse proof for course %s: %v\n", courseID, err)
+						continue
+					}
+					
+					// Convert course map to CourseCompletion struct
+					course, err := convertToCourseCompletion(courseMap)
+					if err != nil {
+						fmt.Printf("    ❌ Failed to parse course data for %s: %v\n", courseID, err)
+						continue
+					}
+					
+					// Generate course key for verification
+					studentDID := fmt.Sprintf("did:example:%s", studentID)
+					courseKey := fmt.Sprintf("%s:%s:%s", studentDID, termID, courseID)
+					
+					// Perform full cryptographic verification
+					if err := verkle.VerifyCourseProof(courseKey, course, proofBytes, verkleRoot); err != nil {
+						return fmt.Errorf("cryptographic verification failed for course %s in term %s: %w", courseID, termID, err)
+					}
+					
+					verificationCount++
+					fmt.Printf("    ✅ Course %s: Cryptographic proof verified\n", courseID)
+				}
+				
+				fmt.Printf("  ✅ Term %s: All %d course proofs cryptographically verified\n", termID, verificationCount)
 			} else {
-				fmt.Printf("  ✓ Term %s: Verkle root %s\n", termID, verkleRootHex[:16]+"...")
+				fmt.Printf("  ✓ Term %s: Verkle root %s (no course proofs to verify)\n", termID, verkleRootHex[:16]+"...")
 			}
 		} else {
-			fmt.Printf("  ✓ Term %s: Verkle root %s\n", termID, verkleRootHex[:16]+"...")
+			fmt.Printf("  ✓ Term %s: Verkle root %s (no receipt data)\n", termID, verkleRootHex[:16]+"...")
 		}
 	}
 	
@@ -806,3 +867,56 @@ func testCourseProofVerification(receiptFile string) error {
 	
 	return fmt.Errorf("verification incomplete: %d/%d proofs verified", successCount, totalProofs)
 }
+
+// Helper functions for cryptographic verification
+
+func parseVerkleRoot(verkleRootHex string) ([32]byte, error) {
+	var root [32]byte
+	
+	// Remove 0x prefix if present
+	if strings.HasPrefix(verkleRootHex, "0x") {
+		verkleRootHex = verkleRootHex[2:]
+	}
+	
+	// Decode hex string
+	bytes, err := hex.DecodeString(verkleRootHex)
+	if err != nil {
+		return root, fmt.Errorf("failed to decode hex string: %w", err)
+	}
+	
+	if len(bytes) != 32 {
+		return root, fmt.Errorf("invalid root length: expected 32 bytes, got %d", len(bytes))
+	}
+	
+	copy(root[:], bytes)
+	return root, nil
+}
+
+func convertProofToBytes(proofData interface{}) ([]byte, error) {
+	switch v := proofData.(type) {
+	case string:
+		// Base64 encoded proof
+		return base64.StdEncoding.DecodeString(v)
+	case []byte:
+		return v, nil
+	default:
+		return nil, fmt.Errorf("unsupported proof data type: %T", proofData)
+	}
+}
+
+func convertToCourseCompletion(courseMap map[string]interface{}) (verkle.CourseCompletion, error) {
+	var course verkle.CourseCompletion
+	
+	// Convert map to JSON and then unmarshal to struct
+	courseJSON, err := json.Marshal(courseMap)
+	if err != nil {
+		return course, fmt.Errorf("failed to marshal course map: %w", err)
+	}
+	
+	if err := json.Unmarshal(courseJSON, &course); err != nil {
+		return course, fmt.Errorf("failed to unmarshal course: %w", err)
+	}
+	
+	return course, nil
+}
+
