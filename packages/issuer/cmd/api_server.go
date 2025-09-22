@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -76,8 +77,64 @@ type SystemStatus struct {
 	} `json:"storage"`
 }
 
+// Middleware functions
+func requestLoggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		
+		// Log incoming request
+		log.Printf("📥 %s %s - %s", r.Method, r.URL.Path, r.RemoteAddr)
+		
+		// Create a response writer that captures status code
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+		
+		// Call the next handler
+		next.ServeHTTP(wrapped, r)
+		
+		// Log completed request with timing
+		duration := time.Since(start)
+		log.Printf("📤 %s %s - %d (%v)", r.Method, r.URL.Path, wrapped.statusCode, duration)
+	})
+}
+
+func requestValidationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Validate Content-Type for POST/PUT requests
+		if r.Method == "POST" || r.Method == "PUT" {
+			contentType := r.Header.Get("Content-Type")
+			if contentType != "" && !strings.HasPrefix(contentType, "application/json") {
+				respondJSON(w, http.StatusBadRequest, APIResponse{
+					Success: false, 
+					Error: "Content-Type must be application/json",
+				})
+				return
+			}
+		}
+		
+		// Validate request size (limit to 10MB)
+		r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+		
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Response writer wrapper to capture status codes
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
 func startAPIServer(port string, corsEnabled bool) error {
 	r := mux.NewRouter()
+	
+	// Apply middleware to all routes
+	r.Use(requestLoggingMiddleware)
+	r.Use(requestValidationMiddleware)
 	
 	// API routes with issuer/verifier separation
 	api := r.PathPrefix("/api").Subrouter()
