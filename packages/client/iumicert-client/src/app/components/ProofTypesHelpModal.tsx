@@ -85,9 +85,9 @@ export default function ProofTypesHelpModal({ isOpen, onClose }: ProofTypesHelpM
           </h4>
           <ol className="text-blue-200 text-sm space-y-1 font-inter list-decimal list-inside">
             <li>Upload or paste your JSON proof file in the upload area</li>
-            <li>Click "Verify Credentials" to start the verification process</li>
+            <li>Click &quot;Verify Credentials&quot; to start the verification process</li>
             <li>View detailed results including course completions and blockchain verification</li>
-            <li>Use "Copy Data" to export verification results for sharing</li>
+            <li>Use &quot;Copy Data&quot; to export verification results for sharing</li>
           </ol>
         </div>
       </div>

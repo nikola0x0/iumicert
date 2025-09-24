@@ -1,9 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
+interface Student {
+  student_id: string;
+}
+
+interface Course {
+  course_id: string;
+  course_name: string;
+  grade: string;
+  credits: number;
+  instructor: string;
+  completed_at: string;
+}
+
+interface Term {
+  courses: Course[];
+  gpa: string;
+}
+
+interface StudentJourney {
+  terms: Record<string, Term>;
+}
+
 const StudentJourneyVisualization = () => {
-  const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [studentJourney, setStudentJourney] = useState(null);
+  const [studentJourney, setStudentJourney] = useState<StudentJourney | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -157,7 +179,7 @@ const StudentJourneyVisualization = () => {
                 <div className="font-semibold text-blue-900">
                   {Object.values(studentJourney.terms || {}).length > 0 ? (
                     Object.values(studentJourney.terms || {})
-                      .reduce((sum, term) => sum + parseFloat(term.gpa || 0), 0) / 
+                      .reduce((sum, term) => sum + parseFloat(term.gpa || '0'), 0) / 
                       Object.values(studentJourney.terms || {}).length
                   ).toFixed(2) : '0.00'}
                 </div>
