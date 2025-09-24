@@ -111,6 +111,41 @@ class ApiService {
     });
   }
 
+  async verifyCourse(data: {
+    receipt: any;
+    course_id: string;
+    term_id: string;
+  }): Promise<{ 
+    verified: boolean; 
+    course: any; 
+    term_id: string;
+    verkle_root: string;
+    proof_exists: boolean;
+    verification_details: {
+      ipa_verified: boolean;
+      state_diff_verified: boolean;
+      blockchain_anchored: boolean;
+    };
+    verification_error?: string;
+  }> {
+    return this.request<{
+      verified: boolean; 
+      course: any; 
+      term_id: string;
+      verkle_root: string;
+      proof_exists: boolean;
+      verification_details: {
+        ipa_verified: boolean;
+        state_diff_verified: boolean;
+        blockchain_anchored: boolean;
+      };
+      verification_error?: string;
+    }>('/api/receipts/verify-course', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Blockchain operations
   async publishRoots(data: {
     merkle_root: string;

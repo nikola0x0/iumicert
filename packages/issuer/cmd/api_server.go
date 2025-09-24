@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,6 +13,8 @@ import (
 	"time"
 
 	"iumicert/crypto/verkle"
+	blockchain_integration "iumicert/issuer/blockchain_integration"
+	"iumicert/issuer/config"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -594,8 +597,8 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Get the Verkle root
-	verkleRootHex, ok := termData["verkle_root"].(string)
+	// Get the Verkle root from the receipt (for initial check)
+	localVerkleRootHex, ok := termData["verkle_root"].(string)
 	if !ok {
 		respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
@@ -603,6 +606,16 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	
+	// 🔗 SECURITY: Verify root against blockchain smart contract
+	log.Printf("🔍 Fetching Verkle root from blockchain for term: %s", request.TermID)
+	
+	// TODO: Add blockchain verification here
+	// For now, we'll verify against the local root but log the security concern
+	log.Printf("⚠️ SECURITY NOTICE: Currently using local root, should verify against blockchain")
+	log.Printf("📋 Local root: %s", localVerkleRootHex)
+	
+	verkleRootHex := localVerkleRootHex
 	
 	// Get the receipt data
 	receiptData, ok := termData["receipt"].(map[string]interface{})
@@ -624,11 +637,21 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	proofData, ok := courseProofs[request.CourseID].(string)
+	proofDataRaw, ok := courseProofs[request.CourseID]
 	if !ok {
 		respondJSON(w, http.StatusNotFound, APIResponse{
 			Success: false,
 			Error: fmt.Sprintf("No proof found for course %s", request.CourseID),
+		})
+		return
+	}
+	
+	// Convert proof data to JSON bytes (now that we store JSON directly)
+	proofBytes, err := json.Marshal(proofDataRaw)
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("Failed to serialize proof data: %v", err),
 		})
 		return
 	}
@@ -653,10 +676,136 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Return verification result
-	// The actual cryptographic verification happens in the crypto/verkle package
-	// This API just coordinates the verification
+	// Perform actual cryptographic verification
+	log.Printf("🔍 Starting cryptographic verification for course %s", request.CourseID)
 	
+	// Use the exact course data from revealed_courses to ensure data consistency
+	// This preserves the exact serialization format used during proof generation
+	var course verkle.CourseCompletion
+	courseInfoJSON, err := json.Marshal(courseInfo)
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("Failed to serialize course info: %v", err),
+		})
+		return
+	}
+	
+	err = json.Unmarshal(courseInfoJSON, &course)
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("Failed to deserialize course data: %v", err),
+		})
+		return
+	}
+	
+	// SECURITY: Verify Verkle root exists on blockchain before using it for verification
+	log.Printf("🔗 Verifying Verkle root exists on blockchain: %s", verkleRootHex)
+	
+	// Initialize blockchain integration
+	ctx := context.Background()
+	blockchainVerified := false
+	
+	// Load configuration
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Printf("❌ Failed to load configuration: %v", err)
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error: "Blockchain configuration error - cannot verify receipt",
+		})
+		return
+	}
+	
+	if cfg.ContractAddress == "" || cfg.IssuerPrivateKey == "" {
+		log.Printf("❌ Missing blockchain configuration (IUMICERT_CONTRACT_ADDRESS or ISSUER_PRIVATE_KEY)")
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error: "Blockchain configuration missing - cannot verify receipt",
+		})
+		return
+	}
+	
+	blockchainIntegration, err := blockchain_integration.NewBlockchainIntegration(cfg.Network, cfg.IssuerPrivateKey, cfg.ContractAddress)
+	if err != nil {
+		log.Printf("❌ Failed to initialize blockchain integration: %v", err)
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("Blockchain connection failed: %v", err),
+		})
+		return
+	}
+	
+	// Fetch term root info from blockchain to verify it exists
+	termRootInfo, err := blockchainIntegration.GetTermRootInfo(ctx, verkleRootHex)
+	if err != nil {
+		log.Printf("❌ Failed to get term root info from blockchain: %v", err)
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("Verkle root not found on blockchain: %v", err),
+		})
+		return
+	}
+	
+	if !termRootInfo.Exists {
+		log.Printf("❌ Verkle root does not exist on blockchain: %s", verkleRootHex)
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error: "Verkle root not published on blockchain - invalid receipt",
+		})
+		return
+	}
+	
+	blockchainVerified = true
+	log.Printf("✅ Verkle root verified on blockchain: term=%s, students=%d, published_at=%d", 
+		termRootInfo.TermID, termRootInfo.TotalStudents, termRootInfo.PublishedAt)
+	
+	// Convert verified verkle root hex to bytes
+	var verkleRootBytes [32]byte
+	if verkleRootHex[:2] == "0x" {
+		verkleRootHex = verkleRootHex[2:]
+	}
+	for i := 0; i < 32 && i*2 < len(verkleRootHex); i++ {
+		fmt.Sscanf(verkleRootHex[i*2:i*2+2], "%02x", &verkleRootBytes[i])
+	}
+	
+	// Create course key for verification
+	courseKey := fmt.Sprintf("did:example:%s:%s:%s", course.StudentID, course.TermID, course.CourseID)
+	
+	// The proof data from receipts is JSON, we already have it as bytes
+	
+	// Perform the actual cryptographic verification with blockchain-verified root
+	verificationErr := verkle.VerifyCourseProof(courseKey, course, proofBytes, verkleRootBytes)
+	
+	ipaPassed := verificationErr == nil
+	if !ipaPassed {
+		log.Printf("❌ IPA verification failed for course %s: %v", request.CourseID, verificationErr)
+	} else {
+		log.Printf("✅ IPA verification successful for course %s", request.CourseID)
+	}
+	
+	// Return verification result - only succeed if both blockchain AND IPA verification pass
+	if !ipaPassed {
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("IPA verification failed: %v", verificationErr),
+			Data: map[string]interface{}{
+				"course": courseInfo,
+				"term_id": request.TermID,
+				"verkle_root": verkleRootHex,
+				"proof_exists": len(proofBytes) > 0,
+				"verification_details": map[string]interface{}{
+					"ipa_verified": false,
+					"state_diff_verified": false,
+					"blockchain_anchored": blockchainVerified,
+				},
+			},
+		})
+		return
+	}
+
+	// Both blockchain and IPA verification passed
 	respondJSON(w, http.StatusOK, APIResponse{
 		Success: true,
 		Data: map[string]interface{}{
@@ -664,11 +813,11 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 			"course": courseInfo,
 			"term_id": request.TermID,
 			"verkle_root": verkleRootHex,
-			"proof_exists": len(proofData) > 0,
+			"proof_exists": len(proofBytes) > 0,
 			"verification_details": map[string]interface{}{
 				"ipa_verified": true,
 				"state_diff_verified": true,
-				"blockchain_anchored": true,
+				"blockchain_anchored": blockchainVerified,
 			},
 		},
 	})
@@ -975,3 +1124,4 @@ func init() {
 	serveCmd.Flags().Bool("cors", true, "Enable CORS for React development")
 	rootCmd.AddCommand(serveCmd)
 }
+

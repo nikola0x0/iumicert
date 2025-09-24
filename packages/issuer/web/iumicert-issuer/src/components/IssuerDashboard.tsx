@@ -19,7 +19,7 @@ export function IssuerDashboard() {
   const { isConnected, address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [activeTab, setActiveTab] = useState<
-    "terms" | "receipts" | "blockchain" | "status"
+    "terms" | "receipts" | "blockchain" | "verify" | "status"
   >("terms");
   const [terms, setTerms] = useState<Term[]>([]);
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
@@ -105,7 +105,8 @@ export function IssuerDashboard() {
           <nav className="-mb-px flex space-x-8">
             {[
               { id: "terms", name: "Terms & Students", icon: "📚" },
-              { id: "receipts", name: "Receipts & Verification", icon: "🎓" },
+              { id: "receipts", name: "Receipt Generation", icon: "🎓" },
+              { id: "verify", name: "IPA Verification", icon: "🔐" },
               { id: "blockchain", name: "Blockchain Operations", icon: "⛓️" },
               { id: "status", name: "System Status", icon: "🔧" },
             ].map((tab) => (
@@ -142,6 +143,7 @@ export function IssuerDashboard() {
                 isLoading={isLoading}
               />
             )}
+            {activeTab === "verify" && <VerificationTab />}
             {activeTab === "blockchain" && <BlockchainTab terms={terms} />}
             {activeTab === "status" && (
               <StatusTab systemStatus={systemStatus} />
@@ -1066,6 +1068,294 @@ function BlockchainTab({ terms }: { terms: Term[] }) {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function VerificationTab() {
+  const [receiptFile, setReceiptFile] = useState<any>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [selectedTerm, setSelectedTerm] = useState<string>("");
+  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleReceiptUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const receipt = JSON.parse(e.target?.result as string);
+        setReceiptFile(receipt);
+        setVerificationResult(null);
+        setSelectedCourse("");
+        setSelectedTerm("");
+      } catch (error) {
+        alert("Invalid receipt file format");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleVerifyCourse = async () => {
+    if (!receiptFile || !selectedCourse || !selectedTerm) {
+      alert("Please select receipt file, term, and course first");
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const result = await apiService.verifyCourse({
+        receipt: receiptFile,
+        course_id: selectedCourse,
+        term_id: selectedTerm,
+      });
+      setVerificationResult(result);
+    } catch (error: any) {
+      console.error("Course verification failed:", error);
+      setVerificationResult({
+        verified: false,
+        verification_error: error.message || "Verification failed",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const getAvailableTerms = () => {
+    if (!receiptFile?.term_receipts) return [];
+    return Object.keys(receiptFile.term_receipts);
+  };
+
+  const getAvailableCourses = () => {
+    if (!receiptFile?.term_receipts?.[selectedTerm]?.receipt?.revealed_courses) return [];
+    return receiptFile.term_receipts[selectedTerm].receipt.revealed_courses;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-2xl">🔐</span>
+          <div>
+            <h2 className="text-lg font-medium text-gray-900">IPA Verification</h2>
+            <p className="text-sm text-gray-600">
+              Upload student receipts and verify specific courses using Verkle proofs with blockchain anchoring
+            </p>
+          </div>
+        </div>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-medium text-blue-900 mb-2">🎯 Verification Process:</h3>
+          <ol className="text-sm text-blue-800 space-y-1">
+            <li><strong>1.</strong> Upload student receipt JSON file</li>
+            <li><strong>2.</strong> Select term and course to verify</li>
+            <li><strong>3.</strong> System performs cryptographic IPA verification</li>
+            <li><strong>4.</strong> Checks Verkle root exists on Sepolia blockchain</li>
+            <li><strong>5.</strong> Returns verification status with proof details</li>
+          </ol>
+        </div>
+      </div>
+
+      {/* Receipt Upload */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">📋 Upload Student Receipt</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Receipt JSON File
+            </label>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleReceiptUpload}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100"
+            />
+          </div>
+
+          {receiptFile && (
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h4 className="font-medium text-gray-900 mb-2">Receipt Details</h4>
+              <p className="text-sm text-gray-600">
+                <strong>Student ID:</strong> {receiptFile.student_id}
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>Terms:</strong> {getAvailableTerms().length} available
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>Status:</strong> {receiptFile.blockchain_ready ? "✅ Blockchain Ready" : "⚠️ Not Ready"}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Course Selection */}
+      {receiptFile && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">🎯 Select Course to Verify</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Term</label>
+              <select
+                value={selectedTerm}
+                onChange={(e) => {
+                  setSelectedTerm(e.target.value);
+                  setSelectedCourse("");
+                }}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a term...</option>
+                {getAvailableTerms().map((term) => (
+                  <option key={term} value={term}>{term}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                disabled={!selectedTerm}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              >
+                <option value="">Select a course...</option>
+                {getAvailableCourses().map((course: any) => (
+                  <option key={course.course_id} value={course.course_id}>
+                    {course.course_id} - {course.course_name} ({course.grade})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <button
+              onClick={handleVerifyCourse}
+              disabled={!receiptFile || !selectedCourse || !selectedTerm || isVerifying}
+              className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isVerifying ? "🔄 Verifying..." : "🔐 Verify Course with IPA"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Verification Results */}
+      {verificationResult && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">📊 Verification Results</h3>
+          
+          <div className={`p-4 rounded-lg border-2 ${
+            verificationResult.verified 
+              ? "bg-green-50 border-green-200" 
+              : "bg-red-50 border-red-200"
+          }`}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl">
+                {verificationResult.verified ? "✅" : "❌"}
+              </span>
+              <h4 className={`font-medium ${
+                verificationResult.verified ? "text-green-900" : "text-red-900"
+              }`}>
+                {verificationResult.verified ? "Course Verification Successful" : "Course Verification Failed"}
+              </h4>
+            </div>
+
+            {verificationResult.verified && verificationResult.course && (
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-700">
+                  <strong>Course:</strong> {verificationResult.course.course_name} ({verificationResult.course.course_id})
+                </p>
+                <p className="text-gray-700">
+                  <strong>Grade:</strong> {verificationResult.course.grade} | 
+                  <strong> Credits:</strong> {verificationResult.course.credits}
+                </p>
+                <p className="text-gray-700">
+                  <strong>Instructor:</strong> {verificationResult.course.instructor}
+                </p>
+                <p className="text-gray-700">
+                  <strong>Verkle Root:</strong> <code className="text-xs">{verificationResult.verkle_root}</code>
+                </p>
+              </div>
+            )}
+
+            {verificationResult.verification_details && (
+              <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+                <div className={`text-center p-2 rounded ${
+                  verificationResult.verification_details.ipa_verified 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  <div className="font-medium">IPA Verification</div>
+                  <div>{verificationResult.verification_details.ipa_verified ? "✅ Passed" : "❌ Failed"}</div>
+                </div>
+                <div className={`text-center p-2 rounded ${
+                  verificationResult.verification_details.state_diff_verified 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  <div className="font-medium">State Diff</div>
+                  <div>{verificationResult.verification_details.state_diff_verified ? "✅ Verified" : "❌ Failed"}</div>
+                </div>
+                <div className={`text-center p-2 rounded ${
+                  verificationResult.verification_details.blockchain_anchored 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-yellow-100 text-yellow-800"
+                }`}>
+                  <div className="font-medium">Blockchain</div>
+                  <div>{verificationResult.verification_details.blockchain_anchored ? "✅ Anchored" : "⚠️ Not Found"}</div>
+                </div>
+              </div>
+            )}
+
+            {verificationResult.verification_error && (
+              <div className="mt-3 p-3 bg-red-100 border border-red-200 rounded text-sm">
+                <p className="font-medium text-red-900">Error Details:</p>
+                <p className="text-red-800">{verificationResult.verification_error}</p>
+              </div>
+            )}
+          </div>
+
+          {verificationResult.verified && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h5 className="font-medium text-blue-900 mb-2">🎓 Verification Summary</h5>
+              <p className="text-sm text-blue-800">
+                This cryptographic verification proves that student <strong>{receiptFile.student_id}</strong> 
+                successfully completed <strong>{selectedCourse}</strong> in <strong>{selectedTerm}</strong> 
+                with the grade and details shown above. The verification uses:
+              </p>
+              <ul className="text-sm text-blue-800 mt-2 space-y-1">
+                <li>• <strong>IPA (Inner Product Arguments):</strong> Zero-knowledge proof verification</li>
+                <li>• <strong>Verkle Trees:</strong> Cryptographic commitment to course data</li>
+                <li>• <strong>Blockchain Anchoring:</strong> Immutable record on Ethereum Sepolia</li>
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Quick Test */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">🧪 Quick Test</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          For demo purposes, you can test with the existing receipt file:
+        </p>
+        <code className="text-xs bg-gray-100 p-2 rounded block">
+          publish_ready/receipts/ITITIU00001_journey.json
+        </code>
+        <p className="text-xs text-gray-500 mt-2">
+          This receipt contains verified courses for student ITITIU00001 across multiple terms.
+        </p>
       </div>
     </div>
   );
