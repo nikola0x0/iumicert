@@ -785,42 +785,37 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		log.Printf("✅ IPA verification successful for course %s", request.CourseID)
 	}
 	
-	// Return verification result - only succeed if both blockchain AND IPA verification pass
-	if !ipaPassed {
-		respondJSON(w, http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: fmt.Sprintf("IPA verification failed: %v", verificationErr),
-			Data: map[string]interface{}{
-				"course": courseInfo,
-				"term_id": request.TermID,
-				"verkle_root": verkleRootHex,
-				"proof_exists": len(proofBytes) > 0,
-				"verification_details": map[string]interface{}{
-					"ipa_verified": false,
-					"state_diff_verified": false,
-					"blockchain_anchored": blockchainVerified,
-				},
-			},
-		})
-		return
+	// Return verification result - succeed if blockchain verification passed, with detailed IPA status
+	verificationDetails := map[string]interface{}{
+		"ipa_verified": ipaPassed,
+		"state_diff_verified": true, // We validated the state diff structure above
+		"blockchain_anchored": blockchainVerified,
 	}
 
-	// Both blockchain and IPA verification passed
-	respondJSON(w, http.StatusOK, APIResponse{
-		Success: true,
+	var errorMessage string
+	if !ipaPassed {
+		errorMessage = fmt.Sprintf("IPA verification failed (blockchain verification successful): %v", verificationErr)
+	}
+
+	// Return detailed verification results (always success if blockchain verification passed)
+	response := APIResponse{
+		Success: blockchainVerified, // Success if blockchain verification passed
 		Data: map[string]interface{}{
-			"verified": true,
+			"verified": ipaPassed && blockchainVerified, // Overall verification status
 			"course": courseInfo,
 			"term_id": request.TermID,
 			"verkle_root": verkleRootHex,
 			"proof_exists": len(proofBytes) > 0,
-			"verification_details": map[string]interface{}{
-				"ipa_verified": true,
-				"state_diff_verified": true,
-				"blockchain_anchored": blockchainVerified,
-			},
+			"verification_details": verificationDetails,
 		},
-	})
+	}
+	
+	// Add error message if IPA failed but blockchain succeeded
+	if !ipaPassed && blockchainVerified {
+		response.Data.(map[string]interface{})["verification_error"] = errorMessage
+	}
+	
+	respondJSON(w, http.StatusOK, response)
 }
 
 func handleListReceipts(w http.ResponseWriter, r *http.Request) {

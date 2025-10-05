@@ -120,6 +120,7 @@ func (tvt *TermVerkleTree) GenerateCourseProof(studentDID, courseID string) ([]b
 	}
 	
 	// Generate proper Verkle proof using MakeVerkleMultiProof (following Duc's approach)
+	// Use nil for pre-state for membership proofs (no state transition)
 	proof, _, _, _, err := verkleLib.MakeVerkleMultiProof(tvt.tree, nil, [][]byte{courseKeyHash[:]}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate verkle proof for course %s: %w", courseID, err)
@@ -360,9 +361,10 @@ func VerifyCourseProof(courseKey string, course CourseCompletion, proofData []by
 		}
 	}
 	
-	// For membership proofs in Verkle trees, we typically verify against the current state
-	// The StateDiff should show the current value, not a transition
-	err = verkleLib.Verify(proofBundle.VerkleProof, verkleRoot[:], verkleRoot[:], proofBundle.StateDiff)
+	// For membership proofs in Verkle trees, we verify from empty state to current state
+	// This matches how the proof was generated with empty pre-state
+	emptyRoot := make([]byte, 32)
+	err = verkleLib.Verify(proofBundle.VerkleProof, emptyRoot, verkleRoot[:], proofBundle.StateDiff)
 	if err != nil {
 		log.Printf("❌ IPA verification failed for course %s: %v", course.CourseID, err)
 		return fmt.Errorf("cryptographic IPA verification failed for course %s: %w", course.CourseID, err)

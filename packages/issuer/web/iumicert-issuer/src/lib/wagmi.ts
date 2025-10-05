@@ -20,7 +20,7 @@ export const config = createConfig(
     appName: "IU-MiCert Issuer",
     appDescription:
       "Academic credential issuance system with blockchain integration",
-    appUrl: "http://localhost:3000",
+    appUrl: "http://localhost:3001",
     appIcon: "/next.svg",
   })
 );
