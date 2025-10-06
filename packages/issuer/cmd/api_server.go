@@ -181,7 +181,7 @@ func startAPIServer(port string, corsEnabled bool) error {
 	var handler http.Handler = r
 	if corsEnabled {
 		c := cors.New(cors.Options{
-			AllowedOrigins: []string{"http://localhost:3000", "http://localhost:5173"}, // React dev servers
+			AllowedOrigins: []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:5173"}, // React dev servers
 			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowedHeaders: []string{"*"},
 			AllowCredentials: true,
