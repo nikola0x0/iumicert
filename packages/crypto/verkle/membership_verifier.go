@@ -93,9 +93,10 @@ func VerifyMembershipProof(proof *verkleLib.VerkleProof, stateDiff verkleLib.Sta
 
 	// Verify the pre-state tree root matches our expected root
 	reconstructedRoot := preStateTree.Commit()
-	if !bytes.Equal(reconstructedRoot.Bytes()[:], treeRoot[:]) {
+	reconstructedRootBytes := reconstructedRoot.Bytes()
+	if !bytes.Equal(reconstructedRootBytes[:], treeRoot[:]) {
 		return fmt.Errorf("IPA verification failed: root mismatch %x != %x",
-			reconstructedRoot.Bytes(), treeRoot)
+			reconstructedRootBytes, treeRoot)
 	}
 
 	log.Printf("✅ Full IPA membership proof verification successful")

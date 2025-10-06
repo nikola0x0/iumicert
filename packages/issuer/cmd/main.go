@@ -578,8 +578,8 @@ func verifyReceiptLocally(receiptFile string) error {
 						continue
 					}
 					
-					// Convert proof data to bytes
-					proofBytes, err := convertProofToBytes(proofData)
+						// Convert proof data (map) to JSON bytes
+					proofBytes, err := json.Marshal(proofData)
 					if err != nil {
 						fmt.Printf("    ❌ Failed to parse proof for course %s: %v\n", courseID, err)
 						continue

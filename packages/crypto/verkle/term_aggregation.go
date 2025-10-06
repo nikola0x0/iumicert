@@ -363,22 +363,20 @@ func VerifyCourseProof(courseKey string, course CourseCompletion, proofData []by
 		}
 	}
 	
-	// For membership proofs (following Duc's approach):
-	// We've already verified:
-	// 1. The blockchain-anchored root matches the receipt
-	// 2. The StateDiff contains the correct key-value pair
-	//
-	// NOTE: Full IPA verification using verkleLib.Verify() is complex for membership proofs
-	// because it expects state transitions. For membership proofs where pre==post root,
-	// the cryptographic verification is implicitly done by checking the StateDiff contents
-	// against expected values, which we've already done above.
-	//
-	// Duc's implementation (VerifySuppliedVerkleProof) also skips full IPA verification
-	// and focuses on StateDiff content validation (see line 263 in his code).
+	// Perform full IPA verification using go-verkle's internal API
+	// This cryptographically proves that the StateDiff matches the VerkleProof
+	err = VerifyMembershipProof(
+		proofBundle.VerkleProof,
+		proofBundle.StateDiff,
+		verkleRoot,
+		[][]byte{courseKeyHash[:]},
+		[][32]byte{courseValueHash},
+	)
+	if err != nil {
+		return fmt.Errorf("IPA membership proof verification failed: %w", err)
+	}
 
-	log.Printf("✅ Membership proof verification successful for course %s", course.CourseID)
-	log.Printf("   - Blockchain root verified: %x", verkleRoot)
-	log.Printf("   - StateDiff validated: key and value match")
+	log.Printf("✅ Full IPA membership proof verification successful for course %s", course.CourseID)
 	return nil
 }
 
