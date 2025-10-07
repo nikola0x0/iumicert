@@ -37,7 +37,40 @@ mkdir -p publish_ready/{receipts,roots,proofs,transactions}
 
 echo -e "${GREEN}✅ All data cleared and directories recreated${NC}"
 
-# Step 2: Show clean structure
+# Step 2: Reset database
+echo -e "\n${YELLOW}🗄️  Step 2: Resetting database...${NC}"
+
+# Check if database is available
+if docker ps | grep -q iumicert-postgres; then
+    echo -e "  ${BLUE}Dropping and recreating database tables...${NC}"
+
+    # Drop all tables
+    docker exec iumicert-postgres psql -U iumicert -d iumicert -c "
+    DROP TABLE IF EXISTS verification_logs CASCADE;
+    DROP TABLE IF EXISTS blockchain_transactions CASCADE;
+    DROP TABLE IF EXISTS accumulated_receipts CASCADE;
+    DROP TABLE IF EXISTS term_receipts CASCADE;
+    DROP TABLE IF EXISTS terms CASCADE;
+    DROP TABLE IF EXISTS students CASCADE;
+    " > /dev/null 2>&1
+
+    # Run migrations to recreate tables
+    cd cmd
+    go run . migrate > /dev/null 2>&1
+    cd ..
+
+    if [ $? -eq 0 ]; then
+        echo -e "  ${GREEN}✅ Database reset complete (all tables recreated)${NC}"
+    else
+        echo -e "  ${RED}❌ Database migration failed${NC}"
+        echo -e "  ${YELLOW}⚠️  Continuing with file system reset...${NC}"
+    fi
+else
+    echo -e "  ${YELLOW}⚠️  PostgreSQL not running - skipping database reset${NC}"
+    echo -e "  ${BLUE}Start database with: docker compose up -d postgres${NC}"
+fi
+
+# Step 3: Show clean structure
 echo -e "\n${BLUE}📊 Clean Directory Structure:${NC}"
 echo -e "${BLUE}==============================${NC}"
 echo -e "${BLUE}📁 data/${NC}"

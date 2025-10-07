@@ -21,9 +21,36 @@ export interface Receipt {
   created_at: string;
 }
 
+export interface TermReceipt {
+  ID: number;
+  ReceiptID: string;
+  StudentID: string;
+  TermID: string;
+  VerkleProof: any;
+  RevealedCourses: Course[];
+  CourseCount: number;
+  VerkleRootHex: string;
+  GeneratedAt: string;
+  IsSelective: boolean;
+}
+
+export interface AccumulatedReceipt {
+  AccumulatedReceiptID: string;
+  StudentID: string;
+  Type: string;
+  CompletedTerms: number;
+  TotalCourses: number;
+  TotalCredits: number;
+  GPA: number;
+  AllCourses: any;
+  GeneratedAt: string;
+}
+
 export interface Course {
-  id: string;
-  name: string;
+  id?: string;
+  course_id?: string;
+  name?: string;
+  course_name?: string;
   grade: string;
   credits: number;
 }
@@ -178,17 +205,95 @@ class ApiService {
     try {
       const url = `${API_BASE_URL}/api/health`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         return { status: 'error', timestamp: new Date().toISOString() };
       }
-      
+
       // Health endpoint might return plain text or different format
       const result = await response.json();
       return result.data || result;
     } catch (error) {
       return { status: 'error', timestamp: new Date().toISOString() };
     }
+  }
+
+  // Database-backed receipt endpoints
+  async getStudentLatestReceipts(studentId: string): Promise<{
+    student_id: string;
+    count: number;
+    receipts: TermReceipt[];
+  }> {
+    return this.request<{
+      student_id: string;
+      count: number;
+      receipts: TermReceipt[];
+    }>(`/api/issuer/students/${studentId}/receipts/latest`);
+  }
+
+  async getStudentAccumulatedReceipt(studentId: string): Promise<{
+    student_id: string;
+    receipt: AccumulatedReceipt;
+  }> {
+    return this.request<{
+      student_id: string;
+      receipt: AccumulatedReceipt;
+    }>(`/api/issuer/students/${studentId}/receipts/accumulated`);
+  }
+
+  async getStudentTermReceipt(studentId: string, termId: string): Promise<{
+    student_id: string;
+    term_id: string;
+    receipt: TermReceipt;
+  }> {
+    return this.request<{
+      student_id: string;
+      term_id: string;
+      receipt: TermReceipt;
+    }>(`/api/issuer/students/${studentId}/receipts/term/${termId}`);
+  }
+
+  // Full IPA verification
+  async verifyReceiptIPA(receipt: any): Promise<{
+    status: string;
+    student_id: string;
+    total_courses: number;
+    verified_courses: number;
+    failed_courses: number;
+    failed_list: string[];
+    term_results: Record<string, any>;
+    computation_note: string;
+  }> {
+    return this.request<{
+      status: string;
+      student_id: string;
+      total_courses: number;
+      verified_courses: number;
+      failed_courses: number;
+      failed_list: string[];
+      term_results: Record<string, any>;
+      computation_note: string;
+    }>('/api/verifier/ipa-verify', {
+      method: 'POST',
+      body: JSON.stringify({ receipt }),
+    });
+  }
+
+  // Student list
+  async getStudents(): Promise<Array<{
+    student_id: string;
+    name: string;
+    did: string;
+    enrollment_date: string;
+    status: string;
+  }>> {
+    return this.request<Array<{
+      student_id: string;
+      name: string;
+      did: string;
+      enrollment_date: string;
+      status: string;
+    }>>('/api/issuer/students');
   }
 }
 

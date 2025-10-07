@@ -78,7 +78,26 @@ done
 
 echo -e "${GREEN}✅ Generated ${generated_receipts}/${#students[@]} receipts successfully${NC}"
 
-# Step 4: Show comprehensive summary
+# Step 4: Import data into database
+echo -e "\n${YELLOW}🗄️  Step 4: Importing data into database...${NC}"
+
+# Check if database is available
+if docker ps | grep -q iumicert-postgres; then
+    cd cmd
+    go run . db-import
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Data imported into PostgreSQL${NC}"
+    else
+        echo -e "${RED}❌ Failed to import data into database${NC}"
+        echo -e "${YELLOW}⚠️  Continuing with file-based data...${NC}"
+    fi
+    cd ..
+else
+    echo -e "${YELLOW}⚠️  PostgreSQL not running - skipping database import${NC}"
+    echo -e "${BLUE}Tip: Start database with 'docker compose up -d postgres'${NC}"
+fi
+
+# Step 5: Show comprehensive summary
 echo -e "\n${BLUE}📊 Single Verkle System Summary${NC}"
 echo -e "${BLUE}================================${NC}"
 

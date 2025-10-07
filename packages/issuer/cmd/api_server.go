@@ -15,6 +15,7 @@ import (
 	"iumicert/crypto/verkle"
 	blockchain_integration "iumicert/issuer/blockchain_integration"
 	"iumicert/issuer/config"
+	"iumicert/issuer/database"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -160,11 +161,17 @@ func startAPIServer(port string, corsEnabled bool) error {
 	issuer.HandleFunc("/students", handleListStudents).Methods("GET")
 	issuer.HandleFunc("/students/{student_id}/terms", handleGetStudentTerms).Methods("GET")
 	issuer.HandleFunc("/students/{student_id}/journey", handleGetStudentJourney).Methods("GET")
-	
+
+	// Database-backed receipt endpoints (NEW)
+	issuer.HandleFunc("/students/{student_id}/receipts/latest", handleGetLatestReceipts).Methods("GET")
+	issuer.HandleFunc("/students/{student_id}/receipts/accumulated", handleGetAccumulatedReceipt).Methods("GET")
+	issuer.HandleFunc("/students/{student_id}/receipts/term/{term_id}", handleGetTermReceipt).Methods("GET")
+
 	// Verifier endpoints (public - for students/employers)
 	verifier := api.PathPrefix("/verifier").Subrouter()
 	verifier.HandleFunc("/receipt", handleVerifyReceipt).Methods("POST")
 	verifier.HandleFunc("/course", handleVerifyCourse).Methods("POST")
+	verifier.HandleFunc("/ipa-verify", handleIPAVerify).Methods("POST")  // Full IPA cryptographic verification
 	verifier.HandleFunc("/receipt/{receipt_id}", handleGetReceiptByID).Methods("GET")
 	verifier.HandleFunc("/journey/{student_id}", handleGetStudentJourney).Methods("GET")
 	verifier.HandleFunc("/blockchain/transaction/{tx_hash}", handleGetTransaction).Methods("GET")
@@ -1029,29 +1036,43 @@ func handleGetTransaction(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleListStudents(w http.ResponseWriter, r *http.Request) {
-	students := []map[string]interface{}{}
-	
-	// Get students from generated data if available
-	if files, err := filepath.Glob("data/generated_student_data/students/journey_*.json"); err == nil {
-		for _, file := range files {
-			if studentData, err := os.ReadFile(file); err == nil {
-				var student map[string]interface{}
-				if err := json.Unmarshal(studentData, &student); err == nil {
-					// Extract student ID from filename
-					filename := filepath.Base(file)
-					studentID := strings.TrimSuffix(strings.TrimPrefix(filename, "journey_"), ".json")
-					
-					students = append(students, map[string]interface{}{
-						"student_id": studentID,
-						"student_did": student["student_id"],
-						"terms": getTermsFromStudent(student),
-					})
-				}
-			}
-		}
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   "Database connection failed",
+		})
+		return
 	}
-	
-	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: students})
+	defer database.Close(db)
+
+	repo := database.NewReceiptRepository(db)
+
+	// Get all students from database
+	students, err := repo.GetAllStudents()
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to fetch students: %v", err),
+		})
+		return
+	}
+
+	// Format response
+	studentList := make([]map[string]interface{}, 0, len(students))
+	for _, student := range students {
+		studentList = append(studentList, map[string]interface{}{
+			"student_id":      student.StudentID,
+			"name":            student.Name,
+			"did":             student.DID,
+			"enrollment_date": student.EnrollmentDate.Format(time.RFC3339),
+			"expected_grad":   student.ExpectedGraduation.Format(time.RFC3339),
+			"status":          student.Status,
+		})
+	}
+
+	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: studentList})
 }
 
 func handleGetStudentTerms(w http.ResponseWriter, r *http.Request) {
@@ -1112,6 +1133,340 @@ func respondJSON(w http.ResponseWriter, status int, response APIResponse) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(response)
+}
+
+// ========== NEW DATABASE-BACKED RECEIPT ENDPOINTS ==========
+
+// handleGetLatestReceipts returns the latest term receipts for a student
+func handleGetLatestReceipts(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	studentID := vars["student_id"]
+
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   "Database connection failed",
+		})
+		return
+	}
+	defer database.Close(db)
+
+	// Get all term receipts for this student
+	var receipts []*database.TermReceipt
+	err = db.Where("student_id = ?", studentID).
+		Order("generated_at DESC").
+		Find(&receipts).Error
+
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to fetch receipts: %v", err),
+		})
+		return
+	}
+
+	if len(receipts) == 0 {
+		respondJSON(w, http.StatusNotFound, APIResponse{
+			Success: false,
+			Error:   "No receipts found for student",
+		})
+		return
+	}
+
+	respondJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"student_id": studentID,
+			"count":      len(receipts),
+			"receipts":   receipts,
+		},
+	})
+}
+
+// handleGetAccumulatedReceipt returns the full academic journey receipt for a student
+func handleGetAccumulatedReceipt(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	studentID := vars["student_id"]
+
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   "Database connection failed",
+		})
+		return
+	}
+	defer database.Close(db)
+
+	repo := database.NewReceiptRepository(db)
+
+	// Get or generate accumulated receipt
+	accumulated, err := repo.GetCurrentProgressReceipt(studentID)
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to generate accumulated receipt: %v", err),
+		})
+		return
+	}
+
+	respondJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"student_id": studentID,
+			"receipt":    accumulated,
+		},
+	})
+}
+
+// handleGetTermReceipt returns a specific term receipt for a student
+func handleGetTermReceipt(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	studentID := vars["student_id"]
+	termID := vars["term_id"]
+
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   "Database connection failed",
+		})
+		return
+	}
+	defer database.Close(db)
+
+	// Get the term receipt
+	var receipt database.TermReceipt
+	err = db.Where("student_id = ? AND term_id = ?", studentID, termID).
+		First(&receipt).Error
+
+	if err != nil {
+		respondJSON(w, http.StatusNotFound, APIResponse{
+			Success: false,
+			Error:   "Receipt not found",
+		})
+		return
+	}
+
+	respondJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"student_id": studentID,
+			"term_id":    termID,
+			"receipt":    receipt,
+		},
+	})
+}
+
+// ========== IPA VERIFICATION ENDPOINT ==========
+
+// handleIPAVerify performs full IPA (Inner Product Argument) cryptographic verification
+// This is computationally intensive and verifies Verkle proofs cryptographically
+func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
+	var request struct {
+		Receipt json.RawMessage `json:"receipt"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error:   "Invalid request format",
+		})
+		return
+	}
+
+	// Parse receipt
+	var receipt map[string]interface{}
+	if err := json.Unmarshal(request.Receipt, &receipt); err != nil {
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error:   "Invalid receipt format",
+		})
+		return
+	}
+
+	// Extract student ID
+	studentID, ok := receipt["student_id"].(string)
+	if !ok {
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error:   "Missing student_id in receipt",
+		})
+		return
+	}
+
+	// Extract term receipts
+	termReceipts, ok := receipt["term_receipts"].(map[string]interface{})
+	if !ok {
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error:   "Missing term_receipts in receipt",
+		})
+		return
+	}
+
+	// Track verification results
+	verificationResults := make(map[string]interface{})
+	totalCourses := 0
+	verifiedCourses := 0
+	failedCourses := []string{}
+
+	// Verify each term
+	for termID, termDataInterface := range termReceipts {
+		termData, ok := termDataInterface.(map[string]interface{})
+		if !ok {
+			verificationResults[termID] = map[string]interface{}{
+				"status": "error",
+				"error":  "Invalid term data format",
+			}
+			continue
+		}
+
+		verkleRootHex, ok := termData["verkle_root"].(string)
+		if !ok {
+			verificationResults[termID] = map[string]interface{}{
+				"status": "error",
+				"error":  "Missing verkle_root",
+			}
+			continue
+		}
+
+		// Parse Verkle root
+		verkleRoot, err := parseVerkleRoot(verkleRootHex)
+		if err != nil {
+			verificationResults[termID] = map[string]interface{}{
+				"status": "error",
+				"error":  fmt.Sprintf("Invalid verkle_root: %v", err),
+			}
+			continue
+		}
+
+		// Get receipt data
+		receiptData, ok := termData["receipt"].(map[string]interface{})
+		if !ok {
+			verificationResults[termID] = map[string]interface{}{
+				"status": "success",
+				"note":   "No receipt data to verify",
+			}
+			continue
+		}
+
+		// Get course proofs and revealed courses
+		courseProofs, ok := receiptData["course_proofs"].(map[string]interface{})
+		if !ok {
+			verificationResults[termID] = map[string]interface{}{
+				"status": "error",
+				"error":  "Missing course_proofs",
+			}
+			continue
+		}
+
+		revealedCourses, ok := receiptData["revealed_courses"].([]interface{})
+		if !ok {
+			verificationResults[termID] = map[string]interface{}{
+				"status": "error",
+				"error":  "Missing revealed_courses",
+			}
+			continue
+		}
+
+		// Verify each course cryptographically
+		termResults := make(map[string]interface{})
+		termVerified := 0
+		termFailed := 0
+
+		for _, courseInterface := range revealedCourses {
+			courseMap, ok := courseInterface.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			courseID, ok := courseMap["course_id"].(string)
+			if !ok {
+				continue
+			}
+
+			totalCourses++
+
+			// Get course proof
+			proofData, exists := courseProofs[courseID]
+			if !exists {
+				termResults[courseID] = "no_proof"
+				termFailed++
+				failedCourses = append(failedCourses, fmt.Sprintf("%s:%s", termID, courseID))
+				continue
+			}
+
+			// Convert proof to JSON bytes
+			proofBytes, err := json.Marshal(proofData)
+			if err != nil {
+				termResults[courseID] = fmt.Sprintf("proof_parse_error: %v", err)
+				termFailed++
+				failedCourses = append(failedCourses, fmt.Sprintf("%s:%s", termID, courseID))
+				continue
+			}
+
+			// Convert course map to CourseCompletion
+			course, err := convertToCourseCompletion(courseMap)
+			if err != nil {
+				termResults[courseID] = fmt.Sprintf("course_parse_error: %v", err)
+				termFailed++
+				failedCourses = append(failedCourses, fmt.Sprintf("%s:%s", termID, courseID))
+				continue
+			}
+
+			// Generate course key
+			studentDID := fmt.Sprintf("did:example:%s", studentID)
+			courseKey := fmt.Sprintf("%s:%s:%s", studentDID, termID, courseID)
+
+			// Perform full IPA cryptographic verification
+			if err := verkle.VerifyCourseProof(courseKey, course, proofBytes, verkleRoot); err != nil {
+				termResults[courseID] = fmt.Sprintf("verification_failed: %v", err)
+				termFailed++
+				failedCourses = append(failedCourses, fmt.Sprintf("%s:%s", termID, courseID))
+				continue
+			}
+
+			termResults[courseID] = "verified"
+			termVerified++
+			verifiedCourses++
+		}
+
+		verificationResults[termID] = map[string]interface{}{
+			"status":           "completed",
+			"verkle_root":      verkleRootHex,
+			"courses_verified": termVerified,
+			"courses_failed":   termFailed,
+			"course_results":   termResults,
+		}
+	}
+
+	// Overall status
+	overallStatus := "success"
+	if len(failedCourses) > 0 {
+		overallStatus = "partial_failure"
+	}
+	if verifiedCourses == 0 && totalCourses > 0 {
+		overallStatus = "failure"
+	}
+
+	respondJSON(w, http.StatusOK, APIResponse{
+		Success: overallStatus == "success",
+		Data: map[string]interface{}{
+			"status":           overallStatus,
+			"student_id":       studentID,
+			"total_courses":    totalCourses,
+			"verified_courses": verifiedCourses,
+			"failed_courses":   len(failedCourses),
+			"failed_list":      failedCourses,
+			"term_results":     verificationResults,
+			"computation_note": "Full IPA cryptographic verification performed on backend",
+		},
+	})
 }
 
 func init() {
