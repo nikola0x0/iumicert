@@ -387,7 +387,10 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 	for _, termID := range targetTerms {
 		// Load the complete TermVerkleTree saved during term addition
     // Load the complete TermVerkleTree saved during term addition (project-level data dir)
-    verkleTreeFile := filepath.Join("..", "data", "verkle_trees", fmt.Sprintf("%s_verkle_tree.json", termID))
+    verkleTreeFile := filepath.Join("data", "verkle_trees", fmt.Sprintf("%s_verkle_tree.json", termID))
+		if _, err := os.Stat(verkleTreeFile); os.IsNotExist(err) {
+			verkleTreeFile = filepath.Join("..", "data", "verkle_trees", fmt.Sprintf("%s_verkle_tree.json", termID))
+		}
 		
 		verkleTreeData, err := os.ReadFile(verkleTreeFile)
 		if err != nil {
@@ -485,20 +488,10 @@ func generateStudentReceipt(studentID, outputFile string, terms, courses []strin
 	if err := os.WriteFile(outputFile, receiptData, 0644); err != nil {
 		return fmt.Errorf("failed to write receipt file: %w", err)
 	}
-	
-	// Also save to blockchain-ready directory for easy access
-	receiptDir := "../publish_ready/receipts"
-	blockchainFile := filepath.Join(receiptDir, fmt.Sprintf("receipt_%s_%s.json", 
-		extractStudentID(studentID), time.Now().Format("20060102_150405")))
-	
-	if err := os.WriteFile(blockchainFile, receiptData, 0644); err != nil {
-		return fmt.Errorf("failed to save blockchain-ready receipt: %w", err)
-	}
-	
+
 	fmt.Printf("💾 Receipt saved to: %s\n", outputFile)
-	fmt.Printf("💾 Blockchain-ready copy: %s\n", blockchainFile)
 	fmt.Println("✅ Receipt generated successfully!")
-	
+
 	return nil
 }
 
@@ -758,7 +751,11 @@ func loadCompletionsFromJSON(dataFile string) ([]verkle.CourseCompletion, error)
 
 func discoverStudentTerms(studentID string) ([]string, error) {
 	// Look for published Verkle tree roots to discover available terms
-	rootsDir := "../publish_ready/roots"
+	// Try both paths to handle running from different directories
+	rootsDir := "publish_ready/roots"
+	if _, err := os.Stat(rootsDir); os.IsNotExist(err) {
+		rootsDir = "../publish_ready/roots"
+	}
 	
 	var terms []string
 	err := filepath.Walk(rootsDir, func(path string, info os.FileInfo, err error) error {
@@ -777,7 +774,10 @@ func discoverStudentTerms(studentID string) ([]string, error) {
 			termID = strings.TrimSuffix(termID, ".json")
 			
 			// Check if this term has data for the requested student
-			verkleTermFile := filepath.Join("../data/verkle_terms", termID+"_completions.json")
+			verkleTermFile := filepath.Join("data/verkle_terms", termID+"_completions.json")
+			if _, err := os.Stat(verkleTermFile); os.IsNotExist(err) {
+				verkleTermFile = filepath.Join("../data/verkle_terms", termID+"_completions.json")
+			}
 			if data, err := os.ReadFile(verkleTermFile); err == nil {
 				// Check if student has courses in this term
 				if strings.Contains(string(data), fmt.Sprintf("\"student_id\": \"%s\"", extractStudentID(studentID))) {

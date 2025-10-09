@@ -421,9 +421,9 @@ func handleGetTermReceipts(w http.ResponseWriter, r *http.Request) {
 	termID := vars["term_id"]
 	
 	receipts := []map[string]interface{}{}
-	
-	// Look for all receipt files and filter by term
-	if files, err := filepath.Glob("publish_ready/receipts/receipt_*.json"); err == nil {
+
+	// Look for all journey receipt files and filter by term
+	if files, err := filepath.Glob("publish_ready/receipts/*_journey.json"); err == nil {
 		for _, file := range files {
 			if receiptData, err := os.ReadFile(file); err == nil {
 				var receiptFile map[string]interface{}
@@ -551,6 +551,15 @@ func handleUpdateTermBlockchainStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("✅ Updated %d term receipts for %s with blockchain info (tx: %s)", result.RowsAffected, termID, req.TxHash)
+
+	// Regenerate journey receipts for all students with published terms
+	fmt.Printf("📝 Regenerating journey receipts for all students...\n")
+	if err := regenerateAllJourneyReceipts(); err != nil {
+		fmt.Printf("⚠️ Warning: Failed to regenerate receipts: %v\n", err)
+		// Don't fail the blockchain update, just log the warning
+	} else {
+		fmt.Printf("✅ Journey receipts regenerated successfully\n")
+	}
 
 	respondJSON(w, http.StatusOK, APIResponse{
 		Success: true,
@@ -949,8 +958,8 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 
 func handleListReceipts(w http.ResponseWriter, r *http.Request) {
 	receipts := []map[string]interface{}{}
-	
-	if files, err := filepath.Glob("publish_ready/receipts/receipt_*.json"); err == nil {
+
+	if files, err := filepath.Glob("publish_ready/receipts/*_journey.json"); err == nil {
 		for _, file := range files {
 			if receiptData, err := os.ReadFile(file); err == nil {
 				var receipt map[string]interface{}
@@ -977,18 +986,8 @@ func handleGetReceiptByID(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "receipt_id is required"})
 		return
 	}
-	
-	// Look for receipt file
-	receiptPath := fmt.Sprintf("publish_ready/receipts/receipt_%s.json", receiptID)
-	if receiptData, err := os.ReadFile(receiptPath); err == nil {
-		var receipt map[string]interface{}
-		if err := json.Unmarshal(receiptData, &receipt); err == nil {
-			respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: receipt})
-			return
-		}
-	}
-	
-	// Also look for journey files
+
+	// Look for journey receipt file
 	journeyPath := fmt.Sprintf("publish_ready/receipts/%s_journey.json", receiptID)
 	if journeyData, err := os.ReadFile(journeyPath); err == nil {
 		var journey map[string]interface{}
@@ -997,8 +996,54 @@ func handleGetReceiptByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	
+
 	respondJSON(w, http.StatusNotFound, APIResponse{Success: false, Error: "Receipt not found"})
+}
+
+// regenerateAllJourneyReceipts regenerates journey receipts for all students with published terms
+func regenerateAllJourneyReceipts() error {
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+	defer database.Close(db)
+
+	// Get all students from database
+	var students []database.Student
+	if err := db.Find(&students).Error; err != nil {
+		return fmt.Errorf("failed to query students: %w", err)
+	}
+
+	if len(students) == 0 {
+		return fmt.Errorf("no students found in database")
+	}
+
+	fmt.Printf("📋 Found %d students to regenerate receipts for\n", len(students))
+
+	// Regenerate receipt for each student with all published terms
+	successCount := 0
+	for _, student := range students {
+		outputFile := fmt.Sprintf("publish_ready/receipts/%s_journey.json", student.StudentID)
+
+		// Call generateStudentReceipt with empty terms list (auto-discover published terms)
+		// and empty courses list (include all courses), selective=false
+		err := generateStudentReceipt(student.StudentID, outputFile, nil, nil, false)
+		if err != nil {
+			fmt.Printf("⚠️ Failed to regenerate receipt for %s: %v\n", student.StudentID, err)
+			continue
+		}
+
+		successCount++
+		fmt.Printf("✓ Regenerated receipt for %s\n", student.StudentID)
+	}
+
+	if successCount == 0 {
+		return fmt.Errorf("failed to regenerate any receipts")
+	}
+
+	fmt.Printf("✅ Successfully regenerated %d/%d receipts\n", successCount, len(students))
+	return nil
 }
 
 func handlePublishRoots(w http.ResponseWriter, r *http.Request) {
@@ -1065,7 +1110,16 @@ func handlePublishRoots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Printf("✅ API: publishTermRoots completed successfully\n")
-	
+
+	// Regenerate journey receipts for all students with published terms
+	fmt.Printf("📝 Regenerating journey receipts for all students...\n")
+	if err := regenerateAllJourneyReceipts(); err != nil {
+		fmt.Printf("⚠️ Warning: Failed to regenerate receipts: %v\n", err)
+		// Don't fail the publish operation, just log the warning
+	} else {
+		fmt.Printf("✅ Journey receipts regenerated successfully\n")
+	}
+
 	// Find the latest transaction file for this term
 	// Note: Transaction files are named by hash, so we need to search through them
 	if files, err := filepath.Glob("publish_ready/transactions/tx_*.json"); err == nil && len(files) > 0 {

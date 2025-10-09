@@ -58,28 +58,11 @@ done
 
 echo -e "${GREEN}✅ Processed ${processed_terms}/${#terms[@]} terms successfully${NC}"
 
-# Step 3: Generate student receipts
-echo -e "\n${YELLOW}🎓 Step 3: Generating student verification receipts...${NC}"
-students=("ITITIU00001" "ITITIU00002" "ITITIU00003" "ITITIU00004" "ITITIU00005")
+# Note: Receipts are NOT generated here - they will be auto-generated when terms are published to blockchain
+echo -e "\n${BLUE}ℹ️  Receipts will be generated automatically when you publish terms to blockchain${NC}"
 
-generated_receipts=0
-for student in "${students[@]}"; do
-    echo -e "  👤 Generating receipt for ${CYAN}${student}${NC}..."
-    cd cmd
-    go run . generate-receipt $student ../publish_ready/receipts/${student}_journey.json
-    if [ $? -eq 0 ]; then
-        echo -e "    ${GREEN}✅ Receipt generated with Verkle proofs${NC}"
-        ((generated_receipts++))
-    else
-        echo -e "    ${RED}❌ Failed to generate receipt for ${student}${NC}"
-    fi
-    cd ..
-done
-
-echo -e "${GREEN}✅ Generated ${generated_receipts}/${#students[@]} receipts successfully${NC}"
-
-# Step 4: Import data into database
-echo -e "\n${YELLOW}🗄️  Step 4: Importing data into database...${NC}"
+# Step 3: Import data into database
+echo -e "\n${YELLOW}🗄️  Step 3: Importing data into database...${NC}"
 
 # Check if database is available
 if docker ps | grep -q iumicert-postgres; then
@@ -97,7 +80,7 @@ else
     echo -e "${BLUE}Tip: Start database with 'docker compose up -d postgres'${NC}"
 fi
 
-# Step 5: Show comprehensive summary
+# Step 4: Show comprehensive summary
 echo -e "\n${BLUE}📊 Single Verkle System Summary${NC}"
 echo -e "${BLUE}================================${NC}"
 
@@ -106,13 +89,12 @@ student_count=$(find data/student_journeys/students/ -name "*.json" 2>/dev/null 
 term_count=$(find data/student_journeys/terms/ -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
 verkle_count=$(find data/verkle_terms/ -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
 root_count=$(find publish_ready/roots/ -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
-receipt_count=$(find publish_ready/receipts/ -name "*.json" 2>/dev/null | wc -l | tr -d ' ')
 
 echo -e "👥 Students: ${GREEN}${student_count}${NC} (with complete academic journeys)"
-echo -e "📚 Terms: ${GREEN}${term_count}${NC} (with course completion data)"  
+echo -e "📚 Terms: ${GREEN}${term_count}${NC} (with course completion data)"
 echo -e "🌳 Single Verkle Trees: ${GREEN}${verkle_count}${NC} (pure Verkle, no Merkle)"
 echo -e "🔗 Blockchain Roots: ${GREEN}${root_count}${NC} (ready for publishing)"
-echo -e "🎓 Verification Receipts: ${GREEN}${receipt_count}${NC} (with 32-byte proofs)"
+echo -e "🎓 Verification Receipts: ${YELLOW}Generated on first blockchain publish${NC}"
 
 # Show students with their IDs
 if [ -d "data/student_journeys/students/" ]; then
@@ -160,4 +142,5 @@ echo -e "  3. ${PURPLE}Frontend demo${NC}: Show course-level proof verification"
 echo -e "  4. ${PURPLE}Performance comparison${NC}: Compare with old hybrid approach"
 
 echo -e "\n${GREEN}🎉 Single Verkle system ready!${NC}"
-echo -e "${GREEN}Generated ${processed_terms} Verkle trees with ${student_count} students and ${receipt_count} verification receipts.${NC}"
+echo -e "${GREEN}Generated ${processed_terms} Verkle trees with ${student_count} students.${NC}"
+echo -e "${YELLOW}📝 Receipts will be auto-generated when you publish terms to blockchain.${NC}"

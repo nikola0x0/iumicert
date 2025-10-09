@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export interface Term {
   id: string;
@@ -70,11 +70,14 @@ interface ApiResponse<T> {
 }
 
 class ApiService {
-  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  private async request<T>(
+    endpoint: string,
+    options?: RequestInit
+  ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options?.headers,
       },
       ...options,
@@ -85,28 +88,38 @@ class ApiService {
     }
 
     const result: ApiResponse<T> = await response.json();
-    
+
     if (!result.success) {
-      throw new Error(result.error || 'API request failed');
+      throw new Error(result.error || "API request failed");
     }
-    
+
     return result.data as T;
   }
 
   // Term management
   async getTerms(): Promise<Term[]> {
-    return this.request<Term[]>('/api/terms');
+    return this.request<Term[]>("/api/terms");
   }
 
-  async createTerm(term: Omit<Term, 'id'>): Promise<Term> {
-    return this.request<Term>('/api/terms', {
-      method: 'POST',
+  async createTerm(term: Omit<Term, "id">): Promise<Term> {
+    return this.request<Term>("/api/terms", {
+      method: "POST",
       body: JSON.stringify(term),
     });
   }
 
-  async getTermRoot(termId: string): Promise<{ verkle_root: string; merkle_root: string; total_students: number }> {
-    return this.request<{ verkle_root: string; merkle_root: string; total_students: number }>(`/api/terms/${termId}/roots`);
+  async getTermRoot(
+    termId: string
+  ): Promise<{
+    verkle_root: string;
+    merkle_root: string;
+    total_students: number;
+  }> {
+    return this.request<{
+      verkle_root: string;
+      merkle_root: string;
+      total_students: number;
+    }>(`/api/terms/${termId}/roots`);
   }
 
   // Receipt management
@@ -120,8 +133,8 @@ class ApiService {
     term_id: string;
     courses: Course[];
   }): Promise<Receipt> {
-    return this.request<Receipt>('/api/receipts', {
-      method: 'POST',
+    return this.request<Receipt>("/api/receipts", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
@@ -132,19 +145,22 @@ class ApiService {
     merkle_proof: string;
     verkle_proof: string;
   }): Promise<{ valid: boolean; details: string }> {
-    return this.request<{ valid: boolean; details: string }>('/api/verify-local', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return this.request<{ valid: boolean; details: string }>(
+      "/api/verify-local",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
   }
 
   async verifyCourse(data: {
     receipt: any;
     course_id: string;
     term_id: string;
-  }): Promise<{ 
-    verified: boolean; 
-    course: any; 
+  }): Promise<{
+    verified: boolean;
+    course: any;
     term_id: string;
     verkle_root: string;
     proof_exists: boolean;
@@ -156,8 +172,8 @@ class ApiService {
     verification_error?: string;
   }> {
     return this.request<{
-      verified: boolean; 
-      course: any; 
+      verified: boolean;
+      course: any;
       term_id: string;
       verkle_root: string;
       proof_exists: boolean;
@@ -167,8 +183,8 @@ class ApiService {
         blockchain_anchored: boolean;
       };
       verification_error?: string;
-    }>('/api/receipts/verify-course', {
-      method: 'POST',
+    }>("/api/receipts/verify-course", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
@@ -179,8 +195,8 @@ class ApiService {
     verkle_root: string;
     receipts: string[];
   }): Promise<{ transaction_hash: string }> {
-    return this.request<{ transaction_hash: string }>('/api/publish-roots', {
-      method: 'POST',
+    return this.request<{ transaction_hash: string }>("/api/publish-roots", {
+      method: "POST",
       body: JSON.stringify(data),
     });
   }
@@ -190,14 +206,17 @@ class ApiService {
     network: string;
     gas_limit: number;
   }): Promise<{ transaction_hash: string; status: string }> {
-    return this.request<{ transaction_hash: string; status: string }>('/api/blockchain/publish', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return this.request<{ transaction_hash: string; status: string }>(
+      "/api/blockchain/publish",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
   }
 
   async getBlockchainHistory(): Promise<BlockchainHistory[]> {
-    return this.request<BlockchainHistory[]>('/api/blockchain/history');
+    return this.request<BlockchainHistory[]>("/api/blockchain/history");
   }
 
   // Health check
@@ -207,14 +226,14 @@ class ApiService {
       const response = await fetch(url);
 
       if (!response.ok) {
-        return { status: 'error', timestamp: new Date().toISOString() };
+        return { status: "error", timestamp: new Date().toISOString() };
       }
 
       // Health endpoint might return plain text or different format
       const result = await response.json();
       return result.data || result;
     } catch (error) {
-      return { status: 'error', timestamp: new Date().toISOString() };
+      return { status: "error", timestamp: new Date().toISOString() };
     }
   }
 
@@ -241,7 +260,10 @@ class ApiService {
     }>(`/api/issuer/students/${studentId}/receipts/accumulated`);
   }
 
-  async getStudentTermReceipt(studentId: string, termId: string): Promise<{
+  async getStudentTermReceipt(
+    studentId: string,
+    termId: string
+  ): Promise<{
     student_id: string;
     term_id: string;
     receipt: TermReceipt;
@@ -273,44 +295,52 @@ class ApiService {
       failed_list: string[];
       term_results: Record<string, any>;
       computation_note: string;
-    }>('/api/verifier/ipa-verify', {
-      method: 'POST',
+    }>("/api/verifier/ipa-verify", {
+      method: "POST",
       body: JSON.stringify({ receipt }),
     });
   }
 
   // Student list
-  async getStudents(): Promise<Array<{
-    student_id: string;
-    name: string;
-    did: string;
-    enrollment_date: string;
-    status: string;
-  }>> {
-    return this.request<Array<{
+  async getStudents(): Promise<
+    Array<{
       student_id: string;
       name: string;
       did: string;
       enrollment_date: string;
       status: string;
-    }>>('/api/issuer/students');
+    }>
+  > {
+    return this.request<
+      Array<{
+        student_id: string;
+        name: string;
+        did: string;
+        enrollment_date: string;
+        status: string;
+      }>
+    >("/api/issuer/students");
   }
 
   // Get all published roots from blockchain
-  async getPublishedRoots(): Promise<Array<{
-    filename: string;
-    term_id: string;
-    verkle_root: string;
-    timestamp: string;
-    tx_hash: string;
-  }>> {
-    return this.request<Array<{
+  async getPublishedRoots(): Promise<
+    Array<{
       filename: string;
       term_id: string;
       verkle_root: string;
       timestamp: string;
       tx_hash: string;
-    }>>('/api/blockchain/roots');
+    }>
+  > {
+    return this.request<
+      Array<{
+        filename: string;
+        term_id: string;
+        verkle_root: string;
+        timestamp: string;
+        tx_hash: string;
+      }>
+    >("/api/blockchain/roots");
   }
 
   // Download journey receipt JSON for student
@@ -325,7 +355,7 @@ class ApiService {
     // Trigger download
     const blob = await response.blob();
     const downloadUrl = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = downloadUrl;
     a.download = `${studentId}_journey.json`;
     document.body.appendChild(a);
