@@ -158,6 +158,7 @@ func startAPIServer(port string, corsEnabled bool) error {
 	issuer.HandleFunc("/blockchain/publish", handlePublishRoots).Methods("POST")
 	issuer.HandleFunc("/blockchain/transactions", handleListTransactions).Methods("GET")
 	issuer.HandleFunc("/blockchain/transactions/{tx_hash}", handleGetTransaction).Methods("GET")
+	issuer.HandleFunc("/blockchain/roots", handleGetPublishedRoots).Methods("GET")
 	issuer.HandleFunc("/students", handleListStudents).Methods("GET")
 	issuer.HandleFunc("/students/{student_id}/terms", handleGetStudentTerms).Methods("GET")
 	issuer.HandleFunc("/students/{student_id}/journey", handleGetStudentJourney).Methods("GET")
@@ -166,6 +167,7 @@ func startAPIServer(port string, corsEnabled bool) error {
 	issuer.HandleFunc("/students/{student_id}/receipts/latest", handleGetLatestReceipts).Methods("GET")
 	issuer.HandleFunc("/students/{student_id}/receipts/accumulated", handleGetAccumulatedReceipt).Methods("GET")
 	issuer.HandleFunc("/students/{student_id}/receipts/term/{term_id}", handleGetTermReceipt).Methods("GET")
+	issuer.HandleFunc("/students/{student_id}/receipts/download", handleDownloadJourneyReceipt).Methods("GET")
 
 	// Verifier endpoints (public - for students/employers)
 	verifier := api.PathPrefix("/verifier").Subrouter()
@@ -175,14 +177,17 @@ func startAPIServer(port string, corsEnabled bool) error {
 	verifier.HandleFunc("/receipt/{receipt_id}", handleGetReceiptByID).Methods("GET")
 	verifier.HandleFunc("/journey/{student_id}", handleGetStudentJourney).Methods("GET")
 	verifier.HandleFunc("/blockchain/transaction/{tx_hash}", handleGetTransaction).Methods("GET")
+	verifier.HandleFunc("/blockchain/roots", handleGetPublishedRoots).Methods("GET")
 	
 	// Legacy endpoints (maintain backward compatibility for current issuer dashboard)
 	api.HandleFunc("/terms", handleListTerms).Methods("GET")
 	api.HandleFunc("/terms/{term_id}/roots", handleGetTermRoot).Methods("GET")
+	api.HandleFunc("/terms/{term_id}/blockchain", handleUpdateTermBlockchainStatus).Methods("PUT")
 	api.HandleFunc("/receipts/verify", handleVerifyReceipt).Methods("POST")
 	api.HandleFunc("/receipts/verify-course", handleVerifyCourse).Methods("POST")
 	api.HandleFunc("/blockchain/publish", handlePublishRoots).Methods("POST")
 	api.HandleFunc("/blockchain/transactions", handleListTransactions).Methods("GET")
+	api.HandleFunc("/blockchain/roots", handleGetPublishedRoots).Methods("GET")
 	
 	// Setup CORS if enabled
 	var handler http.Handler = r
@@ -490,6 +495,73 @@ func handleGetTermRoot(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: root})
 }
 
+func handleUpdateTermBlockchainStatus(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	termID := vars["term_id"]
+
+	var req struct {
+		TxHash           string `json:"tx_hash"`
+		BlockNumber      uint64 `json:"block_number"`
+		PublisherAddress string `json:"publisher_address"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "Invalid request body"})
+		return
+	}
+
+	if req.TxHash == "" {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "tx_hash is required"})
+		return
+	}
+
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		log.Printf("❌ Failed to connect to database: %v", err)
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Database connection failed: %v", err),
+		})
+		return
+	}
+	defer database.Close(db)
+
+	// Update all term receipts for this term with blockchain info
+	verified := true
+	now := time.Now()
+
+	result := db.Model(&database.TermReceipt{}).
+		Where("term_id = ?", termID).
+		Updates(map[string]interface{}{
+			"blockchain_verified":  &verified,
+			"blockchain_tx_hash":   &req.TxHash,
+			"blockchain_block":     &req.BlockNumber,
+			"published_at":         &now,
+			"publisher_address":    &req.PublisherAddress,
+		})
+
+	if result.Error != nil {
+		log.Printf("❌ Failed to update blockchain status: %v", result.Error)
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to update blockchain status: %v", result.Error),
+		})
+		return
+	}
+
+	log.Printf("✅ Updated %d term receipts for %s with blockchain info (tx: %s)", result.RowsAffected, termID, req.TxHash)
+
+	respondJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"term_id":        termID,
+			"receipts_updated": result.RowsAffected,
+			"tx_hash":        req.TxHash,
+		},
+	})
+}
+
 func handleGenerateReceipt(w http.ResponseWriter, r *http.Request) {
 	var req ReceiptRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -566,34 +638,44 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		CourseID string          `json:"course_id"`
 		TermID   string          `json:"term_id"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Printf("❌ Failed to decode request: %v", err)
 		respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
-			Error: "Invalid request format",
+			Error: fmt.Sprintf("Invalid request format: %v", err),
 		})
 		return
 	}
+
+	log.Printf("📥 Received verify course request - CourseID: %s, TermID: %s", request.CourseID, request.TermID)
+	log.Printf("📄 Receipt data length: %d bytes", len(request.Receipt))
 	
 	// Parse the receipt
 	var receipt map[string]interface{}
 	if err := json.Unmarshal(request.Receipt, &receipt); err != nil {
+		log.Printf("❌ Failed to unmarshal receipt: %v", err)
 		respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
-			Error: "Invalid receipt format",
+			Error: fmt.Sprintf("Invalid receipt format: %v", err),
 		})
 		return
 	}
-	
+
+	log.Printf("✅ Receipt parsed, keys: %v", getKeys(receipt))
+
 	// Find the term and course
 	termReceipts, ok := receipt["term_receipts"].(map[string]interface{})
 	if !ok {
+		log.Printf("❌ No term_receipts found in receipt. Available keys: %v", getKeys(receipt))
 		respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
-			Error: "No term receipts found",
+			Error: fmt.Sprintf("No term receipts found. Receipt keys: %v", getKeys(receipt)),
 		})
 		return
 	}
+
+	log.Printf("✅ Found term_receipts with terms: %v", getKeys(termReceipts))
 	
 	termData, ok := termReceipts[request.TermID].(map[string]interface{})
 	if !ok {
@@ -763,9 +845,21 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	
+
+	// SECURITY: Verify term_id matches between receipt and blockchain
+	if termRootInfo.TermID != request.TermID {
+		log.Printf("❌ Term ID mismatch: receipt claims %s but blockchain shows %s for root %s",
+			request.TermID, termRootInfo.TermID, verkleRootHex)
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("Receipt term ID (%s) does not match blockchain term ID (%s) for this verkle root",
+				request.TermID, termRootInfo.TermID),
+		})
+		return
+	}
+
 	blockchainVerified = true
-	log.Printf("✅ Verkle root verified on blockchain: term=%s, students=%d, published_at=%d", 
+	log.Printf("✅ Verkle root verified on blockchain: term=%s, students=%d, published_at=%d",
 		termRootInfo.TermID, termRootInfo.TotalStudents, termRootInfo.PublishedAt)
 	
 	// Convert verified verkle root hex to bytes
@@ -804,24 +898,52 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		errorMessage = fmt.Sprintf("IPA verification failed (blockchain verification successful): %v", verificationErr)
 	}
 
+	// Query database to get blockchain transaction info for this term
+	db, err := database.Connect()
+	if err != nil {
+		log.Printf("⚠️ Failed to connect to database for blockchain info: %v", err)
+	}
+	defer database.Close(db)
+
+	var blockchainInfo map[string]interface{}
+	if db != nil {
+		var termReceipt database.TermReceipt
+		result := db.Where("term_id = ?", request.TermID).First(&termReceipt)
+		if result.Error == nil && termReceipt.BlockchainTxHash != nil {
+			blockchainInfo = map[string]interface{}{
+				"tx_hash": *termReceipt.BlockchainTxHash,
+				"publisher_address": termReceipt.PublisherAddress,
+				"published_at": termRootInfo.PublishedAt,
+				"block_number": termReceipt.BlockchainBlock,
+			}
+		}
+	}
+
 	// Return detailed verification results (always success if blockchain verification passed)
+	responseData := map[string]interface{}{
+		"verified": ipaPassed && blockchainVerified, // Overall verification status
+		"course": courseInfo,
+		"term_id": request.TermID,
+		"verkle_root": verkleRootHex,
+		"proof_exists": len(proofBytes) > 0,
+		"verification_details": verificationDetails,
+	}
+
+	// Add blockchain info if available
+	if blockchainInfo != nil {
+		responseData["blockchain_info"] = blockchainInfo
+	}
+
 	response := APIResponse{
 		Success: blockchainVerified, // Success if blockchain verification passed
-		Data: map[string]interface{}{
-			"verified": ipaPassed && blockchainVerified, // Overall verification status
-			"course": courseInfo,
-			"term_id": request.TermID,
-			"verkle_root": verkleRootHex,
-			"proof_exists": len(proofBytes) > 0,
-			"verification_details": verificationDetails,
-		},
+		Data: responseData,
 	}
-	
+
 	// Add error message if IPA failed but blockchain succeeded
 	if !ipaPassed && blockchainVerified {
 		response.Data.(map[string]interface{})["verification_error"] = errorMessage
 	}
-	
+
 	respondJSON(w, http.StatusOK, response)
 }
 
@@ -1033,6 +1155,30 @@ func handleGetTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	respondJSON(w, http.StatusNotFound, APIResponse{Success: false, Error: "Transaction not found"})
+}
+
+func handleGetPublishedRoots(w http.ResponseWriter, r *http.Request) {
+	roots := []map[string]interface{}{}
+
+	// Read all root files from publish_ready/roots/
+	if files, err := filepath.Glob("publish_ready/roots/root_*.json"); err == nil {
+		for _, file := range files {
+			if rootData, err := os.ReadFile(file); err == nil {
+				var root map[string]interface{}
+				if err := json.Unmarshal(rootData, &root); err == nil {
+					roots = append(roots, map[string]interface{}{
+						"filename":    filepath.Base(file),
+						"term_id":     root["term_id"],
+						"verkle_root": root["verkle_root"],
+						"timestamp":   root["timestamp"],
+						"tx_hash":     root["tx_hash"],
+					})
+				}
+			}
+		}
+	}
+
+	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: roots})
 }
 
 func handleListStudents(w http.ResponseWriter, r *http.Request) {
@@ -1262,6 +1408,43 @@ func handleGetTermReceipt(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleDownloadJourneyReceipt serves the journey receipt JSON file for download
+func handleDownloadJourneyReceipt(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	studentID := vars["student_id"]
+
+	// Build file path
+	filePath := fmt.Sprintf("publish_ready/receipts/%s_journey.json", studentID)
+
+	// Check if file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		respondJSON(w, http.StatusNotFound, APIResponse{
+			Success: false,
+			Error:   "Receipt not found. Please generate receipts first.",
+		})
+		return
+	}
+
+	// Read file
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to read receipt: %v", err),
+		})
+		return
+	}
+
+	// Set headers for download
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s_journey.json", studentID))
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Disposition")
+
+	// Write file content
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
 // ========== IPA VERIFICATION ENDPOINT ==========
 
 // handleIPAVerify performs full IPA (Inner Product Argument) cryptographic verification
@@ -1344,6 +1527,68 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 			}
 			continue
 		}
+
+		// BLOCKCHAIN VERIFICATION: Check if verkle root exists on-chain
+		ctx := context.Background()
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			verificationResults[termID] = map[string]interface{}{
+				"status": "error",
+				"error":  "Blockchain configuration error",
+			}
+			continue
+		}
+
+		if cfg.ContractAddress == "" || cfg.IssuerPrivateKey == "" {
+			verificationResults[termID] = map[string]interface{}{
+				"status":         "error",
+				"error":          "Missing blockchain configuration",
+				"blockchain_check": false,
+			}
+			continue
+		}
+
+		blockchainIntegration, err := blockchain_integration.NewBlockchainIntegration(cfg.Network, cfg.IssuerPrivateKey, cfg.ContractAddress)
+		if err != nil {
+			verificationResults[termID] = map[string]interface{}{
+				"status":         "error",
+				"error":          fmt.Sprintf("Blockchain connection failed: %v", err),
+				"blockchain_check": false,
+			}
+			continue
+		}
+
+		// Verify root exists on blockchain
+		termRootInfo, err := blockchainIntegration.GetTermRootInfo(ctx, verkleRootHex)
+		if err != nil {
+			verificationResults[termID] = map[string]interface{}{
+				"status":         "error",
+				"error":          fmt.Sprintf("Verkle root not found on blockchain: %v", err),
+				"blockchain_check": false,
+			}
+			continue
+		}
+
+		if !termRootInfo.Exists {
+			verificationResults[termID] = map[string]interface{}{
+				"status":         "error",
+				"error":          "Verkle root not published on blockchain - invalid receipt",
+				"blockchain_check": false,
+			}
+			continue
+		}
+
+		// Verify term_id matches
+		if termRootInfo.TermID != termID {
+			verificationResults[termID] = map[string]interface{}{
+				"status":         "error",
+				"error":          fmt.Sprintf("Term ID mismatch: receipt claims %s but blockchain shows %s", termID, termRootInfo.TermID),
+				"blockchain_check": false,
+			}
+			continue
+		}
+
+		log.Printf("✅ Blockchain verification passed for term %s: root exists on-chain", termID)
 
 		// Get receipt data
 		receiptData, ok := termData["receipt"].(map[string]interface{})
@@ -1437,11 +1682,13 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 		}
 
 		verificationResults[termID] = map[string]interface{}{
-			"status":           "completed",
-			"verkle_root":      verkleRootHex,
-			"courses_verified": termVerified,
-			"courses_failed":   termFailed,
-			"course_results":   termResults,
+			"status":              "completed",
+			"verkle_root":         verkleRootHex,
+			"courses_verified":    termVerified,
+			"courses_failed":      termFailed,
+			"course_results":      termResults,
+			"blockchain_verified": true,
+			"blockchain_published_at": termRootInfo.PublishedAt.String(),
 		}
 	}
 
@@ -1467,6 +1714,15 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 			"computation_note": "Full IPA cryptographic verification performed on backend",
 		},
 	})
+}
+
+// Helper function to get keys from a map
+func getKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func init() {

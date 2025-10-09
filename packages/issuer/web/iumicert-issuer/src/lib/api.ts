@@ -295,6 +295,44 @@ class ApiService {
       status: string;
     }>>('/api/issuer/students');
   }
+
+  // Get all published roots from blockchain
+  async getPublishedRoots(): Promise<Array<{
+    filename: string;
+    term_id: string;
+    verkle_root: string;
+    timestamp: string;
+    tx_hash: string;
+  }>> {
+    return this.request<Array<{
+      filename: string;
+      term_id: string;
+      verkle_root: string;
+      timestamp: string;
+      tx_hash: string;
+    }>>('/api/blockchain/roots');
+  }
+
+  // Download journey receipt JSON for student
+  async downloadJourneyReceipt(studentId: string): Promise<void> {
+    const url = `${API_BASE_URL}/api/issuer/students/${studentId}/receipts/download`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to download receipt: ${response.statusText}`);
+    }
+
+    // Trigger download
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `${studentId}_journey.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
 }
 
 export const apiService = new ApiService();

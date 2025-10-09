@@ -53,6 +53,13 @@ type TermReceipt struct {
 	GeneratedAt   time.Time `gorm:"index"`
 	IsSelective   bool      `gorm:"default:false"` // true if not all courses revealed
 
+	// Blockchain Verification
+	BlockchainVerified *bool      `gorm:"default:false"`      // Whether this term root is published on blockchain
+	BlockchainTxHash   *string    `gorm:"size:66"`            // Transaction hash (0x...)
+	BlockchainBlock    *uint64    `gorm:""`                   // Block number
+	PublishedAt        *time.Time `gorm:""`                   // When it was published
+	PublisherAddress   *string    `gorm:"size:42"`            // Institution wallet address (0x...)
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
