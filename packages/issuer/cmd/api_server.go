@@ -7,11 +7,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
+	"iumicert/crypto/testdata"
 	"iumicert/crypto/verkle"
 	blockchain_integration "iumicert/issuer/blockchain_integration"
 	"iumicert/issuer/config"
@@ -20,6 +22,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/spf13/cobra"
+	"gorm.io/datatypes"
 )
 
 var serveCmd = &cobra.Command{
@@ -150,9 +153,15 @@ func startAPIServer(port string, corsEnabled bool) error {
 	// Issuer-only endpoints (for institution dashboard)
 	issuer := api.PathPrefix("/issuer").Subrouter()
 	issuer.HandleFunc("/terms", handleAddTerm).Methods("POST")
-	issuer.HandleFunc("/terms", handleListTerms).Methods("GET")  
+	issuer.HandleFunc("/terms", handleListTerms).Methods("GET")
 	issuer.HandleFunc("/terms/{term_id}/receipts", handleGetTermReceipts).Methods("GET")
 	issuer.HandleFunc("/terms/{term_id}/roots", handleGetTermRoot).Methods("GET")
+
+	// New: Process uploaded term data (Data Management Panel)
+	api.HandleFunc("/terms/process", handleProcessTermData).Methods("POST")
+	api.HandleFunc("/demo/generate-term", handleGenerateDemoTerm).Methods("POST")
+	api.HandleFunc("/demo/reset", handleDemoReset).Methods("POST")
+	api.HandleFunc("/demo/generate-full", handleDemoGenerateFull).Methods("POST")
 	issuer.HandleFunc("/receipts", handleGenerateReceipt).Methods("POST")
 	issuer.HandleFunc("/receipts", handleListReceipts).Methods("GET")
 	issuer.HandleFunc("/blockchain/publish", handlePublishRoots).Methods("POST")
@@ -332,6 +341,490 @@ func handleAddTerm(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: result})
 }
 
+// handleProcessTermData processes uploaded term data from Data Management Panel
+// It converts the data, builds Verkle trees, and generates receipts
+func handleProcessTermData(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		TermID   string                       `json:"term_id"`
+		Students map[string][]map[string]interface{} `json:"students"`
+		Metadata map[string]interface{}       `json:"metadata,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "Invalid request body"})
+		return
+	}
+
+	if req.TermID == "" {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "term_id is required"})
+		return
+	}
+
+	if len(req.Students) == 0 {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "students data is required"})
+		return
+	}
+
+	log.Printf("📥 Processing term data for: %s", req.TermID)
+	log.Printf("   Students: %d", len(req.Students))
+
+	// Step 1: Convert uploaded data to CourseCompletion format
+	var completions []verkle.CourseCompletion
+	totalCourses := 0
+
+	for studentID, courses := range req.Students {
+		for _, courseData := range courses {
+			// Extract course fields
+			courseID, _ := courseData["course_id"].(string)
+			courseName, _ := courseData["course_name"].(string)
+			grade, _ := courseData["grade"].(string)
+
+			var credits uint8 = 3 // Default
+			if creditsFloat, ok := courseData["credits"].(float64); ok {
+				credits = uint8(creditsFloat)
+			}
+
+			completion := verkle.CourseCompletion{
+				StudentID:  studentID,
+				TermID:     req.TermID,
+				CourseID:   courseID,
+				CourseName: courseName,
+				Grade:      grade,
+				Credits:    credits,
+				IssuerID:   "IU-CS",
+				AttemptNo:  1,
+				// Use current time for timestamps
+				StartedAt:   time.Now().Add(-90 * 24 * time.Hour),
+				CompletedAt: time.Now().Add(-7 * 24 * time.Hour),
+				AssessedAt:  time.Now().Add(-3 * 24 * time.Hour),
+				IssuedAt:    time.Now(),
+				Instructor:  "Prof. System",
+			}
+
+			completions = append(completions, completion)
+			totalCourses++
+		}
+	}
+
+	log.Printf("   Total courses: %d", totalCourses)
+
+	// Step 2: Save to verkle format file
+	verkleDir := "data/verkle_terms"
+	if err := os.MkdirAll(verkleDir, 0755); err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to create verkle directory: %v", err),
+		})
+		return
+	}
+
+	verkleFile := filepath.Join(verkleDir, fmt.Sprintf("%s_completions.json", req.TermID))
+	data, _ := json.MarshalIndent(completions, "", "  ")
+	if err := os.WriteFile(verkleFile, data, 0644); err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to save verkle data: %v", err),
+		})
+		return
+	}
+
+	log.Printf("✅ Saved verkle data to: %s", verkleFile)
+
+	// Step 3: Build Verkle tree
+	log.Printf("🌳 Building Verkle tree...")
+	if err := addAcademicTerm(req.TermID, verkleFile, "json", true); err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to build Verkle tree: %v", err),
+		})
+		return
+	}
+
+	log.Printf("✅ Verkle tree built successfully")
+
+	// Step 4: Generate receipts for all students
+	log.Printf("📄 Generating receipts...")
+	successCount := 0
+	failedStudents := []string{}
+
+	for studentID := range req.Students {
+		outputFile := fmt.Sprintf("publish_ready/receipts/%s_journey.json", studentID)
+
+		// Generate receipt with all terms (empty list = autodiscover)
+		if err := generateStudentReceipt(studentID, outputFile, nil, nil, false); err != nil {
+			log.Printf("⚠️ Failed to generate receipt for %s: %v", studentID, err)
+			failedStudents = append(failedStudents, studentID)
+			continue
+		}
+
+		successCount++
+	}
+
+	log.Printf("✅ Generated %d/%d receipts", successCount, len(req.Students))
+
+	// Step 5: Store receipts in database
+	log.Printf("💾 Storing receipts in database...")
+
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		log.Printf("⚠️ Warning: Failed to connect to database: %v", err)
+		log.Printf("   Receipts generated but not stored in database")
+	} else {
+		defer database.Close(db)
+
+		repo := database.NewReceiptRepository(db)
+		storedCount := 0
+
+		for studentID := range req.Students {
+			// Read the generated receipt file
+			receiptFile := fmt.Sprintf("publish_ready/receipts/%s_journey.json", studentID)
+			receiptData, err := os.ReadFile(receiptFile)
+			if err != nil {
+				log.Printf("⚠️ Failed to read receipt for %s: %v", studentID, err)
+				continue
+			}
+
+			// Parse the receipt
+			var journeyReceipt map[string]interface{}
+			if err := json.Unmarshal(receiptData, &journeyReceipt); err != nil {
+				log.Printf("⚠️ Failed to parse receipt for %s: %v", studentID, err)
+				continue
+			}
+
+			// Extract term receipts
+			termReceipts, ok := journeyReceipt["term_receipts"].(map[string]interface{})
+			if !ok {
+				log.Printf("⚠️ No term_receipts found for %s", studentID)
+				continue
+			}
+
+			// Check if this term exists in the receipt
+			termData, ok := termReceipts[req.TermID].(map[string]interface{})
+			if !ok {
+				log.Printf("⚠️ Term %s not found in receipt for %s", req.TermID, studentID)
+				continue
+			}
+
+			// Extract verkle root
+			verkleRootHex, ok := termData["verkle_root"].(string)
+			if !ok {
+				log.Printf("⚠️ No verkle_root found for %s/%s", studentID, req.TermID)
+				continue
+			}
+
+			// Extract receipt data
+			receiptDataMap, ok := termData["receipt"].(map[string]interface{})
+			if !ok {
+				log.Printf("⚠️ No receipt data found for %s/%s", studentID, req.TermID)
+				continue
+			}
+
+			// Extract course proofs and revealed courses
+			courseProofs := receiptDataMap["course_proofs"]
+			revealedCourses := receiptDataMap["revealed_courses"]
+
+			// Marshal to JSON for database storage
+			verkleProofJSON, _ := json.Marshal(courseProofs)
+			revealedCoursesJSON, _ := json.Marshal(revealedCourses)
+
+			// Count courses
+			var courseCount int
+			if courses, ok := revealedCourses.([]interface{}); ok {
+				courseCount = len(courses)
+			}
+
+			// Create term receipt for database
+			termReceipt := &database.TermReceipt{
+				ReceiptID:       fmt.Sprintf("receipt_%s_%s_%d", studentID, req.TermID, time.Now().Unix()),
+				StudentID:       studentID,
+				TermID:          req.TermID,
+				VerkleProof:     datatypes.JSON(verkleProofJSON),
+				RevealedCourses: datatypes.JSON(revealedCoursesJSON),
+				StateDiff:       datatypes.JSON("[]"), // Placeholder
+				CourseCount:     courseCount,
+				VerkleRootHex:   verkleRootHex,
+				GeneratedAt:     time.Now(),
+				IsSelective:     false,
+			}
+
+			// Store in database
+			if err := repo.StoreTermReceipt(termReceipt); err != nil {
+				log.Printf("⚠️ Failed to store receipt for %s/%s: %v", studentID, req.TermID, err)
+				continue
+			}
+
+			storedCount++
+		}
+
+		log.Printf("✅ Stored %d/%d receipts in database", storedCount, successCount)
+	}
+
+	// Return success with statistics
+	result := map[string]interface{}{
+		"term_id":            req.TermID,
+		"students_processed": len(req.Students),
+		"courses_processed":  totalCourses,
+		"receipts_generated": successCount,
+		"verkle_tree_built":  true,
+		"timestamp":          time.Now().Format(time.RFC3339),
+	}
+
+	if len(failedStudents) > 0 {
+		result["failed_students"] = failedStudents
+	}
+
+	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: result})
+}
+
+// handleGenerateDemoTerm generates demo term data for testing/performance purposes
+func handleGenerateDemoTerm(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		TermID      string `json:"term_id"`
+		NumStudents int    `json:"num_students"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "Invalid request body"})
+		return
+	}
+
+	// Validate inputs
+	if req.TermID == "" {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "term_id is required"})
+		return
+	}
+	if req.NumStudents < 1 || req.NumStudents > 100 {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "num_students must be between 1 and 100"})
+		return
+	}
+
+	log.Printf("📊 Generating demo term: %s with %d students (3-6 courses per student)", req.TermID, req.NumStudents)
+
+	// Call the addon term generator logic with fixed course range (3-6)
+	outputData, err := generateAddonTermData(req.TermID, req.NumStudents)
+	if err != nil {
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Failed to generate demo data: %v", err),
+		})
+		return
+	}
+
+	log.Printf("✅ Generated demo term data: %d students, %d total courses",
+		len(outputData["students"].(map[string][]map[string]interface{})),
+		countTotalCourses(outputData["students"].(map[string][]map[string]interface{})))
+
+	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: outputData})
+}
+
+// generateAddonTermData generates term data using the test data generator
+func generateAddonTermData(termID string, numStudents int) (map[string]interface{}, error) {
+	// Fixed course range: 3-6 courses per student
+	const minCourses = 3
+	const maxCourses = 6
+
+	generator := testdata.NewTestDataGenerator()
+
+	// Generate course completions for all students
+	allCompletions := make([]verkle.CourseCompletion, 0)
+
+	for i := 0; i < numStudents; i++ {
+		// Variable course count per student (3-6)
+		coursesForStudent := minCourses + (i % (maxCourses - minCourses + 1))
+
+		studentCompletions, err := generator.GenerateTermData(termID, 1, coursesForStudent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate data for student %d: %w", i, err)
+		}
+
+		// Update student IDs to match IU Vietnam format
+		for j := range studentCompletions {
+			studentCompletions[j].StudentID = fmt.Sprintf("ITITIU%05d", i+1)
+		}
+
+		allCompletions = append(allCompletions, studentCompletions...)
+	}
+
+	// Organize data by student
+	studentCourses := make(map[string][]map[string]interface{})
+
+	for _, completion := range allCompletions {
+		studentID := completion.StudentID
+
+		courseData := map[string]interface{}{
+			"course_id":   completion.CourseID,
+			"course_name": completion.CourseName,
+			"credits":     completion.Credits,
+			"grade":       completion.Grade,
+		}
+
+		studentCourses[studentID] = append(studentCourses[studentID], courseData)
+	}
+
+	// Create the term data structure
+	termData := map[string]interface{}{
+		"term_id":  termID,
+		"students": studentCourses,
+		"metadata": map[string]interface{}{
+			"generated_at":   time.Now().Format(time.RFC3339),
+			"total_students": len(studentCourses),
+			"total_courses":  len(allCompletions),
+			"generated_by":   "demo-generator-api",
+		},
+	}
+
+	return termData, nil
+}
+
+// countTotalCourses counts total courses across all students
+func countTotalCourses(students map[string][]map[string]interface{}) int {
+	total := 0
+	for _, courses := range students {
+		total += len(courses)
+	}
+	return total
+}
+
+// handleDemoReset executes ./reset.sh to clean all generated data
+func handleDemoReset(w http.ResponseWriter, r *http.Request) {
+	log.Printf("🧹 Executing system reset (./reset.sh)...")
+
+	// Execute reset.sh script
+	cmd := exec.Command("./reset.sh")
+	cmd.Dir = "." // Run in current directory
+
+	// Capture output
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		log.Printf("❌ Reset failed: %v\nOutput: %s", err, string(output))
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Reset script failed: %v", err),
+		})
+		return
+	}
+
+	log.Printf("✅ Reset completed successfully")
+
+	respondJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"message": "System reset completed successfully",
+			"output":  string(output),
+			"timestamp": time.Now().Format(time.RFC3339),
+		},
+	})
+}
+
+// handleDemoGenerateFull executes customizable full data generation
+func handleDemoGenerateFull(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		NumStudents int      `json:"num_students"`
+		Terms       []string `json:"terms"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "Invalid request body"})
+		return
+	}
+
+	// Validate inputs
+	if req.NumStudents < 1 || req.NumStudents > 100 {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "num_students must be between 1 and 100"})
+		return
+	}
+
+	if len(req.Terms) == 0 {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "at least one term is required"})
+		return
+	}
+
+	log.Printf("🚀 Executing full data generation: %d students, %d terms", req.NumStudents, len(req.Terms))
+
+	// Step 1: Generate student journeys
+	log.Printf("👥 Step 1: Generating student academic journeys...")
+
+	// Debug: Log the exact command we're about to run
+	termsArg := strings.Join(req.Terms, ",")
+	log.Printf("🔍 DEBUG: About to execute: go run . generate-data --students=%d --terms=%s", req.NumStudents, termsArg)
+
+	cmd := exec.Command("go", "run", ".", "generate-data",
+		fmt.Sprintf("--students=%d", req.NumStudents),
+		fmt.Sprintf("--terms=%s", termsArg))
+	cmd.Dir = "./cmd"
+
+	output1, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("❌ Failed to generate student data: %v\nOutput: %s", err, string(output1))
+		respondJSON(w, http.StatusInternalServerError, APIResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Student data generation failed: %v", err),
+		})
+		return
+	}
+
+	log.Printf("✅ Student journeys generated")
+
+	// Step 2: Process each term
+	log.Printf("🌳 Step 2: Processing terms with Verkle trees...")
+	processedTerms := 0
+	var outputLog strings.Builder
+	outputLog.WriteString(string(output1))
+	outputLog.WriteString("\n")
+
+	for _, term := range req.Terms {
+		log.Printf("  📚 Processing term: %s", term)
+
+		// Convert data
+		cmdConvert := exec.Command("go", "run", ".", "convert-data", term)
+		cmdConvert.Dir = "./cmd"
+		convertOut, err := cmdConvert.CombinedOutput()
+		if err != nil {
+			log.Printf("    ❌ Failed to convert data for %s: %v", term, err)
+			outputLog.WriteString(fmt.Sprintf("❌ Failed to convert %s: %v\n", term, err))
+			continue
+		}
+		outputLog.WriteString(string(convertOut))
+
+		// Add term (create Verkle tree)
+		cmdAdd := exec.Command("go", "run", ".", "add-term", term,
+			fmt.Sprintf("../data/verkle_terms/%s_completions.json", term))
+		cmdAdd.Dir = "./cmd"
+		addOut, err := cmdAdd.CombinedOutput()
+		if err != nil {
+			log.Printf("    ❌ Failed to create Verkle tree for %s: %v", term, err)
+			outputLog.WriteString(fmt.Sprintf("❌ Failed to create Verkle tree for %s: %v\n", term, err))
+			continue
+		}
+		outputLog.WriteString(string(addOut))
+		processedTerms++
+		log.Printf("    ✅ Verkle tree created for %s", term)
+	}
+
+	log.Printf("✅ Processed %d/%d terms successfully", processedTerms, len(req.Terms))
+
+	// Step 3: Import to database (optional)
+	log.Printf("🗄️  Step 3: Importing data into database...")
+	cmdDB := exec.Command("go", "run", ".", "db-import")
+	cmdDB.Dir = "./cmd"
+	dbOut, _ := cmdDB.CombinedOutput() // Ignore error - database is optional
+	outputLog.WriteString(string(dbOut))
+
+	respondJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"message": fmt.Sprintf("Generated %d students across %d/%d terms", req.NumStudents, processedTerms, len(req.Terms)),
+			"num_students": req.NumStudents,
+			"processed_terms": processedTerms,
+			"total_terms": len(req.Terms),
+			"output":  outputLog.String(),
+			"timestamp": time.Now().Format(time.RFC3339),
+		},
+	})
+}
+
 func handleListTerms(w http.ResponseWriter, r *http.Request) {
 	// Load terms from generated data
 	terms := []map[string]interface{}{}
@@ -364,26 +857,34 @@ func handleListTerms(w http.ResponseWriter, r *http.Request) {
 					termName := strings.Join(nameParts, " ")
 					
 					// Determine dates based on term pattern
+					// Extract year from term ID (e.g., "Semester_1_2023" -> "2023")
 					var startDate, endDate string
-					if strings.Contains(termID, "Semester_1") {
-						year := "2023"
+					year := "2023" // default fallback
+					if len(nameParts) > 1 {
+						// For "Semester_X_YYYY" or "Summer_YYYY", get the year
 						if len(nameParts) > 2 {
-							year = nameParts[2]
+							year = nameParts[2] // Semester_1_2023 -> 2023
+						} else if len(nameParts) == 2 {
+							year = nameParts[1] // Summer_2023 -> 2023
 						}
+					}
+
+					if strings.Contains(termID, "Semester_1") {
+						// Fall semester: August - December of same year
 						startDate = fmt.Sprintf("%s-08-15", year)
 						endDate = fmt.Sprintf("%s-12-15", year)
 					} else if strings.Contains(termID, "Semester_2") {
-						year := "2024"
-						if len(nameParts) > 2 {
-							year = nameParts[2]
+						// Spring semester: January - May of NEXT year
+						// E.g., "Semester_2_2023" actually runs Jan-May 2024
+						nextYear := year
+						var yearInt int
+					if _, err := fmt.Sscanf(year, "%d", &yearInt); err == nil && yearInt > 0 {
+							nextYear = fmt.Sprintf("%d", yearInt+1)
 						}
-						startDate = fmt.Sprintf("%s-01-15", year)
-						endDate = fmt.Sprintf("%s-05-15", year)
+						startDate = fmt.Sprintf("%s-01-15", nextYear)
+						endDate = fmt.Sprintf("%s-05-15", nextYear)
 					} else if strings.Contains(termID, "Summer") {
-						year := "2023"
-						if len(nameParts) > 1 {
-							year = nameParts[1]
-						}
+						// Summer term: May - August of same year
 						startDate = fmt.Sprintf("%s-05-15", year)
 						endDate = fmt.Sprintf("%s-08-15", year)
 					} else {
@@ -411,8 +912,18 @@ func handleListTerms(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+
+		// Sort terms by start_date (chronological order)
+		sort.Slice(terms, func(i, j int) bool {
+			dateI, okI := terms[i]["start_date"].(string)
+			dateJ, okJ := terms[j]["start_date"].(string)
+			if !okI || !okJ {
+				return false
+			}
+			return dateI < dateJ // String comparison works for YYYY-MM-DD format
+		})
 	}
-	
+
 	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: terms})
 }
 
@@ -1230,6 +1741,22 @@ func handleGetPublishedRoots(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+
+		// Sort roots by timestamp (chronological order)
+		sort.Slice(roots, func(i, j int) bool {
+			timeI, okI := roots[i]["timestamp"].(string)
+			timeJ, okJ := roots[j]["timestamp"].(string)
+			if !okI || !okJ {
+				return false
+			}
+			// Parse timestamps and compare
+			tI, errI := time.Parse(time.RFC3339, timeI)
+			tJ, errJ := time.Parse(time.RFC3339, timeJ)
+			if errI != nil || errJ != nil {
+				return false
+			}
+			return tI.Before(tJ)
+		})
 	}
 
 	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: roots})

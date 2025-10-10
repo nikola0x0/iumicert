@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -20,27 +21,52 @@ var dataGeneratorCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("📊 Starting Student Data Generation")
 		fmt.Println("=" + string(make([]byte, 50)))
-		
-		if err := runStudentDataGeneration(); err != nil {
+
+		students, _ := cmd.Flags().GetInt("students")
+		termsFlag, _ := cmd.Flags().GetString("terms")
+
+		// DEBUG: Log what we received
+		fmt.Printf("🔍 DEBUG: Received flags - students=%d, terms='%s'\n", students, termsFlag)
+
+		if err := runStudentDataGeneration(students, termsFlag); err != nil {
 			log.Fatalf("❌ Student data generation failed: %v", err)
 		}
-		
+
 		fmt.Println("\n🎉 Student data generation completed successfully!")
 	},
 }
 
-func runStudentDataGeneration() error {
+func runStudentDataGeneration(numStudents int, termsFlag string) error {
 	// Step 1: Initialize generator
 	fmt.Println("\n🔧 Step 1: Initializing test data generator...")
 	generator := testdata.NewTestDataGenerator()
-	
-	// Configuration for IU Vietnam realistic data generation - Extended to 2025
-	terms := []string{
-		"Semester_1_2023", "Semester_2_2023", "Summer_2023",
-		"Semester_1_2024", "Semester_2_2024", "Summer_2024", 
-		"Semester_1_2025", "Semester_2_2025",
+
+	// Parse terms from comma-separated string
+	var terms []string
+	if termsFlag != "" {
+		terms = strings.Split(termsFlag, ",")
+		// Trim whitespace from each term
+		for i, term := range terms {
+			terms[i] = strings.TrimSpace(term)
+		}
+		fmt.Printf("🔍 DEBUG: Parsed %d custom terms from flag: %v\n", len(terms), terms)
+	} else {
+		// Default terms if not specified
+		terms = []string{
+			"Semester_1_2023", "Semester_2_2023", "Summer_2023",
+			"Semester_1_2024", "Semester_2_2024", "Summer_2024",
+			"Semester_1_2025", "Semester_2_2025",
+		}
+		fmt.Printf("🔍 DEBUG: Using %d default terms: %v\n", len(terms), terms)
 	}
-	numStudents := 5  // Generate 5 students for demo
+
+	// Use default student count if not specified
+	if numStudents <= 0 {
+		numStudents = 5
+	}
+
+	fmt.Printf("🔍 DEBUG: Final configuration - students=%d, terms=%v\n", numStudents, terms)
+
 	minCoursesPerTerm := 3
 	maxCoursesPerTerm := 6
 	
@@ -280,5 +306,7 @@ func saveStudentJSONFile(filepath string, data interface{}) error {
 }
 
 func init() {
+	dataGeneratorCmd.Flags().Int("students", 5, "Number of students to generate (default: 5)")
+	dataGeneratorCmd.Flags().String("terms", "", "Comma-separated list of terms (e.g., Semester_1_2023,Summer_2023)")
 	rootCmd.AddCommand(dataGeneratorCmd)
 }

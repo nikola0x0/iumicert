@@ -175,34 +175,62 @@ func (g *TestDataGenerator) generateCourseCompletion(student StudentInfo, course
 
 // getTermDates returns start and end dates for a term
 func (g *TestDataGenerator) getTermDates(termID string) (time.Time, time.Time, error) {
+	// First check predefined terms
 	switch termID {
 	case "Semester_1_2023":
-		return time.Date(2023, 8, 15, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2023, 8, 15, 0, 0, 0, 0, time.UTC),
 			   time.Date(2023, 12, 20, 23, 59, 59, 0, time.UTC), nil
 	case "Semester_2_2023":
-		return time.Date(2024, 1, 8, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2024, 1, 8, 0, 0, 0, 0, time.UTC),
 			   time.Date(2024, 5, 15, 23, 59, 59, 0, time.UTC), nil
 	case "Summer_2023":
-		return time.Date(2023, 6, 1, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2023, 6, 1, 0, 0, 0, 0, time.UTC),
 			   time.Date(2023, 7, 31, 23, 59, 59, 0, time.UTC), nil
 	case "Semester_1_2024":
-		return time.Date(2024, 8, 15, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2024, 8, 15, 0, 0, 0, 0, time.UTC),
 			   time.Date(2024, 12, 20, 23, 59, 59, 0, time.UTC), nil
 	case "Semester_2_2024":
-		return time.Date(2025, 1, 8, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2025, 1, 8, 0, 0, 0, 0, time.UTC),
 			   time.Date(2025, 5, 15, 23, 59, 59, 0, time.UTC), nil
 	case "Summer_2024":
-		return time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC),
 			   time.Date(2024, 7, 31, 23, 59, 59, 0, time.UTC), nil
 	case "Semester_1_2025":
-		return time.Date(2025, 8, 15, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2025, 8, 15, 0, 0, 0, 0, time.UTC),
 			   time.Date(2025, 12, 20, 23, 59, 59, 0, time.UTC), nil
 	case "Semester_2_2025":
-		return time.Date(2026, 1, 8, 0, 0, 0, 0, time.UTC), 
+		return time.Date(2026, 1, 8, 0, 0, 0, 0, time.UTC),
 			   time.Date(2026, 5, 15, 23, 59, 59, 0, time.UTC), nil
-	default:
-		return time.Time{}, time.Time{}, fmt.Errorf("unknown term: %s", termID)
 	}
+
+	// Try to parse term ID dynamically for custom terms
+	// Expected format: "Semester_1_YYYY", "Semester_2_YYYY", or "Summer_YYYY"
+	return g.parseTermDates(termID)
+}
+
+// parseTermDates dynamically parses term dates from term ID
+func (g *TestDataGenerator) parseTermDates(termID string) (time.Time, time.Time, error) {
+	var year int
+
+	// Try Semester_1_YYYY format
+	if _, err := fmt.Sscanf(termID, "Semester_1_%d", &year); err == nil {
+		return time.Date(year, 8, 15, 0, 0, 0, 0, time.UTC),
+			   time.Date(year, 12, 20, 23, 59, 59, 0, time.UTC), nil
+	}
+
+	// Try Semester_2_YYYY format (runs in YYYY+1)
+	if _, err := fmt.Sscanf(termID, "Semester_2_%d", &year); err == nil {
+		return time.Date(year+1, 1, 8, 0, 0, 0, 0, time.UTC),
+			   time.Date(year+1, 5, 15, 23, 59, 59, 0, time.UTC), nil
+	}
+
+	// Try Summer_YYYY format
+	if _, err := fmt.Sscanf(termID, "Summer_%d", &year); err == nil {
+		return time.Date(year, 6, 1, 0, 0, 0, 0, time.UTC),
+			   time.Date(year, 7, 31, 23, 59, 59, 0, time.UTC), nil
+	}
+
+	return time.Time{}, time.Time{}, fmt.Errorf("unknown term format: %s (expected Semester_1_YYYY, Semester_2_YYYY, or Summer_YYYY)", termID)
 }
 
 // Helper methods

@@ -264,13 +264,26 @@ func initializeRepository(institutionID string) error {
 func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 	fmt.Printf("📚 Adding academic term: %s\n", termID)
 	fmt.Printf("📖 Processing data from: %s (format: %s)\n", dataFile, format)
-	
-	if validate {
-		fmt.Println("✅ Validating input data...")
-		if _, err := os.Stat(dataFile); os.IsNotExist(err) {
-			return fmt.Errorf("data file does not exist: %s", dataFile)
+
+	// Resolve data file path to handle both cmd/ and project root contexts
+	resolvedDataFile := dataFile
+	if _, err := os.Stat(dataFile); os.IsNotExist(err) {
+		// Try alternative path with ../
+		altDataFile := filepath.Join("..", dataFile)
+		if _, err := os.Stat(altDataFile); err == nil {
+			resolvedDataFile = altDataFile
 		}
 	}
+
+	if validate {
+		fmt.Println("✅ Validating input data...")
+		if _, err := os.Stat(resolvedDataFile); os.IsNotExist(err) {
+			return fmt.Errorf("data file does not exist: %s (also tried ../%s)", dataFile, dataFile)
+		}
+	}
+
+	// Use resolved path for loading
+	dataFile = resolvedDataFile
 	
 	// Load data based on format
 	var completions []verkle.CourseCompletion
@@ -315,8 +328,8 @@ func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 		return fmt.Errorf("failed to publish term: %w", err)
 	}
 
-    // Save complete Verkle tree for receipt generation (project-level data dir)
-    verkleDir := filepath.Join("..", "data", "verkle_trees")
+	// Save complete Verkle tree for receipt generation (project-level data dir)
+	verkleDir := resolveProjectPath("data/verkle_trees")
 	if err := os.MkdirAll(verkleDir, 0755); err != nil {
 		return fmt.Errorf("failed to create verkle directory: %w", err)
 	}
@@ -331,7 +344,11 @@ func addAcademicTerm(termID, dataFile, format string, validate bool) error {
 	if err := os.WriteFile(termTreeFile, termTreeData, 0644); err != nil {
 		return fmt.Errorf("failed to save term tree: %w", err)
 	}	// Save root for blockchain publishing
-	rootsDir := "../publish_ready/roots"
+	rootsDir := resolveProjectPath("publish_ready/roots")
+	if err := os.MkdirAll(rootsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create roots directory: %w", err)
+	}
+
 	rootData := map[string]interface{}{
 		"term_id": termID,
 		"verkle_root": fmt.Sprintf("%x", termTree.VerkleRoot),
@@ -733,6 +750,23 @@ func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error
 }
 
 // Helper Functions
+
+// resolveProjectPath resolves a project-relative path from either cmd/ or project root
+func resolveProjectPath(relativePath string) string {
+	// Try project root first (when running from project root)
+	if _, err := os.Stat(relativePath); err == nil {
+		return relativePath
+	}
+
+	// Try one level up (when running from cmd/)
+	parentPath := filepath.Join("..", relativePath)
+	if _, err := os.Stat(filepath.Dir(parentPath)); err == nil {
+		return parentPath
+	}
+
+	// If neither exists, return the parent path for creation
+	return parentPath
+}
 
 func loadCompletionsFromJSON(dataFile string) ([]verkle.CourseCompletion, error) {
 	// This is a simplified loader - in production you'd have more robust parsing
