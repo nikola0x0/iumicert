@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { FileText, ShieldCheck, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,16 +34,24 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[260px] bg-gradient-to-b from-white to-gray-50 border-r border-gray-200 flex flex-col shadow-lg">
-      {/* Logo Area with gradient */}
-      <div className="py-6 px-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-sm">IU</span>
+    <aside className="fixed left-0 top-0 h-screen w-[260px] bg-gradient-to-b from-slate-900 via-blue-900 to-indigo-900 border-r border-blue-800/50 flex flex-col shadow-2xl">
+      {/* Logo Area */}
+      <div className="py-6 px-6 border-b border-blue-800/50">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-blue-500/30 p-1.5">
+            <Image
+              src="/logo.png"
+              alt="IU-MiCert Logo"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain"
+            />
           </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">MiCert</h1>
+          <div>
+            <h1 className="text-xl font-bold text-white">IU-MiCert</h1>
+            <p className="text-xs text-blue-200/80 font-medium">Issuer Dashboard</p>
+          </div>
         </div>
-        <p className="text-xs text-gray-600 font-medium ml-10">Issuer Dashboard</p>
       </div>
 
       {/* Navigation */}
@@ -59,24 +68,19 @@ export function Sidebar() {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
                     isActive
-                      ? "bg-gradient-to-r from-blue-500 via-indigo-600 to-blue-500 text-white shadow-lg shadow-blue-500/30"
-                      : "text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:shadow-md"
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/50"
+                      : "text-blue-100/70 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                    isActive ? "bg-white/20" : "bg-gray-100 group-hover:bg-blue-100"
-                  )}>
-                    <Icon
-                      className={cn(
-                        "w-4 h-4 transition-colors",
-                        isActive ? "text-white" : "text-gray-600 group-hover:text-blue-600"
-                      )}
-                    />
-                  </div>
+                  <Icon
+                    className={cn(
+                      "w-5 h-5 transition-colors",
+                      isActive ? "text-white" : "text-blue-200/70 group-hover:text-white"
+                    )}
+                  />
                   <span className={cn(
-                    "font-medium text-sm transition-colors",
-                    isActive ? "text-white" : "group-hover:text-blue-700"
+                    "font-semibold text-sm transition-colors",
+                    isActive ? "text-white" : ""
                   )}>{item.label}</span>
                 </Link>
               </li>
@@ -86,8 +90,8 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-gray-200">
-        <p className="text-[11px] text-gray-400">Version 1.0.0</p>
+      <div className="px-4 py-4 border-t border-blue-800/50">
+        <p className="text-[11px] text-blue-300/50">Version 1.0.0</p>
       </div>
     </aside>
   );

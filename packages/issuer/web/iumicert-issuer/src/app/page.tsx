@@ -48,12 +48,29 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Publish Terms</h1>
-        <p className="text-gray-600 mt-2">
-          Publish academic term roots to the blockchain for verification
-        </p>
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-3xl p-10 shadow-2xl shadow-blue-500/20">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 right-1/4 w-32 h-32 border-4 border-white/10 rounded-full"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-20 h-20 border-4 border-white/10 rounded-full"></div>
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-4">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span className="text-xs font-semibold text-white/90">BLOCKCHAIN PUBLISHING</span>
+          </div>
+          <h1 className="text-5xl font-extrabold text-white mb-3 tracking-tight">
+            Publish Terms
+          </h1>
+          <p className="text-blue-100 text-lg max-w-2xl leading-relaxed">
+            Publish academic term roots to the blockchain for verification
+          </p>
+        </div>
       </div>
 
       <PublishTermTab />

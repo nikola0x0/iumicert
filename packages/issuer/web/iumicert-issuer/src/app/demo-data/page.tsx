@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -227,7 +228,7 @@ export default function DemoDataPage() {
           {output && (
             <details className="mt-3">
               <summary className="cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors">
-                📄 View Output
+                View Output
               </summary>
               <pre className="mt-2 p-3 bg-white rounded-lg text-xs overflow-x-auto border shadow-sm">
                 {output}
@@ -240,41 +241,60 @@ export default function DemoDataPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header with gradient background */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-100 shadow-sm">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400/10 rounded-full blur-3xl -z-10"></div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-          Demo Data Management
-        </h1>
-        <p className="text-gray-700 mt-3 text-lg">
-          Generate and manage demo data for testing the IU-MiCert system
-        </p>
+    <div className="space-y-8 pb-12">
+      {/* Header with gradient background and patterns */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-3xl p-10 shadow-2xl shadow-blue-500/20">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 right-1/4 w-32 h-32 border-4 border-white/10 rounded-full"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-20 h-20 border-4 border-white/10 rounded-full"></div>
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-4">
+            <Database className="w-4 h-4 text-white" />
+            <span className="text-xs font-semibold text-white/90">DATA MANAGEMENT</span>
+          </div>
+          <h1 className="text-5xl font-extrabold text-white mb-3 tracking-tight">
+            Demo Data Management
+          </h1>
+          <p className="text-blue-100 text-lg max-w-2xl leading-relaxed">
+            Generate and manage test data for the IU-MiCert credential system
+          </p>
+        </div>
       </div>
 
       {/* System Reset Section */}
-      <Card className="border-l-4 border-red-500 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white to-red-50/30">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
-              <Trash2 className="w-6 h-6 text-red-600" />
+      <Card className="relative overflow-hidden rounded-3xl shadow-xl border-2 border-red-200 hover:border-red-300 transition-all duration-300 bg-white group">
+        <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-red-500 to-rose-600"></div>
+
+        <CardHeader className="relative">
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30 transform group-hover:scale-110 transition-transform duration-300">
+                <Trash2 className="w-7 h-7 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full"></div>
             </div>
-            <div>
-              <CardTitle className="text-red-700">System Reset</CardTitle>
-              <CardDescription className="mt-1">
-                <strong>Warning:</strong> This will delete ALL generated data,
-                including terms, receipts, and Verkle trees.
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <CardTitle className="text-2xl text-red-700">System Reset</CardTitle>
+                <Badge variant="destructive" className="text-[10px] px-2 py-0.5">DESTRUCTIVE</Badge>
+              </div>
+              <CardDescription className="text-base text-gray-600">
+                This action will permanently delete <strong className="text-red-600">all generated data</strong>, including terms,
+                receipts, and Verkle trees. This operation cannot be undone.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 relative">
           <Button
             onClick={handleReset}
             disabled={resetStatus.status === "running"}
             variant="destructive"
-            className="rounded-xl shadow-md hover:shadow-lg hover:shadow-red-500/20 transition-all"
+            className="rounded-2xl shadow-lg hover:shadow-xl hover:shadow-red-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
             {resetStatus.status === "running" ? (
               <>
@@ -294,116 +314,162 @@ export default function DemoDataPage() {
       </Card>
 
       {/* Full Data Generation Section */}
-      <Card className="border-l-4 border-blue-500 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white via-blue-50/20 to-indigo-50/30">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
-              <Zap className="w-6 h-6 text-white" />
+      <Card className="relative overflow-hidden rounded-3xl shadow-2xl border-2 border-blue-200 hover:border-blue-300 transition-all duration-300 bg-white group">
+
+        <CardHeader className="relative">
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center shadow-xl shadow-blue-500/40 transform group-hover:rotate-6 transition-transform duration-300">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center shadow-md">
+                <span className="text-xs">⚡</span>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-blue-700">
-                Full Data Generation
-              </CardTitle>
-              <CardDescription className="mt-1">
-                Generate a complete dataset with custom parameters. This creates
-                student journeys, converts them to Verkle format, builds trees,
-                and generates receipts for all selected terms.
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <CardTitle className="text-3xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Data Generation
+                </CardTitle>
+              </div>
+              <CardDescription className="text-base text-gray-600 leading-relaxed">
+                Generate comprehensive test datasets with customizable parameters. Creates student journeys,
+                converts to Verkle format, builds cryptographic trees, and generates verification receipts.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Number of Students Input */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+        <CardContent className="space-y-8 relative">
+          {/* Number of Students Input - Enhanced */}
+          <div className="relative">
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-3">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">1</span>
               Number of Students
-              <Badge variant="destructive" className="text-xs">
+              <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
                 Required
               </Badge>
             </label>
-            <input
-              type="number"
-              value={numStudentsForFull}
-              onChange={(e) =>
-                setNumStudentsForFull(parseInt(e.target.value) || 1)
-              }
-              min="1"
-              max="100"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-all bg-white shadow-sm"
-            />
-            <p className="text-xs text-gray-500 mt-2">
-              Number of students to generate (1-100). Each student gets 3-6
-              courses per term.
+            <div className="relative group">
+              <input
+                type="number"
+                value={numStudentsForFull}
+                onChange={(e) =>
+                  setNumStudentsForFull(parseInt(e.target.value) || 1)
+                }
+                min="1"
+                max="100"
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 hover:border-blue-300 transition-all bg-white shadow-sm text-lg font-semibold text-gray-900 group-hover:shadow-md"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">
+                students
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-3 ml-8">
+              Range: 1-100 students, 3-6 courses each per term
             </p>
           </div>
 
-          {/* Term Selection */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Select Terms
-                </label>
-                <Badge variant="destructive" className="text-xs">
+          {/* Term Selection - Interactive Grid */}
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">2</span>
+                Select Academic Terms
+                <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
                   Required
                 </Badge>
-              </div>
+              </label>
               <Button
                 onClick={toggleAllTerms}
                 variant="ghost"
                 size="sm"
-                className="rounded-lg"
+                className="rounded-xl hover:bg-blue-100 hover:text-blue-700 transition-colors text-xs font-semibold"
               >
                 {selectedTerms.length === availableTerms.length
-                  ? "Deselect All"
-                  : "Select All"}
+                  ? "✕ Deselect All"
+                  : "✓ Select All"}
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3 p-5 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-xl border border-blue-100 shadow-sm">
-              {availableTerms.map((term) => (
-                <label
-                  key={term}
-                  className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-all duration-200 hover:shadow-md group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedTerms.includes(term)}
-                    onChange={() => toggleTerm(term)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-slate-900 group-hover:text-blue-600 transition-colors">
-                    {term}
-                  </span>
-                </label>
-              ))}
+
+            <div className="relative p-6 bg-gradient-to-br from-gray-50 via-blue-50/50 to-indigo-50/50 rounded-2xl border-2 border-gray-200 shadow-inner">
+              <div className="grid grid-cols-2 gap-3">
+                {availableTerms.map((term, idx) => (
+                  <label
+                    key={term}
+                    className="relative flex items-center space-x-3 cursor-pointer p-4 rounded-xl transition-all duration-200 group bg-white border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg hover:-translate-y-0.5"
+                    style={{ animationDelay: `${idx * 50}ms` }}
+                  >
+                    <div className={`flex items-center justify-center w-5 h-5 rounded-md border-2 transition-all ${
+                      selectedTerms.includes(term)
+                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500'
+                        : 'border-gray-300 group-hover:border-blue-400'
+                    }`}>
+                      {selectedTerms.includes(term) && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={selectedTerms.includes(term)}
+                      onChange={() => toggleTerm(term)}
+                      className="sr-only"
+                    />
+                    <span className={`text-sm font-semibold transition-colors ${
+                      selectedTerms.includes(term)
+                        ? 'text-blue-700'
+                        : 'text-slate-700 group-hover:text-blue-600'
+                    }`}>
+                      {term.replace(/_/g, ' ')}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Selected: {selectedTerms.length} / {availableTerms.length} terms
-            </p>
+
+            <div className="mt-3 ml-8 text-sm">
+              <div className={`inline-flex px-3 py-1.5 rounded-full font-semibold ${
+                selectedTerms.length === 0
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {selectedTerms.length} / {availableTerms.length} terms selected
+              </div>
+            </div>
           </div>
 
-          {/* Action Button */}
-          <Button
-            onClick={handleGenerateFull}
-            disabled={
-              generateStatus.status === "running" || selectedTerms.length === 0
-            }
-            className="w-full text-white rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
-            size="lg"
-          >
-            {generateStatus.status === "running" ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Zap className="mr-2 h-5 w-5" />
-                Generate {numStudentsForFull} Students × {selectedTerms.length}{" "}
-                Terms
-              </>
-            )}
-          </Button>
+          {/* Action Button - Hero CTA */}
+          <div className="pt-4">
+            <Button
+              onClick={handleGenerateFull}
+              disabled={
+                generateStatus.status === "running" || selectedTerms.length === 0
+              }
+              className="w-full text-white rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-2xl shadow-blue-500/50 hover:shadow-blue-600/60 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
+              size="lg"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              <div className="relative flex items-center justify-center gap-3 py-1">
+                {generateStatus.status === "running" ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span className="text-lg font-bold">Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                    <span className="text-lg font-bold">
+                      Generate {numStudentsForFull} Students × {selectedTerms.length} Terms
+                    </span>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      →
+                    </div>
+                  </>
+                )}
+              </div>
+            </Button>
+          </div>
 
           <StatusBadge {...generateStatus} />
 
