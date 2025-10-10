@@ -1,6 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Trash2,
+  Zap,
+  PlusCircle,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 type OperationStatus = {
   status: "idle" | "running" | "success" | "error";
@@ -9,9 +28,15 @@ type OperationStatus = {
 };
 
 export default function DemoDataPage() {
-  const [resetStatus, setResetStatus] = useState<OperationStatus>({ status: "idle" });
-  const [generateStatus, setGenerateStatus] = useState<OperationStatus>({ status: "idle" });
-  const [addTermStatus, setAddTermStatus] = useState<OperationStatus>({ status: "idle" });
+  const [resetStatus, setResetStatus] = useState<OperationStatus>({
+    status: "idle",
+  });
+  const [generateStatus, setGenerateStatus] = useState<OperationStatus>({
+    status: "idle",
+  });
+  const [addTermStatus, setAddTermStatus] = useState<OperationStatus>({
+    status: "idle",
+  });
 
   // Add New Term state
   const [termId, setTermId] = useState("Semester_1_2026");
@@ -38,7 +63,9 @@ export default function DemoDataPage() {
   ]);
 
   const handleReset = async () => {
-    if (!confirm("⚠️ WARNING: This will delete ALL generated data. Are you sure?")) {
+    if (
+      !confirm("⚠️ WARNING: This will delete ALL generated data. Are you sure?")
+    ) {
       return;
     }
 
@@ -81,14 +108,17 @@ export default function DemoDataPage() {
     });
 
     try {
-      const response = await fetch("http://localhost:8080/api/demo/generate-full", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          num_students: numStudentsForFull,
-          terms: selectedTerms,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/demo/generate-full",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            num_students: numStudentsForFull,
+            terms: selectedTerms,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -152,172 +182,254 @@ export default function DemoDataPage() {
   const StatusBadge = ({ status, message, output }: OperationStatus) => {
     if (status === "idle") return null;
 
-    const colors = {
-      running: "bg-blue-50 border-blue-200 text-blue-800",
-      success: "bg-green-50 border-green-200 text-green-800",
-      error: "bg-red-50 border-red-200 text-red-800",
+    const config = {
+      running: {
+        variant: "default" as const,
+        icon: Loader2,
+        className:
+          "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-900 shadow-sm",
+        iconBg: "bg-blue-100",
+        iconColor: "text-blue-600",
+      },
+      success: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        className:
+          "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-900 shadow-sm",
+        iconBg: "bg-green-100",
+        iconColor: "text-green-600",
+      },
+      error: {
+        variant: "destructive" as const,
+        icon: XCircle,
+        className:
+          "bg-gradient-to-r from-red-50 to-rose-50 border-red-200 text-red-900 shadow-sm",
+        iconBg: "bg-red-100",
+        iconColor: "text-red-600",
+      },
     };
 
-    const icons = {
-      running: "⏳",
-      success: "✅",
-      error: "❌",
-    };
+    const { icon: Icon, className, iconBg, iconColor } = config[status];
 
     return (
-      <div className={`p-4 rounded-lg border ${colors[status]} mt-4`}>
-        <p className="font-medium">
-          {icons[status]} {message}
-        </p>
-        {output && (
-          <details className="mt-2">
-            <summary className="cursor-pointer text-sm font-medium">View Output</summary>
-            <pre className="mt-2 p-2 bg-white rounded text-xs overflow-x-auto border">
-              {output}
-            </pre>
-          </details>
-        )}
-      </div>
+      <Alert className={`${className} mt-4 rounded-xl flex items-start gap-3`}>
+        <div
+          className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}
+        >
+          <Icon
+            className={`h-5 w-5 ${iconColor} ${
+              status === "running" ? "animate-spin" : ""
+            }`}
+          />
+        </div>
+        <AlertDescription className="flex-1">
+          <p className="font-semibold">{message}</p>
+          {output && (
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-medium hover:text-blue-600 transition-colors">
+                📄 View Output
+              </summary>
+              <pre className="mt-2 p-3 bg-white rounded-lg text-xs overflow-x-auto border shadow-sm">
+                {output}
+              </pre>
+            </details>
+          )}
+        </AlertDescription>
+      </Alert>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header with Navigation */}
-        <div className="mb-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Demo Data Management</h1>
-              <p className="text-gray-600 mt-2">
-                Generate and manage demo data for testing the IU-MiCert system
-              </p>
+    <div className="max-w-6xl mx-auto space-y-8">
+      {/* Header with gradient background */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-100 shadow-sm">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400/10 rounded-full blur-3xl -z-10"></div>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Demo Data Management
+        </h1>
+        <p className="text-gray-700 mt-3 text-lg">
+          Generate and manage demo data for testing the IU-MiCert system
+        </p>
+      </div>
+
+      {/* System Reset Section */}
+      <Card className="border-l-4 border-red-500 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white to-red-50/30">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+              <Trash2 className="w-6 h-6 text-red-600" />
             </div>
-            <div className="flex gap-3">
-              <a
-                href="/"
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-              >
-                ← Back to Dashboard
-              </a>
-              <a
-                href="/verifier"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-              >
-                🔍 Verifier
-              </a>
+            <div>
+              <CardTitle className="text-red-700">System Reset</CardTitle>
+              <CardDescription className="mt-1">
+                <strong>Warning:</strong> This will delete ALL generated data,
+                including terms, receipts, and Verkle trees.
+              </CardDescription>
             </div>
           </div>
-        </div>
-
-        {/* System Reset Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6 border-l-4 border-red-500">
-          <h2 className="text-2xl font-bold mb-4 text-red-700">🧹 System Reset</h2>
-          <p className="text-gray-600 mb-6">
-            <strong>Warning:</strong> This will delete ALL generated data, including terms,
-            receipts, and Verkle trees. Use this to start fresh.
-          </p>
-
-          <button
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button
             onClick={handleReset}
             disabled={resetStatus.status === "running"}
-            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+            variant="destructive"
+            className="rounded-xl shadow-md hover:shadow-lg hover:shadow-red-500/20 transition-all"
           >
-            {resetStatus.status === "running" ? "Resetting..." : "Execute Reset (./reset.sh)"}
-          </button>
+            {resetStatus.status === "running" ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Resetting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Execute Reset (./reset.sh)
+              </>
+            )}
+          </Button>
 
           <StatusBadge {...resetStatus} />
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Full Data Generation Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6 border-l-4 border-blue-500">
-          <h2 className="text-2xl font-bold mb-4 text-blue-700">🚀 Full Data Generation</h2>
-          <p className="text-gray-600 mb-6">
-            Generate a complete dataset with custom parameters. This creates student journeys,
-            converts them to Verkle format, builds trees, and generates receipts for all selected terms.
-          </p>
-
-          <div className="space-y-6 mb-6">
-            {/* Number of Students Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Students <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={numStudentsForFull}
-                onChange={(e) => setNumStudentsForFull(parseInt(e.target.value) || 1)}
-                min="1"
-                max="100"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Number of students to generate (1-100). Each student gets 3-6 courses per term.
-              </p>
+      {/* Full Data Generation Section */}
+      <Card className="border-l-4 border-blue-500 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-white via-blue-50/20 to-indigo-50/30">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+              <Zap className="w-6 h-6 text-white" />
             </div>
-
-            {/* Term Selection */}
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Select Terms <span className="text-red-500">*</span>
+              <CardTitle className="text-blue-700">
+                Full Data Generation
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Generate a complete dataset with custom parameters. This creates
+                student journeys, converts them to Verkle format, builds trees,
+                and generates receipts for all selected terms.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Number of Students Input */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+              Number of Students
+              <Badge variant="destructive" className="text-xs">
+                Required
+              </Badge>
+            </label>
+            <input
+              type="number"
+              value={numStudentsForFull}
+              onChange={(e) =>
+                setNumStudentsForFull(parseInt(e.target.value) || 1)
+              }
+              min="1"
+              max="100"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-all bg-white shadow-sm"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              Number of students to generate (1-100). Each student gets 3-6
+              courses per term.
+            </p>
+          </div>
+
+          {/* Term Selection */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Select Terms
                 </label>
-                <button
-                  onClick={toggleAllTerms}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  {selectedTerms.length === availableTerms.length ? "Deselect All" : "Select All"}
-                </button>
+                <Badge variant="destructive" className="text-xs">
+                  Required
+                </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                {availableTerms.map((term) => (
-                  <label
-                    key={term}
-                    className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 p-2 rounded transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedTerms.includes(term)}
-                      onChange={() => toggleTerm(term)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700">{term}</span>
-                  </label>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Selected: {selectedTerms.length} / {availableTerms.length} terms
-              </p>
+              <Button
+                onClick={toggleAllTerms}
+                variant="ghost"
+                size="sm"
+                className="rounded-lg"
+              >
+                {selectedTerms.length === availableTerms.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </Button>
             </div>
+            <div className="grid grid-cols-2 gap-3 p-5 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-xl border border-blue-100 shadow-sm">
+              {availableTerms.map((term) => (
+                <label
+                  key={term}
+                  className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-all duration-200 hover:shadow-md group"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTerms.includes(term)}
+                    onChange={() => toggleTerm(term)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-slate-900 group-hover:text-blue-600 transition-colors">
+                    {term}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Selected: {selectedTerms.length} / {availableTerms.length} terms
+            </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 mb-4">
-            <button
-              onClick={handleGenerateFull}
-              disabled={generateStatus.status === "running" || selectedTerms.length === 0}
-              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {generateStatus.status === "running"
-                ? "Generating..."
-                : `Generate ${numStudentsForFull} Students × ${selectedTerms.length} Terms`}
-            </button>
-          </div>
+          {/* Action Button */}
+          <Button
+            onClick={handleGenerateFull}
+            disabled={
+              generateStatus.status === "running" || selectedTerms.length === 0
+            }
+            className="w-full text-white rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-700 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
+            size="lg"
+          >
+            {generateStatus.status === "running" ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Zap className="mr-2 h-5 w-5" />
+                Generate {numStudentsForFull} Students × {selectedTerms.length}{" "}
+                Terms
+              </>
+            )}
+          </Button>
 
           <StatusBadge {...generateStatus} />
 
           {/* Add New Term to List */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-bold mb-3 text-gray-900">➕ Add Custom Term</h3>
-            <p className="text-gray-600 mb-4 text-sm">
-              Add a new term to the selection list above (it will be automatically selected).
-            </p>
+          <div className="pt-6 border-t-2 border-dashed border-gray-200 mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                <PlusCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Add Custom Term
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Add a new term to the selection list above
+                </p>
+              </div>
+            </div>
 
-            <div className="flex gap-4 items-end">
-              {/* Term ID Input */}
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Term ID <span className="text-red-500">*</span>
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                  New Term ID
+                  <Badge variant="destructive" className="text-xs">
+                    Required
+                  </Badge>
                 </label>
                 <input
                   type="text"
@@ -329,35 +441,40 @@ export default function DemoDataPage() {
                     }
                   }}
                   placeholder="e.g., Semester_1_2026"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-300 transition-all bg-white shadow-sm"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-2">
                   Format: Semester_1_YYYY, Semester_2_YYYY, or Summer_YYYY
                 </p>
               </div>
 
-              {/* Add Button */}
-              <button
+              <Button
                 onClick={handleAddTerm}
                 disabled={!termId.trim()}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap"
+                variant="default"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl w-full shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all"
+                size="lg"
               >
-                ➕ Add Term
-              </button>
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Add Term
+              </Button>
             </div>
 
             <StatusBadge {...addTermStatus} />
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Info Section */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            <strong>💡 Tip:</strong> After generating data, use the main issuer dashboard to
-            process terms, build Verkle trees, and publish to blockchain.
-          </p>
+      {/* Info Section */}
+      <Alert className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 rounded-xl shadow-sm">
+        <div className="flex items-center">
+          <AlertCircle className="h-5 w-5 text-blue-600" />
+          <AlertDescription className="ml-2 text-blue-900">
+            After generating data, use the main issuer dashboard to process
+            terms, build Verkle trees, and publish to blockchain.
+          </AlertDescription>
         </div>
-      </div>
+      </Alert>
     </div>
   );
 }

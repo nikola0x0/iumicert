@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Web3Provider } from "@/providers/Web3Provider";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -24,7 +25,7 @@ export default function RootLayout({
         className={`${inter.variable} font-sans antialiased`}
       >
         <Web3Provider>
-          {children}
+          <DashboardLayout>{children}</DashboardLayout>
         </Web3Provider>
       </body>
     </html>

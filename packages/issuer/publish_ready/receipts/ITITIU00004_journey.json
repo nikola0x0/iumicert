@@ -1,7 +1,7 @@
 {
   "blockchain_ready": true,
   "courses_filter": null,
-  "generation_timestamp": "2025-10-10T22:28:54+07:00",
+  "generation_timestamp": "2025-10-10T23:19:01+07:00",
   "receipt_type": {
     "selective_disclosure": false,
     "specific_courses": false,
@@ -10,7 +10,7 @@
   "student_id": "ITITIU00004",
   "term_receipts": {
     "Semester_1_2023": {
-      "generated_at": "2025-10-10T22:28:54+07:00",
+      "generated_at": "2025-10-10T23:19:01+07:00",
       "receipt": {
         "course_proofs": {
           "CH011IU": {
@@ -303,7 +303,7 @@
           }
         },
         "metadata": {
-          "generated_at": "2025-10-10T22:28:54.293548+07:00",
+          "generated_at": "2025-10-10T23:19:01.149636+07:00",
           "total_courses": 6,
           "revealed_courses": 6,
           "verification_level": "full"
@@ -329,21 +329,6 @@
             "issuer_id": "IU-BUS",
             "student_id": "ITITIU00004",
             "term_id": "Semester_1_2023",
-            "course_id": "IT076IU",
-            "course_name": "Software Engineering",
-            "attempt_no": 1,
-            "started_at": "2023-09-03T02:11:02.238487688Z",
-            "completed_at": "2023-11-04T11:58:52.905882505Z",
-            "assessed_at": "2023-11-11T11:58:52.905882505Z",
-            "issued_at": "2023-11-12T11:58:52.905882505Z",
-            "grade": "A+",
-            "credits": 4,
-            "instructor": "Prof. White"
-          },
-          {
-            "issuer_id": "IU-BUS",
-            "student_id": "ITITIU00004",
-            "term_id": "Semester_1_2023",
             "course_id": "IT089IU",
             "course_name": "Computer Architecture",
             "attempt_no": 1,
@@ -356,16 +341,16 @@
             "instructor": "Prof. Harris"
           },
           {
-            "issuer_id": "IU-BUS",
+            "issuer_id": "IU-CS",
             "student_id": "ITITIU00004",
             "term_id": "Semester_1_2023",
-            "course_id": "IT160IU",
-            "course_name": "Data Mining",
+            "course_id": "IT091IU",
+            "course_name": "Computer Networks",
             "attempt_no": 1,
-            "started_at": "2023-08-31T20:50:41.371746359Z",
-            "completed_at": "2023-10-19T21:37:43.661544815Z",
-            "assessed_at": "2023-10-23T21:37:43.661544815Z",
-            "issued_at": "2023-11-04T21:37:43.661544815Z",
+            "started_at": "2023-09-07T19:53:25.107202922Z",
+            "completed_at": "2023-10-24T23:05:57.13532649Z",
+            "assessed_at": "2023-10-31T23:05:57.13532649Z",
+            "issued_at": "2023-11-02T23:05:57.13532649Z",
             "grade": "C+",
             "credits": 4,
             "instructor": "Prof. Davis"
@@ -386,16 +371,31 @@
             "instructor": "Prof. Davis"
           },
           {
-            "issuer_id": "IU-CS",
+            "issuer_id": "IU-BUS",
             "student_id": "ITITIU00004",
             "term_id": "Semester_1_2023",
-            "course_id": "IT091IU",
-            "course_name": "Computer Networks",
+            "course_id": "IT076IU",
+            "course_name": "Software Engineering",
             "attempt_no": 1,
-            "started_at": "2023-09-07T19:53:25.107202922Z",
-            "completed_at": "2023-10-24T23:05:57.13532649Z",
-            "assessed_at": "2023-10-31T23:05:57.13532649Z",
-            "issued_at": "2023-11-02T23:05:57.13532649Z",
+            "started_at": "2023-09-03T02:11:02.238487688Z",
+            "completed_at": "2023-11-04T11:58:52.905882505Z",
+            "assessed_at": "2023-11-11T11:58:52.905882505Z",
+            "issued_at": "2023-11-12T11:58:52.905882505Z",
+            "grade": "A+",
+            "credits": 4,
+            "instructor": "Prof. White"
+          },
+          {
+            "issuer_id": "IU-BUS",
+            "student_id": "ITITIU00004",
+            "term_id": "Semester_1_2023",
+            "course_id": "IT160IU",
+            "course_name": "Data Mining",
+            "attempt_no": 1,
+            "started_at": "2023-08-31T20:50:41.371746359Z",
+            "completed_at": "2023-10-19T21:37:43.661544815Z",
+            "assessed_at": "2023-10-23T21:37:43.661544815Z",
+            "issued_at": "2023-11-04T21:37:43.661544815Z",
             "grade": "C+",
             "credits": 4,
             "instructor": "Prof. Davis"
@@ -415,7 +415,7 @@
       "verkle_root": "118c7c6d65efca71bc055d8e28cc77dac8841c38191a90b72be176e94e701066"
     },
     "Semester_2_2023": {
-      "generated_at": "2025-10-10T22:28:54+07:00",
+      "generated_at": "2025-10-10T23:19:01+07:00",
       "receipt": {
         "course_proofs": {
           "IT064IU": {
@@ -709,13 +709,28 @@
           }
         },
         "metadata": {
-          "generated_at": "2025-10-10T22:28:54.428326+07:00",
+          "generated_at": "2025-10-10T23:19:01.288347+07:00",
           "total_courses": 6,
           "revealed_courses": 6,
           "verification_level": "full"
         },
         "proof_type": "verkle_32_byte",
         "revealed_courses": [
+          {
+            "issuer_id": "IU-CHEM",
+            "student_id": "ITITIU00004",
+            "term_id": "Semester_2_2023",
+            "course_id": "IT064IU",
+            "course_name": "Introduction to Computing",
+            "attempt_no": 1,
+            "started_at": "2024-01-20T01:16:57.521427346Z",
+            "completed_at": "2024-03-13T18:09:34.386240341Z",
+            "assessed_at": "2024-03-18T18:09:34.386240341Z",
+            "issued_at": "2024-03-26T18:09:34.386240341Z",
+            "grade": "B",
+            "credits": 3,
+            "instructor": "Prof. Wilson"
+          },
           {
             "issuer_id": "IU-BUS",
             "student_id": "ITITIU00004",
@@ -750,21 +765,6 @@
             "issuer_id": "IU-CS",
             "student_id": "ITITIU00004",
             "term_id": "Semester_2_2023",
-            "course_id": "IT153IU",
-            "course_name": "Discrete Mathematics",
-            "attempt_no": 1,
-            "started_at": "2024-01-24T03:24:43.321657509Z",
-            "completed_at": "2024-03-27T20:20:29.705367173Z",
-            "assessed_at": "2024-03-28T20:20:29.705367173Z",
-            "issued_at": "2024-04-02T20:20:29.705367173Z",
-            "grade": "B+",
-            "credits": 3,
-            "instructor": "Prof. Johnson"
-          },
-          {
-            "issuer_id": "IU-CS",
-            "student_id": "ITITIU00004",
-            "term_id": "Semester_2_2023",
             "course_id": "MA001IU",
             "course_name": "Calculus 1",
             "attempt_no": 1,
@@ -777,19 +777,19 @@
             "instructor": "Prof. Johnson"
           },
           {
-            "issuer_id": "IU-CHEM",
+            "issuer_id": "IU-CS",
             "student_id": "ITITIU00004",
             "term_id": "Semester_2_2023",
-            "course_id": "IT064IU",
-            "course_name": "Introduction to Computing",
+            "course_id": "IT153IU",
+            "course_name": "Discrete Mathematics",
             "attempt_no": 1,
-            "started_at": "2024-01-20T01:16:57.521427346Z",
-            "completed_at": "2024-03-13T18:09:34.386240341Z",
-            "assessed_at": "2024-03-18T18:09:34.386240341Z",
-            "issued_at": "2024-03-26T18:09:34.386240341Z",
-            "grade": "B",
+            "started_at": "2024-01-24T03:24:43.321657509Z",
+            "completed_at": "2024-03-27T20:20:29.705367173Z",
+            "assessed_at": "2024-03-28T20:20:29.705367173Z",
+            "issued_at": "2024-04-02T20:20:29.705367173Z",
+            "grade": "B+",
             "credits": 3,
-            "instructor": "Prof. Wilson"
+            "instructor": "Prof. Johnson"
           },
           {
             "issuer_id": "IU-PHYS",
@@ -821,7 +821,7 @@
       "verkle_root": "253f6449cc516ab3c753170db9270b5da16392616cd843744bf2424fcb96ccc2"
     },
     "Semester_2_2025": {
-      "generated_at": "2025-10-10T22:28:54+07:00",
+      "generated_at": "2025-10-10T23:19:01+07:00",
       "receipt": {
         "course_proofs": {
           "CH011IU": {
@@ -1114,28 +1114,13 @@
           }
         },
         "metadata": {
-          "generated_at": "2025-10-10T22:28:54.55454+07:00",
+          "generated_at": "2025-10-10T23:19:01.423107+07:00",
           "total_courses": 6,
           "revealed_courses": 6,
           "verification_level": "full"
         },
         "proof_type": "verkle_32_byte",
         "revealed_courses": [
-          {
-            "issuer_id": "IU-CS",
-            "student_id": "ITITIU00004",
-            "term_id": "Semester_2_2025",
-            "course_id": "CH011IU",
-            "course_name": "Chemistry for Engineers",
-            "attempt_no": 1,
-            "started_at": "2026-01-30T14:02:51.560066174Z",
-            "completed_at": "2026-03-22T11:12:18.952266299Z",
-            "assessed_at": "2026-03-24T11:12:18.952266299Z",
-            "issued_at": "2026-04-01T11:12:18.952266299Z",
-            "grade": "B-",
-            "credits": 3,
-            "instructor": "Prof. Jackson"
-          },
           {
             "issuer_id": "IU-MATH",
             "student_id": "ITITIU00004",
@@ -1167,19 +1152,34 @@
             "instructor": "Prof. Brown"
           },
           {
-            "issuer_id": "IU-PHYS",
+            "issuer_id": "IU-CS",
             "student_id": "ITITIU00004",
             "term_id": "Semester_2_2025",
-            "course_id": "EN007IU",
-            "course_name": "Writing AE1",
+            "course_id": "CH011IU",
+            "course_name": "Chemistry for Engineers",
             "attempt_no": 1,
-            "started_at": "2026-01-30T15:32:38.347142755Z",
-            "completed_at": "2026-03-26T13:30:10.138681223Z",
-            "assessed_at": "2026-03-30T13:30:10.138681223Z",
-            "issued_at": "2026-04-01T13:30:10.138681223Z",
-            "grade": "B",
-            "credits": 2,
-            "instructor": "Prof. White"
+            "started_at": "2026-01-30T14:02:51.560066174Z",
+            "completed_at": "2026-03-22T11:12:18.952266299Z",
+            "assessed_at": "2026-03-24T11:12:18.952266299Z",
+            "issued_at": "2026-04-01T11:12:18.952266299Z",
+            "grade": "B-",
+            "credits": 3,
+            "instructor": "Prof. Jackson"
+          },
+          {
+            "issuer_id": "IU-CS",
+            "student_id": "ITITIU00004",
+            "term_id": "Semester_2_2025",
+            "course_id": "IT116IU",
+            "course_name": "C/C++ Programming",
+            "attempt_no": 1,
+            "started_at": "2026-01-14T18:35:29.679695072Z",
+            "completed_at": "2026-03-23T18:33:46.552234398Z",
+            "assessed_at": "2026-03-29T18:33:46.552234398Z",
+            "issued_at": "2026-04-03T18:33:46.552234398Z",
+            "grade": "B+",
+            "credits": 4,
+            "instructor": "Prof. Davis"
           },
           {
             "issuer_id": "IU-PHYS",
@@ -1197,19 +1197,19 @@
             "instructor": "Prof. Johnson"
           },
           {
-            "issuer_id": "IU-CS",
+            "issuer_id": "IU-PHYS",
             "student_id": "ITITIU00004",
             "term_id": "Semester_2_2025",
-            "course_id": "IT116IU",
-            "course_name": "C/C++ Programming",
+            "course_id": "EN007IU",
+            "course_name": "Writing AE1",
             "attempt_no": 1,
-            "started_at": "2026-01-14T18:35:29.679695072Z",
-            "completed_at": "2026-03-23T18:33:46.552234398Z",
-            "assessed_at": "2026-03-29T18:33:46.552234398Z",
-            "issued_at": "2026-04-03T18:33:46.552234398Z",
-            "grade": "B+",
-            "credits": 4,
-            "instructor": "Prof. Davis"
+            "started_at": "2026-01-30T15:32:38.347142755Z",
+            "completed_at": "2026-03-26T13:30:10.138681223Z",
+            "assessed_at": "2026-03-30T13:30:10.138681223Z",
+            "issued_at": "2026-04-01T13:30:10.138681223Z",
+            "grade": "B",
+            "credits": 2,
+            "instructor": "Prof. White"
           }
         ],
         "selective_disclosure": false,
@@ -1226,7 +1226,7 @@
       "verkle_root": "38e7f2ce18440d3ba153b2c5f8af877d31afea03a4d1a669afb1cc4e26a64a7a"
     },
     "Summer_2023": {
-      "generated_at": "2025-10-10T22:28:54+07:00",
+      "generated_at": "2025-10-10T23:19:01+07:00",
       "receipt": {
         "course_proofs": {
           "EN008IU": {
@@ -1519,7 +1519,7 @@
           }
         },
         "metadata": {
-          "generated_at": "2025-10-10T22:28:54.678507+07:00",
+          "generated_at": "2025-10-10T23:19:01.553334+07:00",
           "total_courses": 6,
           "revealed_courses": 6,
           "verification_level": "full"
@@ -1542,21 +1542,6 @@
             "instructor": "Prof. Taylor"
           },
           {
-            "issuer_id": "IU-PHYS",
-            "student_id": "ITITIU00004",
-            "term_id": "Summer_2023",
-            "course_id": "IT116IU",
-            "course_name": "C/C++ Programming",
-            "attempt_no": 1,
-            "started_at": "2023-06-09T12:07:41.667773994Z",
-            "completed_at": "2023-06-28T05:34:31.745565234Z",
-            "assessed_at": "2023-07-04T05:34:31.745565234Z",
-            "issued_at": "2023-07-16T05:34:31.745565234Z",
-            "grade": "C",
-            "credits": 4,
-            "instructor": "Prof. White"
-          },
-          {
             "issuer_id": "IU-BUS",
             "student_id": "ITITIU00004",
             "term_id": "Summer_2023",
@@ -1572,19 +1557,19 @@
             "instructor": "Prof. White"
           },
           {
-            "issuer_id": "IU-CS",
+            "issuer_id": "IU-PHYS",
             "student_id": "ITITIU00004",
             "term_id": "Summer_2023",
-            "course_id": "IT089IU",
-            "course_name": "Computer Architecture",
+            "course_id": "IT116IU",
+            "course_name": "C/C++ Programming",
             "attempt_no": 1,
-            "started_at": "2023-06-05T06:34:15.838127543Z",
-            "completed_at": "2023-06-26T16:26:32.847718064Z",
-            "assessed_at": "2023-07-01T16:26:32.847718064Z",
-            "issued_at": "2023-07-11T16:26:32.847718064Z",
-            "grade": "B-",
+            "started_at": "2023-06-09T12:07:41.667773994Z",
+            "completed_at": "2023-06-28T05:34:31.745565234Z",
+            "assessed_at": "2023-07-04T05:34:31.745565234Z",
+            "issued_at": "2023-07-16T05:34:31.745565234Z",
+            "grade": "C",
             "credits": 4,
-            "instructor": "Prof. Smith"
+            "instructor": "Prof. White"
           },
           {
             "issuer_id": "IU-CHEM",
@@ -1615,6 +1600,21 @@
             "grade": "D",
             "credits": 3,
             "instructor": "Prof. Taylor"
+          },
+          {
+            "issuer_id": "IU-CS",
+            "student_id": "ITITIU00004",
+            "term_id": "Summer_2023",
+            "course_id": "IT089IU",
+            "course_name": "Computer Architecture",
+            "attempt_no": 1,
+            "started_at": "2023-06-05T06:34:15.838127543Z",
+            "completed_at": "2023-06-26T16:26:32.847718064Z",
+            "assessed_at": "2023-07-01T16:26:32.847718064Z",
+            "issued_at": "2023-07-11T16:26:32.847718064Z",
+            "grade": "B-",
+            "credits": 4,
+            "instructor": "Prof. Smith"
           }
         ],
         "selective_disclosure": false,
