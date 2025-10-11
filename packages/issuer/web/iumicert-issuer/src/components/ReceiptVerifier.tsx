@@ -71,6 +71,11 @@ export default function ReceiptVerifier() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string>("");
 
+  // Selective disclosure state
+  const [selectedTerms, setSelectedTerms] = useState<Set<string>>(new Set());
+  const [selectedCourses, setSelectedCourses] = useState<Record<string, Set<string>>>({}); // termId -> Set<courseId>
+  const [isSelectiveMode, setIsSelectiveMode] = useState(false);
+
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -116,6 +121,144 @@ export default function ReceiptVerifier() {
       }
       return next;
     });
+  };
+
+  // Initialize selective disclosure with all items selected
+  const initializeSelectiveMode = () => {
+    if (!receipt) return;
+
+    const allTerms = new Set(Object.keys(receipt.term_receipts));
+    setSelectedTerms(allTerms);
+
+    const allCourses: Record<string, Set<string>> = {};
+    Object.entries(receipt.term_receipts).forEach(([termId, termData]) => {
+      const courseIds = new Set(
+        termData.receipt.revealed_courses.map((c) => c.course_id || "")
+      );
+      allCourses[termId] = courseIds;
+    });
+    setSelectedCourses(allCourses);
+
+    setIsSelectiveMode(true);
+  };
+
+  // Toggle term selection
+  const toggleTermSelection = (termId: string) => {
+    setSelectedTerms((prev) => {
+      const next = new Set(prev);
+      if (next.has(termId)) {
+        next.delete(termId);
+        // Also remove all courses from this term
+        setSelectedCourses((prevCourses) => {
+          const nextCourses = { ...prevCourses };
+          delete nextCourses[termId];
+          return nextCourses;
+        });
+      } else {
+        next.add(termId);
+        // Add all courses from this term
+        if (receipt) {
+          const termData = receipt.term_receipts[termId];
+          setSelectedCourses((prevCourses) => ({
+            ...prevCourses,
+            [termId]: new Set(
+              termData.receipt.revealed_courses.map((c) => c.course_id || "")
+            ),
+          }));
+        }
+      }
+      return next;
+    });
+  };
+
+  // Toggle course selection
+  const toggleCourseSelection = (termId: string, courseId: string) => {
+    setSelectedCourses((prev) => {
+      const termCourses = new Set(prev[termId] || []);
+      if (termCourses.has(courseId)) {
+        termCourses.delete(courseId);
+      } else {
+        termCourses.add(courseId);
+      }
+      return { ...prev, [termId]: termCourses };
+    });
+  };
+
+  // Generate filtered receipt
+  const generateFilteredReceipt = () => {
+    if (!receipt) return null;
+
+    const filteredTermReceipts: Record<string, TermReceipt> = {};
+
+    selectedTerms.forEach((termId) => {
+      const termData = receipt.term_receipts[termId];
+      const selectedCoursesForTerm = selectedCourses[termId] || new Set();
+
+      // Filter courses
+      const filteredCourses = termData.receipt.revealed_courses.filter(
+        (course) => selectedCoursesForTerm.has(course.course_id || "")
+      );
+
+      // Filter course proofs
+      const filteredProofs: Record<string, any> = {};
+      selectedCoursesForTerm.forEach((courseId) => {
+        if (termData.receipt.course_proofs[courseId]) {
+          filteredProofs[courseId] = termData.receipt.course_proofs[courseId];
+        }
+      });
+
+      filteredTermReceipts[termId] = {
+        ...termData,
+        revealed_courses: filteredCourses.length,
+        receipt: {
+          ...termData.receipt,
+          revealed_courses: filteredCourses,
+          course_proofs: filteredProofs,
+          selective_disclosure: true,
+        },
+      };
+    });
+
+    const filteredReceipt: JourneyReceipt = {
+      ...receipt,
+      receipt_type: {
+        selective_disclosure: true,
+        specific_courses: true,
+        specific_terms: true,
+      },
+      terms_included: Array.from(selectedTerms),
+      term_receipts: filteredTermReceipts,
+      generation_timestamp: new Date().toISOString(),
+    };
+
+    return filteredReceipt;
+  };
+
+  // Download filtered receipt
+  const downloadFilteredReceipt = () => {
+    const filteredReceipt = generateFilteredReceipt();
+    if (!filteredReceipt) return;
+
+    const blob = new Blob([JSON.stringify(filteredReceipt, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${receipt?.student_id}_selective_receipt.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Get counts for selective disclosure
+  const getSelectedCounts = () => {
+    const totalTerms = selectedTerms.size;
+    const totalCourses = Array.from(selectedTerms).reduce((sum, termId) => {
+      return sum + (selectedCourses[termId]?.size || 0);
+    }, 0);
+    return { totalTerms, totalCourses };
   };
 
   // Verify entire journey
@@ -279,8 +422,8 @@ export default function ReceiptVerifier() {
           </button>
         </div>
 
-        {/* Verification Button */}
-        <div className="flex items-center gap-4">
+        {/* Verification and Selective Disclosure Buttons */}
+        <div className="flex flex-wrap items-center gap-4">
           <button
             onClick={verifyJourney}
             disabled={isVerifying}
@@ -318,6 +461,46 @@ export default function ReceiptVerifier() {
             )}
           </button>
 
+          {/* Selective Disclosure Toggle */}
+          {!isSelectiveMode ? (
+            <button
+              onClick={initializeSelectiveMode}
+              className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 bg-gradient-to-r from-purple-500 to-indigo-600 hover:shadow-lg hover:shadow-purple-500/30 text-white"
+            >
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Create Selective Receipt
+              </span>
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={downloadFilteredReceipt}
+                disabled={getSelectedCounts().totalCourses === 0}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                  getSelectedCounts().totalCourses === 0
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-green-500 to-emerald-600 hover:shadow-lg hover:shadow-green-500/30"
+                } text-white`}
+              >
+                <span className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Selective Receipt ({getSelectedCounts().totalCourses} courses)
+                </span>
+              </button>
+              <button
+                onClick={() => setIsSelectiveMode(false)}
+                className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Cancel
+              </button>
+            </>
+          )}
+
           {overallResult && (
             <div
               className={`px-4 py-2 rounded-xl font-semibold border ${
@@ -330,6 +513,24 @@ export default function ReceiptVerifier() {
             </div>
           )}
         </div>
+
+        {/* Selective Disclosure Info */}
+        {isSelectiveMode && (
+          <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-purple-800 mb-1">Selective Disclosure Mode</p>
+                <p className="text-sm text-purple-700">
+                  Click on terms and courses below to include/exclude them from your selective receipt.
+                  Unchecked items will be removed, but all remaining courses will still verify cryptographically.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {overallResult?.details && (
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
@@ -424,6 +625,19 @@ export default function ReceiptVerifier() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
+                      {/* Selective Disclosure Checkbox */}
+                      {isSelectiveMode && (
+                        <input
+                          type="checkbox"
+                          checked={selectedTerms.has(termId)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleTermSelection(termId);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                        />
+                      )}
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                           isExpanded ? "bg-blue-100" : "bg-gray-100"
@@ -459,6 +673,9 @@ export default function ReceiptVerifier() {
                           {termId.replace(/_/g, " ")}
                         </h3>
                         <p className="text-sm text-gray-600">
+                          {isSelectiveMode && selectedCourses[termId]
+                            ? `${selectedCourses[termId].size} selected / `
+                            : ""}
                           {termData.revealed_courses} of{" "}
                           {termData.total_courses} courses
                         </p>
@@ -626,6 +843,19 @@ export default function ReceiptVerifier() {
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
+                                  {/* Selective Disclosure Checkbox for Course */}
+                                  {isSelectiveMode && selectedTerms.has(termId) && (
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedCourses[termId]?.has(course.course_id || "")}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleCourseSelection(termId, course.course_id || "");
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                    />
+                                  )}
                                   <div
                                     className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                                       isCourseExpanded

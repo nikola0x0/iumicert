@@ -296,9 +296,39 @@ npm install && npm run dev
 
 - **32-byte Verkle Proofs**: Real cryptographic proofs using Ethereum's go-verkle library
 - **Zero-Knowledge Verification**: Prove credentials without revealing full transcript
-- **Selective Disclosure**: Students control what information to share
+- **Selective Disclosure**: Students receive full receipts and can create filtered versions showing only specific courses/terms while maintaining cryptographic verifiability
 - **Blockchain Anchoring**: Immutable term roots on Ethereum for independent verification
 - **Tamper-Proof**: Cryptographically impossible to forge credentials
+
+### How Selective Disclosure Works
+
+The issuer provides students with **complete receipts** containing all courses and cryptographic proofs. Students can then create **filtered versions** for specific purposes:
+
+**Workflow:**
+1. **Issuer generates full receipt** - Contains all terms and courses with individual Verkle proofs
+2. **Student receives full receipt** - `ITITIU00001_full_journey.json`
+3. **Student creates selective receipt** - Removes unwanted courses/terms from the JSON
+4. **Verifier validates selective receipt** - Each remaining course proof still verifies against the blockchain root
+
+**Why it's secure:**
+- Each course has an **independent 32-byte cryptographic proof**
+- Removing courses from the receipt doesn't affect verification of remaining courses
+- The **Verkle root remains unchanged** (published on blockchain)
+- Verifiers confirm revealed courses are genuine without seeing hidden ones
+- **Impossible to add fake courses** - each proof must cryptographically verify against the published root
+
+**Example:** Student has 30 courses across 6 terms but only wants to show IT courses from 2023:
+```json
+// Student manually filters their full receipt JSON:
+// 1. Remove unwanted terms (e.g., keep only Semester_1_2023, Semester_2_2023)
+// 2. Remove unwanted courses from "revealed_courses" array
+// 3. Remove corresponding entries from "course_proofs" object
+// 4. Keep "verkle_root" unchanged
+
+// Result: Selective receipt with only 5 IT courses that still verifies!
+```
+
+**Note:** Currently, filtering is done manually by editing the JSON. A student/verifier portal with UI-based filtering is planned for easier selective disclosure.
 
 ## 🎯 Use Cases
 

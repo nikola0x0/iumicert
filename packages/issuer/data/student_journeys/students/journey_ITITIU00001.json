@@ -1,53 +1,347 @@
 {
   "student_id": "did:example:ITITIU00001",
   "terms": {
-    "Semester_2_2025": {
+    "Semester_1_2023": {
       "courses": [
         {
-          "assessed_at": "2026-04-02T18:37:59.905557586Z",
+          "assessed_at": "2023-10-21T15:49:17.997278438Z",
           "attempt_no": 1,
-          "completed_at": "2026-03-30T18:37:59.905557586Z",
+          "completed_at": "2023-10-18T15:49:17.997278438Z",
+          "course_id": "IT091IU",
+          "course_name": "Computer Networks",
+          "credits": 4,
+          "grade": "A-",
+          "instructor": "Prof. Taylor",
+          "issued_at": "2023-11-01T15:49:17.997278438Z",
+          "issuer_id": "IU-CHEM",
+          "started_at": "2023-09-02T19:27:46.274025267Z",
+          "term_id": "Semester_1_2023"
+        },
+        {
+          "assessed_at": "2023-10-30T20:59:32.762125711Z",
+          "attempt_no": 1,
+          "completed_at": "2023-10-25T20:59:32.762125711Z",
+          "course_id": "IT089IU",
+          "course_name": "Computer Architecture",
+          "credits": 4,
+          "grade": "B+",
+          "instructor": "Prof. White",
+          "issued_at": "2023-11-07T20:59:32.762125711Z",
+          "issuer_id": "IU-BUS",
+          "started_at": "2023-08-26T13:26:53.268522266Z",
+          "term_id": "Semester_1_2023"
+        },
+        {
+          "assessed_at": "2023-10-28T16:54:24.083506527Z",
+          "attempt_no": 1,
+          "completed_at": "2023-10-22T16:54:24.083506527Z",
+          "course_id": "MA026IU",
+          "course_name": "Probability, Statistic \u0026 Random Process",
+          "credits": 3,
+          "grade": "C-",
+          "instructor": "Prof. Wilson",
+          "issued_at": "2023-11-05T16:54:24.083506527Z",
+          "issuer_id": "IU-CS",
+          "started_at": "2023-08-27T01:02:45.406754826Z",
+          "term_id": "Semester_1_2023"
+        }
+      ],
+      "gpa": 2.9,
+      "term_id": "Semester_1_2023",
+      "total_credits": 9
+    },
+    "Semester_1_2024": {
+      "courses": [
+        {
+          "assessed_at": "2024-11-10T15:04:13.602196345Z",
+          "attempt_no": 1,
+          "completed_at": "2024-11-03T15:04:13.602196345Z",
+          "course_id": "MA001IU",
+          "course_name": "Calculus 1",
+          "credits": 4,
+          "grade": "B-",
+          "instructor": "Prof. Thomas",
+          "issued_at": "2024-11-12T15:04:13.602196345Z",
+          "issuer_id": "IU-BUS",
+          "started_at": "2024-08-21T01:45:57.870865486Z",
+          "term_id": "Semester_1_2024"
+        },
+        {
+          "assessed_at": "2024-11-09T11:29:41.001140876Z",
+          "attempt_no": 1,
+          "completed_at": "2024-11-08T11:29:41.001140876Z",
+          "course_id": "IT153IU",
+          "course_name": "Discrete Mathematics",
+          "credits": 3,
+          "grade": "C+",
+          "instructor": "Prof. Taylor",
+          "issued_at": "2024-11-16T11:29:41.001140876Z",
+          "issuer_id": "IU-BUS",
+          "started_at": "2024-08-26T21:33:40.57413589Z",
+          "term_id": "Semester_1_2024"
+        },
+        {
+          "assessed_at": "2024-10-31T19:28:33.20980603Z",
+          "attempt_no": 1,
+          "completed_at": "2024-10-26T19:28:33.20980603Z",
+          "course_id": "IT013IU",
+          "course_name": "Algorithms \u0026 Data Structures",
+          "credits": 4,
+          "grade": "C",
+          "instructor": "Prof. Anderson",
+          "issued_at": "2024-11-10T19:28:33.20980603Z",
+          "issuer_id": "IU-BUS",
+          "started_at": "2024-09-04T16:23:32.177333955Z",
+          "term_id": "Semester_1_2024"
+        }
+      ],
+      "gpa": 2.3333333333333335,
+      "term_id": "Semester_1_2024",
+      "total_credits": 9
+    },
+    "Semester_1_2025": {
+      "courses": [
+        {
+          "assessed_at": "2025-11-01T10:20:40.422403527Z",
+          "attempt_no": 1,
+          "completed_at": "2025-10-31T10:20:40.422403527Z",
+          "course_id": "IT134IU",
+          "course_name": "Internet of Things",
+          "credits": 4,
+          "grade": "D+",
+          "instructor": "Prof. Taylor",
+          "issued_at": "2025-11-14T10:20:40.422403527Z",
+          "issuer_id": "IU-MATH",
+          "started_at": "2025-09-07T12:44:18.979551722Z",
+          "term_id": "Semester_1_2025"
+        },
+        {
+          "assessed_at": "2025-10-24T15:14:20.441025635Z",
+          "attempt_no": 1,
+          "completed_at": "2025-10-23T15:14:20.441025635Z",
+          "course_id": "MA026IU",
+          "course_name": "Probability, Statistic \u0026 Random Process",
+          "credits": 3,
+          "grade": "C-",
+          "instructor": "Prof. Jackson",
+          "issued_at": "2025-10-27T15:14:20.441025635Z",
+          "issuer_id": "IU-MATH",
+          "started_at": "2025-08-23T04:51:10.679120993Z",
+          "term_id": "Semester_1_2025"
+        },
+        {
+          "assessed_at": "2025-10-25T15:23:16.588651095Z",
+          "attempt_no": 1,
+          "completed_at": "2025-10-18T15:23:16.588651095Z",
           "course_id": "PH013IU",
           "course_name": "Physics 1",
           "credits": 2,
-          "grade": "B-",
-          "instructor": "Prof. Miller",
-          "issued_at": "2026-04-04T18:37:59.905557586Z",
-          "issuer_id": "IU-CS",
-          "started_at": "2026-01-14T07:19:05.671571518Z",
-          "term_id": "Semester_2_2025"
-        },
-        {
-          "assessed_at": "2026-04-05T23:37:11.900688674Z",
-          "attempt_no": 1,
-          "completed_at": "2026-03-31T23:37:11.900688674Z",
-          "course_id": "IT069IU",
-          "course_name": "Object-Oriented Programming",
-          "credits": 4,
-          "grade": "D+",
-          "instructor": "Prof. Anderson",
-          "issued_at": "2026-04-16T23:37:11.900688674Z",
-          "issuer_id": "IU-MATH",
-          "started_at": "2026-01-22T13:17:00.649754379Z",
-          "term_id": "Semester_2_2025"
-        },
-        {
-          "assessed_at": "2026-03-20T04:12:52.753731752Z",
-          "attempt_no": 1,
-          "completed_at": "2026-03-19T04:12:52.753731752Z",
-          "course_id": "EN008IU",
-          "course_name": "Listening AE1",
-          "credits": 2,
-          "grade": "C",
-          "instructor": "Prof. Brown",
-          "issued_at": "2026-04-03T04:12:52.753731752Z",
+          "grade": "B",
+          "instructor": "Prof. White",
+          "issued_at": "2025-10-28T15:23:16.588651095Z",
           "issuer_id": "IU-PHYS",
-          "started_at": "2026-01-11T04:39:29.593458153Z",
-          "term_id": "Semester_2_2025"
+          "started_at": "2025-09-07T05:25:22.968465125Z",
+          "term_id": "Semester_1_2025"
         }
       ],
       "gpa": 2,
-      "term_id": "Semester_2_2025",
+      "term_id": "Semester_1_2025",
+      "total_credits": 9
+    },
+    "Semester_2_2023": {
+      "courses": [
+        {
+          "assessed_at": "2024-03-26T22:33:18.249323852Z",
+          "attempt_no": 1,
+          "completed_at": "2024-03-19T22:33:18.249323852Z",
+          "course_id": "IT133IU",
+          "course_name": "Mobile Application Development",
+          "credits": 4,
+          "grade": "B-",
+          "instructor": "Prof. Jackson",
+          "issued_at": "2024-04-03T22:33:18.249323852Z",
+          "issuer_id": "IU-MATH",
+          "started_at": "2024-01-22T06:45:54.868772583Z",
+          "term_id": "Semester_2_2023"
+        },
+        {
+          "assessed_at": "2024-04-05T17:22:09.71870535Z",
+          "attempt_no": 1,
+          "completed_at": "2024-03-30T17:22:09.71870535Z",
+          "course_id": "PH014IU",
+          "course_name": "Physics 2",
+          "credits": 2,
+          "grade": "B+",
+          "instructor": "Prof. Anderson",
+          "issued_at": "2024-04-18T17:22:09.71870535Z",
+          "issuer_id": "IU-CHEM",
+          "started_at": "2024-01-28T09:42:59.074150201Z",
+          "term_id": "Semester_2_2023"
+        },
+        {
+          "assessed_at": "2024-04-04T17:51:16.582176694Z",
+          "attempt_no": 1,
+          "completed_at": "2024-04-02T17:51:16.582176694Z",
+          "course_id": "IT133IU",
+          "course_name": "Mobile Application Development",
+          "credits": 4,
+          "grade": "B+",
+          "instructor": "Prof. Wilson",
+          "issued_at": "2024-04-06T17:51:16.582176694Z",
+          "issuer_id": "IU-CS",
+          "started_at": "2024-01-29T01:22:11.254830503Z",
+          "term_id": "Semester_2_2023"
+        }
+      ],
+      "gpa": 3.1,
+      "term_id": "Semester_2_2023",
+      "total_credits": 9
+    },
+    "Semester_2_2024": {
+      "courses": [
+        {
+          "assessed_at": "2025-04-04T01:06:09.183815353Z",
+          "attempt_no": 1,
+          "completed_at": "2025-03-28T01:06:09.183815353Z",
+          "course_id": "IT134IU",
+          "course_name": "Internet of Things",
+          "credits": 4,
+          "grade": "B+",
+          "instructor": "Prof. Taylor",
+          "issued_at": "2025-04-12T01:06:09.183815353Z",
+          "issuer_id": "IU-CS",
+          "started_at": "2025-01-11T22:22:07.849319178Z",
+          "term_id": "Semester_2_2024"
+        },
+        {
+          "assessed_at": "2025-03-27T07:47:11.080349133Z",
+          "attempt_no": 1,
+          "completed_at": "2025-03-23T07:47:11.080349133Z",
+          "course_id": "MA003IU",
+          "course_name": "Calculus 2",
+          "credits": 4,
+          "grade": "A+",
+          "instructor": "Prof. Miller",
+          "issued_at": "2025-04-04T07:47:11.080349133Z",
+          "issuer_id": "IU-CHEM",
+          "started_at": "2025-01-30T18:49:07.477017407Z",
+          "term_id": "Semester_2_2024"
+        },
+        {
+          "assessed_at": "2025-03-23T16:14:45.85514371Z",
+          "attempt_no": 1,
+          "completed_at": "2025-03-17T16:14:45.85514371Z",
+          "course_id": "IT134IU",
+          "course_name": "Internet of Things",
+          "credits": 4,
+          "grade": "D+",
+          "instructor": "Prof. White",
+          "issued_at": "2025-04-01T16:14:45.85514371Z",
+          "issuer_id": "IU-BUS",
+          "started_at": "2025-01-08T14:17:36.574036139Z",
+          "term_id": "Semester_2_2024"
+        }
+      ],
+      "gpa": 2.8666666666666667,
+      "term_id": "Semester_2_2024",
+      "total_credits": 9
+    },
+    "Summer_2023": {
+      "courses": [
+        {
+          "assessed_at": "2023-07-04T16:44:47.816404678Z",
+          "attempt_no": 1,
+          "completed_at": "2023-06-30T16:44:47.816404678Z",
+          "course_id": "IT154IU",
+          "course_name": "Linear Algebra",
+          "credits": 3,
+          "grade": "A-",
+          "instructor": "Prof. Miller",
+          "issued_at": "2023-07-14T16:44:47.816404678Z",
+          "issuer_id": "IU-CHEM",
+          "started_at": "2023-06-06T18:50:40.110049463Z",
+          "term_id": "Summer_2023"
+        },
+        {
+          "assessed_at": "2023-06-30T08:10:25.179994691Z",
+          "attempt_no": 1,
+          "completed_at": "2023-06-28T08:10:25.179994691Z",
+          "course_id": "IT013IU",
+          "course_name": "Algorithms \u0026 Data Structures",
+          "credits": 4,
+          "grade": "A+",
+          "instructor": "Prof. White",
+          "issued_at": "2023-07-07T08:10:25.179994691Z",
+          "issuer_id": "IU-CS",
+          "started_at": "2023-06-10T03:42:21.894370862Z",
+          "term_id": "Summer_2023"
+        },
+        {
+          "assessed_at": "2023-06-27T02:36:29.399227214Z",
+          "attempt_no": 1,
+          "completed_at": "2023-06-25T02:36:29.399227214Z",
+          "course_id": "PH015IU",
+          "course_name": "Physics 3",
+          "credits": 3,
+          "grade": "D+",
+          "instructor": "Prof. Johnson",
+          "issued_at": "2023-07-10T02:36:29.399227214Z",
+          "issuer_id": "IU-CS",
+          "started_at": "2023-06-04T15:13:00.895609369Z",
+          "term_id": "Summer_2023"
+        }
+      ],
+      "gpa": 3,
+      "term_id": "Summer_2023",
+      "total_credits": 9
+    },
+    "Summer_2024": {
+      "courses": [
+        {
+          "assessed_at": "2024-07-04T06:52:00.206919439Z",
+          "attempt_no": 1,
+          "completed_at": "2024-06-28T06:52:00.206919439Z",
+          "course_id": "CH011IU",
+          "course_name": "Chemistry for Engineers",
+          "credits": 3,
+          "grade": "D+",
+          "instructor": "Prof. Harris",
+          "issued_at": "2024-07-11T06:52:00.206919439Z",
+          "issuer_id": "IU-CS",
+          "started_at": "2024-06-12T21:21:48.206099872Z",
+          "term_id": "Summer_2024"
+        },
+        {
+          "assessed_at": "2024-07-03T22:41:02.424858199Z",
+          "attempt_no": 1,
+          "completed_at": "2024-06-27T22:41:02.424858199Z",
+          "course_id": "IT154IU",
+          "course_name": "Linear Algebra",
+          "credits": 3,
+          "grade": "C",
+          "instructor": "Prof. Smith",
+          "issued_at": "2024-07-06T22:41:02.424858199Z",
+          "issuer_id": "IU-PHYS",
+          "started_at": "2024-06-11T02:28:35.917976408Z",
+          "term_id": "Summer_2024"
+        },
+        {
+          "assessed_at": "2024-06-30T02:47:08.039219549Z",
+          "attempt_no": 1,
+          "completed_at": "2024-06-26T02:47:08.039219549Z",
+          "course_id": "IT117IU",
+          "course_name": "System and Network Security",
+          "credits": 4,
+          "grade": "B",
+          "instructor": "Prof. Thomas",
+          "issued_at": "2024-07-07T02:47:08.039219549Z",
+          "issuer_id": "IU-PHYS",
+          "started_at": "2024-06-10T04:23:51.519746538Z",
+          "term_id": "Summer_2024"
+        }
+      ],
+      "gpa": 2.1,
+      "term_id": "Summer_2024",
       "total_credits": 9
     }
   }
