@@ -131,3 +131,7 @@ For questions about this research, please contact:
 **Le Tien Phat**  
 📧 ltphat.developer@gmail.com  
 🏫 International University - Vietnam National University HCM
+
+- IUMiCertRegistry: 0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60
+- ReceiptRevocationRegistry: 0x8814ae511d54Dc10C088143d86110B9036B3aa92
+- Owner: 0xf16221da98b931409195A395b290333edA85f90F (your wallet)

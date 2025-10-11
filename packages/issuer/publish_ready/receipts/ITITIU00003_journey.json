@@ -1,0 +1,1387 @@
+{
+  "blockchain_ready": true,
+  "courses_filter": null,
+  "generation_timestamp": "2025-10-10T23:19:01+07:00",
+  "receipt_type": {
+    "selective_disclosure": false,
+    "specific_courses": false,
+    "specific_terms": false
+  },
+  "student_id": "ITITIU00003",
+  "term_receipts": {
+    "Semester_1_2023": {
+      "generated_at": "2025-10-10T23:19:00+07:00",
+      "receipt": {
+        "course_proofs": {
+          "IT064IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x5d8c9d728da75bbaaf41e5b477767fb387334415367c057058e4bfbfaac1b34a",
+                "0x274a4b39845da2f54e3cf28a625c3e316fc1725eb74c71a9bc2c697527eefa57"
+              ],
+              "d": "0x1657552a90f2f35a04cb3d41ff7beff4917008729cd900783a784fc1359fbfeb",
+              "ipaProof": {
+                "cl": [
+                  "0x231f421eab8d814bbc09d1d5baa67497774fd00ebba5141320112dcb63ac0c08",
+                  "0x54d86e7f10fab150b0d73176cf59b7c4e2cfbc0d95940661cce14ecd47c2fcf8",
+                  "0x3ef0f746f555a3fe4ea1c03f8a71e36df2e588690b9d23e7d1753b16fd5ace78",
+                  "0x0e21be88accc9fa2225734053559e77c9d0a7a0868d8d0ff959aa341616d5bc3",
+                  "0x021e140ca779aef739e4eba3500bbd17a0f34cf2e0e9464f0f01763a442a07c1",
+                  "0x3fa591c530b0117cdff0ceba35c8d307c7f9e7197a55979431fee91b725e4ed9",
+                  "0x084713be148b379c9aaf7fa348cee44d5bd7f2603d1680521dcef5580e5c9084",
+                  "0x353868dc93f36792090bff72f5e485f36c44a36f7c2f2d889df68c43cc0ec90e"
+                ],
+                "cr": [
+                  "0x4263054cebd877c8abed507d786924c363c34a782ff325636be65e73b1d6defd",
+                  "0x33d9ad85c50a6d2e6113241e64debaf887296a99d9a7ebe6ff1aec01c84de55d",
+                  "0x568fbaa2e4f7f20e5904c7044d7ab93948a60d3471d07d7ef0694fc98806f930",
+                  "0x1e667477a06b7867805035be47a624ce029a16b47380f4772ee3a739aaa00b0b",
+                  "0x3efb34cc0c5d91578da55d79f55414607d48a6e5c3431bb8d90e67cbac7e8009",
+                  "0x5c2d921ae994be3d81be09b6a4797ed9d4f35b794d8671d842a58a624d215830",
+                  "0x50ca84f4574af8e91a655455c62d62d73f413a6189114a47c230a2e709161d34",
+                  "0x049bf98e058c6dcd0f4bf771bbfb489b2cb91057b120fa72318f0b0097c7363c"
+                ],
+                "finalEvaluation": "0x16c96bed91bf736745e92c3f26c38f47eb520294bb4fd18d913d6f5c5bb98361"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xe41db699f3db3ef323e7ce564664d25016233fe1905f1a448bed50bfbc8501",
+                "suffixDiffs": [
+                  {
+                    "suffix": 177,
+                    "currentValue": "0xffde583d426e243105851bb8042a33d3d2086af7c3886783323ca717462a3d91",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_1_2023:IT064IU",
+            "course_id": "IT064IU"
+          },
+          "IT117IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x0bb12b6a96211f3e986883c7612f82d8e3ac507420c245dbafce1e0a7bb92025",
+                "0x354c9e6ed344a7bf196139acc7409273d25da5924f39a2f5f22098ffaec481d5"
+              ],
+              "d": "0x506e3eeaf00066906bbf3675f73a000e6277bc8aa8a1621a45be7e98b5a9aff2",
+              "ipaProof": {
+                "cl": [
+                  "0x09204c1ce7bae8b5405d03c472ec5e02942e493cc372339f059f2ae7fae8a5b2",
+                  "0x5fb84cc682f900be063ca00fb5b1c05e9d1ab575f3557febb1b45b6c9cb47e7b",
+                  "0x267c386d930b1f1c30d12855c0572cd95bb9290214174b5f738c93e435adeb5f",
+                  "0x1a59d13e7d97c92a191946137667b6e3c8884035ceaf96aa619a62e3044635ec",
+                  "0x5d421cae4b875ab62c7f695b96a3210103179bdcc549c0c5110a352d0c6b8664",
+                  "0x5bd2260dde4be44140de39339f03c164addc933c907907eea54f31c5a39d4e86",
+                  "0x648b2acf9108359e5231f54d984b3b4602c4c5ab2285fc486cd1314532a49540",
+                  "0x5615c0e03b4ba8c03d9a1c8f11f7e2b62678ab178ef3786bf172b26f8cea28b7"
+                ],
+                "cr": [
+                  "0x00a65dec8d092b58eb6fd97b0ab3304dbd4dbf22213b400c04e8e20e3cbf72c4",
+                  "0x686b6bc8971ce9b92d17c325244c01480714aa224c3941cceddf5f1947d7985f",
+                  "0x45b3e7429ebc4f1f81f8045d6d6c6c826feb92153dbe77d97c9b912263f72150",
+                  "0x5b64da6144b8c3f9324546eca2281da376a05ebdff02b461ada3a47e720b28b3",
+                  "0x3877a3a75048d3dcd33df6564cc858e031d2628c6e9182125afa5d943607cdbb",
+                  "0x7288173f6986c7757fbfd8259450639c9c14e912bfcff061020671f9352b7381",
+                  "0x44e2791bda7faa5f7964f86a1d2f8222602f0f2e373b8eb2eeda5bd049df28d7",
+                  "0x651b81e66430d068d8e956f29e868d303a4d7582fac53b9c35469b9ecd27b438"
+                ],
+                "finalEvaluation": "0x06c80d72beb8e45ce08e54eae1f3e2aeae22d0292215fdf04cd050fbe1aa9de8"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xec486a469921648405d021bfa4c835b1f18bb81f0f2c09d02b2aa2335d7e3e",
+                "suffixDiffs": [
+                  {
+                    "suffix": 195,
+                    "currentValue": "0x08479593f3e2790b241be1b31cff2f7f703075f1fff320ab176aa2c8c7f2c37c",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_1_2023:IT117IU",
+            "course_id": "IT117IU"
+          },
+          "IT153IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x737df2f1be7a1185540d07cfd725a223e3d4f3cbde189dd27e63dd1a931354ba",
+                "0x300c67b8c94b4b478381f7381f66733e65b34bdcca4fdd7f1b3284a2169284dd"
+              ],
+              "d": "0x6c95f647b0ac86b9da063da6d47f65c64448479cb52c47a135ac7ae57c4086b0",
+              "ipaProof": {
+                "cl": [
+                  "0x630011aaaf600281b24367f0bfbf65e73606e7530d66dbbd746e2d34c55db20a",
+                  "0x150373c11f84b99a9199f0040f3e73367683538a19743c453eef6c9e65da41e0",
+                  "0x5f025c1432ead847f7573352b25f1842842fa21928d13c638954c7f01392e106",
+                  "0x479154a7f50c512b4b591feae22d1ae0d0dc92b54f2fd9f39b136251b580f371",
+                  "0x4994abdf3eb285183e7eed2d621057eef89b5475892214beb7d2e57aa8cca310",
+                  "0x6e0a0a127733ba1f29c0041b9ca2019c7fc594a49a6c0a8ecd3720f77faba8ff",
+                  "0x3dd4fddb97912f5af416e47f7c4465b7e9fea605ed2457f9353c2e5b3690521e",
+                  "0x3210e37b2946f2472f8634bb24ebcbb4a443dd278e8e52831b58d19c4068dbb0"
+                ],
+                "cr": [
+                  "0x274c2ffcb8c289aa13693410fe907eb9593e6434292b220d926cb6988225e79e",
+                  "0x28b09aff85a09453e50cfd017e96d54f6f70fed5083ef05af818684366795347",
+                  "0x58c21ec9dc7b0146e1a19cfcad83c1e2d04e5f839869c7470daee04d9915eff7",
+                  "0x3df827eda1a7a75b56af3646337121dbdb4627da17c0a56c4b43588f4de71ccf",
+                  "0x11507d90767f5206fdea0b4f59e31b0670c296cae43fa260f17a686e1755739d",
+                  "0x3290762955d04b788e2d98bad2c21ff5b5e4bda99cf9260dd573809df41ba883",
+                  "0x4cacf40aeed2735535ff6b23ebcacce1ef1bc505ec00dd049791e33eed7d426c",
+                  "0x5f9d60ad4872d68c0c2af76afcbe7a502fe4959bd44bacc5588a96709feeff00"
+                ],
+                "finalEvaluation": "0x0b1cceb441dadeeb8c5ad06aa49a9ce1fdc5bbe3d2a7283e3cf25ce5506e90cb"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xde89085f22e2481be81f4a769c16c4e5fa33988a4934d67d9d1e0f52d8142f",
+                "suffixDiffs": [
+                  {
+                    "suffix": 3,
+                    "currentValue": "0x0b7d57a60515fd2d88bcd39c706e5e79883eb2fdb059c06ca01f635ad2028bcf",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_1_2023:IT153IU",
+            "course_id": "IT153IU"
+          },
+          "MA003IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x18be4c1df78805947dbc5441de95ec7bb214bb91b7022580cdc1a9a5a2d32fd2",
+                "0x613734da2450a37dfbad25a5deff6b304dd3afa08de02d63174fa3a8cc32e336"
+              ],
+              "d": "0x3a9cefba23862bfd4384851aadf8b5d2f9c05da9b897b25abe0809c141893f6c",
+              "ipaProof": {
+                "cl": [
+                  "0x65c278a9bd94e4bfadc3c6ff624294ae37ffcf2ec41bd689336401ab951d0787",
+                  "0x63551dd0763b35730c4d2c426f684afb3bcc0d0d17bd89befb3a19a1bc225d0b",
+                  "0x649c10b84e92bd345279cfe6b4fdf5a6378712fd14391d88c146ba273ad61b53",
+                  "0x13c0bc57f517f64d3eb64a60166e8c1b8d35049ce5e075f075e6a8f3ea75df88",
+                  "0x14691022b4043bcf9c9fa749cf28ed277c30c2ae2571ea9dd39049d76518c3df",
+                  "0x4af0f141c194b6165c00274474982ef4674267627561428a858b0453f171d2a6",
+                  "0x5bfef89ad84a90c0a39b5bd45e9cf790e1a6628b7b6f7da4081b7964beb491b8",
+                  "0x57f461eb8ca57159b3c2ffcbda4f13dec5b13e479631cf7872650619f9655cb3"
+                ],
+                "cr": [
+                  "0x5bb72205432f7785432588144c374230b6d85d1fdd9f05dd3ecc7bada6156e8d",
+                  "0x009c74d08ff304effb420edf5579fd82fb6dfd8382cc9e730fa38f5f1aee04ec",
+                  "0x2db080cbac0a5e456c54337b01219937f2b6f91b57f0b03aea7fdfd2a8acb1ad",
+                  "0x6479126b5b26e55a93a0ae06071e293f31d180aa683eda7a295f34804a982465",
+                  "0x43afaa9f7d10c91634fa78b5d20c96c3a8f803b51d339d75f59720508fc88691",
+                  "0x5d83cded40b71a650d233c68bcff1f1b239423c6376a2e2a5023d69c1c0f6b55",
+                  "0x3dc935885ed6b96e83c4d0c8f68a1354f380d30157461f84f2059723af6a17f5",
+                  "0x047db42f99f1547e3189400e055a5e3cfb8f1bd759501a3c4234285c27a4bb14"
+                ],
+                "finalEvaluation": "0x1501b8998523653432c5f1f5adfaa2b769bc799bd025809d6e52ad433112b478"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x85f3db24c6689013fb4587ea3864c6e469b0037629473a7ee69049ce337e28",
+                "suffixDiffs": [
+                  {
+                    "suffix": 74,
+                    "currentValue": "0x47ce484e9f941bc319fcf8bca3c44ddfe9e17e4f6b156f61542aafe057f5dba2",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_1_2023:MA003IU",
+            "course_id": "MA003IU"
+          },
+          "PE008IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x34b452bdbd12e9ecf818242df5a1b4283ab8175ce8a22531b81d02e0d1bf24bb",
+                "0x2ea1c0c5e2eed76d8d91306bbeb033adcc4a0927bf6d452fb65194ff0504c603"
+              ],
+              "d": "0x314fffc927b4453a04c66f29ca50771af77d79532ef2c9526a2f6e6991d4dc50",
+              "ipaProof": {
+                "cl": [
+                  "0x078598acd34f14a29cf706681fb46a808f7b3bd8d0fe1b17e27d75fc27b81d48",
+                  "0x21652b612562cc988e6b6889c6e544a50aa9e3eac7d42a17076d788660174fcc",
+                  "0x0de214013e2ada60572a36eeb1ab3c546851f509ba94320f08b58608e447054b",
+                  "0x6bc53785590af599133615911e71d4828eb621311d1140da820ec01fc0d0e609",
+                  "0x5ad7fdb5342265e63dc16ca73273ccac360c856fe25a52ea69cc9251c76189bc",
+                  "0x2b87d6b19270bc81af20b987639cf5e5f96f3edc22e6a5b494800eacfec3e743",
+                  "0x136cfba699082d375f8b51725fb7ce0223ac978e74ad88ff5b531b648c49b356",
+                  "0x37fbfa08f251a999ff5803eda63ec62205840b4ccdb7c03bcaeee0ca258f92e3"
+                ],
+                "cr": [
+                  "0x4de9a1b45867ac295a3195ae097d4e21a9c364164b4a2d3b3c7cd356d71f558f",
+                  "0x27ff4a4793f1a122b25dfe78c1179952575ce5c63128bb2530e42f2f9a9fbe28",
+                  "0x0432a668df672b8c295a31cf47a366a5ee2e571b81fa82b02f972c4d38bbbc2d",
+                  "0x4e02d4783add9f9eece99529ef03e2531b4c44befdaa0791d4966b265dcdcda0",
+                  "0x349d3250cb290f803425908bdff56952a2662f147970086f9e854cbc478c015f",
+                  "0x0c6b8558832ac6957e114013d247810df2fa9a7f07b17cc94c2c1cb5faab21c3",
+                  "0x50f1c5951b7bba85763cc7d2cc6ba4884aca9831f8d436d59714a349a876d9c5",
+                  "0x075e7cefdd04c4cfd6596fc69e0e735764a6e2eb68b356b4c116fd443bd3395d"
+                ],
+                "finalEvaluation": "0x1adee9c6216bf20cbae510a4d841e59ca1bac85bb0aef73f5d207ed709fc17d8"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x3b27f19b49864a4ef10131f09c84c200ade93efe083ea64d0752b85a14da7c",
+                "suffixDiffs": [
+                  {
+                    "suffix": 213,
+                    "currentValue": "0xf8622d69ae51734546daf4a146c04f386691e6f49a1046d95f63481ff77bbb5e",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_1_2023:PE008IU",
+            "course_id": "PE008IU"
+          }
+        },
+        "metadata": {
+          "generated_at": "2025-10-10T23:19:00.694012+07:00",
+          "total_courses": 5,
+          "revealed_courses": 5,
+          "verification_level": "full"
+        },
+        "proof_type": "verkle_32_byte",
+        "revealed_courses": [
+          {
+            "issuer_id": "IU-BUS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_1_2023",
+            "course_id": "IT064IU",
+            "course_name": "Introduction to Computing",
+            "attempt_no": 1,
+            "started_at": "2023-08-19T03:03:47.920336066Z",
+            "completed_at": "2023-10-30T05:13:11.37203257Z",
+            "assessed_at": "2023-10-31T05:13:11.37203257Z",
+            "issued_at": "2023-11-12T05:13:11.37203257Z",
+            "grade": "A",
+            "credits": 3,
+            "instructor": "Prof. Anderson"
+          },
+          {
+            "issuer_id": "IU-BUS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_1_2023",
+            "course_id": "IT153IU",
+            "course_name": "Discrete Mathematics",
+            "attempt_no": 1,
+            "started_at": "2023-08-31T02:36:21.108968326Z",
+            "completed_at": "2023-10-31T01:31:57.876303388Z",
+            "assessed_at": "2023-11-05T01:31:57.876303388Z",
+            "issued_at": "2023-11-15T01:31:57.876303388Z",
+            "grade": "B+",
+            "credits": 3,
+            "instructor": "Prof. Taylor"
+          },
+          {
+            "issuer_id": "IU-MATH",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_1_2023",
+            "course_id": "MA003IU",
+            "course_name": "Calculus 2",
+            "attempt_no": 1,
+            "started_at": "2023-09-07T10:22:14.184346811Z",
+            "completed_at": "2023-11-08T08:10:00.619041339Z",
+            "assessed_at": "2023-11-14T08:10:00.619041339Z",
+            "issued_at": "2023-11-18T08:10:00.619041339Z",
+            "grade": "C",
+            "credits": 4,
+            "instructor": "Prof. White"
+          },
+          {
+            "issuer_id": "IU-MATH",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_1_2023",
+            "course_id": "IT117IU",
+            "course_name": "System and Network Security",
+            "attempt_no": 1,
+            "started_at": "2023-08-31T07:07:38.126973333Z",
+            "completed_at": "2023-11-07T04:21:41.911293545Z",
+            "assessed_at": "2023-11-14T04:21:41.911293545Z",
+            "issued_at": "2023-11-23T04:21:41.911293545Z",
+            "grade": "A+",
+            "credits": 4,
+            "instructor": "Prof. Harris"
+          },
+          {
+            "issuer_id": "IU-CS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_1_2023",
+            "course_id": "PE008IU",
+            "course_name": "Critical Thinking",
+            "attempt_no": 1,
+            "started_at": "2023-08-21T04:54:30.866162987Z",
+            "completed_at": "2023-10-24T04:08:19.993801116Z",
+            "assessed_at": "2023-10-30T04:08:19.993801116Z",
+            "issued_at": "2023-11-13T04:08:19.993801116Z",
+            "grade": "A",
+            "credits": 3,
+            "instructor": "Prof. Miller"
+          }
+        ],
+        "selective_disclosure": false,
+        "student_id": "did:example:ITITIU00003",
+        "term_id": "Semester_1_2023",
+        "timestamp": "2025-10-10T22:24:53+07:00",
+        "verification_path": "single_verkle_proof",
+        "verkle_root": "118c7c6d65efca71bc055d8e28cc77dac8841c38191a90b72be176e94e701066"
+      },
+      "revealed_courses": 5,
+      "student_id": "ITITIU00003",
+      "term_id": "Semester_1_2023",
+      "total_courses": 5,
+      "verkle_root": "118c7c6d65efca71bc055d8e28cc77dac8841c38191a90b72be176e94e701066"
+    },
+    "Semester_2_2023": {
+      "generated_at": "2025-10-10T23:19:00+07:00",
+      "receipt": {
+        "course_proofs": {
+          "IT067IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x07f40df014eaf02412435de8f3f26ffc9720c18fe1b8a2a36da88483640a4588",
+                "0x5986414f15d0a1366247992818d5f6d1b71c3d10b8217aae43cf30cfb0bc7140"
+              ],
+              "d": "0x6e1888289afb444579bed52f0216d82ce9587414ba6694ccc1b64631e6bff55f",
+              "ipaProof": {
+                "cl": [
+                  "0x0532d3e5fb47bf60ab650c2533e66e366b540a4ec0238321d40ed0681195efd0",
+                  "0x018ddd466a582f6ba72f9d3bd5fcd5d628821538b9e50d6fa591b4dded74ebcb",
+                  "0x3ede235ee8c4b8ee525488fb9c677e4f76d5be80d7b7be63bff3cba71f9df6af",
+                  "0x4d3a84e5a4656933e06ee1d1f55a0e2bcd883fe2188dd79cb1390c58026eb932",
+                  "0x7007efa626ca5d7541cd149c253dcef1a54ee6c731bc77fa867bcb2152b94729",
+                  "0x0bd4c9a95038a29cae5491b55daa14e3f6eec5f5cc8f97fe994232fb0dae7f66",
+                  "0x2281db866cce71e0a6141b57e09fadbb6834629c5622fdc9e0814aa08c82e54f",
+                  "0x0c24e0c4a7844402da8ea8fbf9cca578132fe22f1471985de86699d26b94f9c5"
+                ],
+                "cr": [
+                  "0x6accb93d24ce2e7ae439d563959142f8f0ebe9b2271b5193ac295286966f85ad",
+                  "0x0ada348599a458f4d2251575253d59d87213320e0ff2f1cb2dc800045abc8da8",
+                  "0x4023fc397de4200c0f3e808160e0a19ba2df3c291af4ecc63fa16b038d44ee57",
+                  "0x587b6debf1971af888871a34246949987f611a88ce2bb696f3c3ed8e77e3d7b6",
+                  "0x508e36a404983850b801357b24f269ecb3143ad690140666d9f95746b0a40dde",
+                  "0x2b010d15adc3757287459a9836556b87dda4fc6137d186b4f482e6e2e5f76646",
+                  "0x23fb53113464fb4e780e90924b104c5ce5331b4ea7791dab146eb2376dc4f391",
+                  "0x5f0c78922135d1f9347d6c115adc8d19a2de63bbec871a135a1ed52703d392fd"
+                ],
+                "finalEvaluation": "0x169787c51e165e5ec4662c16f785fdd7cde93c6214f9a4e75e7af9229b662a12"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x9f3495346a64f409b9f05968f749299fc6c8e6cf8a7f2360112132b6ed76cc",
+                "suffixDiffs": [
+                  {
+                    "suffix": 86,
+                    "currentValue": "0xa17523d3edef774bb0f5152b18967f4a20e8a70ab9961a5f2e88265deac5db30",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2023:IT067IU",
+            "course_id": "IT067IU"
+          },
+          "IT069IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x630981df43e64e867ab7c046eed857334d6a895c3eff2a58bfbd8f0a125e2c21",
+                "0x1fcb8c9624c561d2a2b13eb8b97baf1c246b0bcdca5a01591af8dbb862a0837b"
+              ],
+              "d": "0x112e24cede5a610ffcb8e9a6f1d22d37a2971db324921e6b431b0863ef26be28",
+              "ipaProof": {
+                "cl": [
+                  "0x4e7437b4ba29b68e68252d8b1657413873dd29c824e4dba74d1414ba842a0665",
+                  "0x46299cd0f3bdd04abed70996629f106ce0a7587127a6a138927c8c8d40d9973b",
+                  "0x19b950685cc8877cf7bf89b7b4b584dbf174d789b916dc6081abd55cb5e709c1",
+                  "0x37513d085d1446822d4043a404fbb6b47ac2d058ee48d0ea7c0200ba0ae0a313",
+                  "0x6f32a9a23c00fc5d88eb015657819cb206b9e55606f22e3d725c55ed2dfcbbb1",
+                  "0x0c56243cbc9750e7cb2d00bbb45a450a130935aadfaac3b1982791816f37c466",
+                  "0x5b2976e672ce72d8db2e6f56c93674a4e41dfb2fb42a0c573b55d9202fcbf785",
+                  "0x312cdee900aac871c9e847c10f4e9c892b2f40cd14bb08766b14f83002df8018"
+                ],
+                "cr": [
+                  "0x1229773fba093b6011e4731848f8934b1c7f2e4f8d1142a953f5b1f72dcc5766",
+                  "0x49a90ac8d1b85b15aa0a4248463f27c3d548f2be051c178d9262e73a3c89a7d5",
+                  "0x336754de4fa8b9afb2e068314f92a9a5aeb4e9623aa82f233e7976e98b29a7a7",
+                  "0x26029e07c8ba48875ea7624fb78e79a42092b4c662390da4121edc7293882fc4",
+                  "0x498ee9b840d488627136a5937819b369fe7f830877decdb8b989d397a5e687e5",
+                  "0x71c34d7e4dc575cc45a0882962a431138ec70b747c3f780a56360283258bfc30",
+                  "0x2fd8071d0c9b84c208019389e4e7912f93c034d8fe98f5ca637012ec644c65ff",
+                  "0x646d52632add00e1ddc4ae31d4cf89a1d9582b2ce6a1ee651dfc7e2a2e7d4971"
+                ],
+                "finalEvaluation": "0x0f212b1b39e5d77e3b0b0f09b5c9cbeb092ad2bc08709d6c727cf0f065e01ae7"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xf69a2c5a50b68e03fa0e34fd6bf3e1bdd08d4b38eaa1897b6269712e798e3a",
+                "suffixDiffs": [
+                  {
+                    "suffix": 127,
+                    "currentValue": "0x66cce3803ed2391f3783b5fddd52ad5a02b316e4058433e63772ac134f093f62",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2023:IT069IU",
+            "course_id": "IT069IU"
+          },
+          "IT091IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x6553b5ec7d6c46f3a746dc355398f0c0a8aa3be0dda69e271ef88918283b612b",
+                "0x278fa518f0b7fb28280bd435667a939bbb89ecbd893372ecd3bd8b2b99e10deb"
+              ],
+              "d": "0x4b69f509c8ce7c4efbc9f2724d8880c9badf59bf20ec9bd0300d3992395e16db",
+              "ipaProof": {
+                "cl": [
+                  "0x6fc21c006ad8435bf1d9d66a64c52f82c469b0e079f0b5a6d5315ce1b97c008e",
+                  "0x12f70383b91259eaf1be7bc7dfb964134ae3788b77c9b98d6924453fc2c90aec",
+                  "0x00a08a3994242a3e8d37f675725a196810fc19cc4dc19a435219846c83cdff7e",
+                  "0x3b3d092a2253d40fb0d306d75dfa2f51a4d6426f81f6fb8aa329ac1bc1a3f9e5",
+                  "0x5198d0a821712af4d5ccd4ad9e2484b5f108dfb47dd42b125ecd6d21f132780f",
+                  "0x0c8d3b685dd2e8cffdcf7cf4beaae9edc7516e786fdfdf04a63fb660983e69cd",
+                  "0x68bb32569ee48077d2cde83bf03fcf8991e1f47a720b75b3f4b1afea2f200390",
+                  "0x053ff7db315cfc12159b5b4c03b846356b5f6b4d18693b272a9915d3fbd2738a"
+                ],
+                "cr": [
+                  "0x2389030e937ceff3800d10efaa0eb03d26ad6dd5cd245041ab2a70dd62fff0c8",
+                  "0x6980f265d995ea97e84e8b6dc8e3fe6be71d8afa7c8135d34518d7a68b8c0774",
+                  "0x1d24d8fd2ae43564a06c995c54d33813924ef355163f467eb466c2f2e57cb9b3",
+                  "0x49b2923f0e7f6b05c7fe474fb0848fb755719114988e2205bde23d585bef9187",
+                  "0x48ed0af6d68c4198492a1d6867e3d81370fa3be20193476ce2c330a164f860c1",
+                  "0x1c575b88acfd583064a9c4ec6e6d0ae0a50d065258504858e5576a2d286420ea",
+                  "0x58cc8524ed9f30ba7790dafa75e86b7aa3daf3d98ae7df8a2c94e9e338f37819",
+                  "0x5bb0d3d9d465b582869fb53593aa60570e9ce8aa4be8623222ba3009d5b5abe4"
+                ],
+                "finalEvaluation": "0x09fb62fa7bb31a9a3e62060d4e75301bc52663065b2f4209ee74efb8d9099d62"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xfa762eb965e863786dd1ffb01e42080c21499a05fb95af2adda078fb28dec8",
+                "suffixDiffs": [
+                  {
+                    "suffix": 230,
+                    "currentValue": "0x47b3062de69343c85218d140f41180c52dc127dc58f71a766b23dbc50016324f",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2023:IT091IU",
+            "course_id": "IT091IU"
+          },
+          "IT133IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x252ee342395818f89d87f920d355defd2e6d0b69e26b2cd07673b0c943ad322a",
+                "0x64a38b49bae4701eb5c49c07e711d9ece3b12ad56342d7c3d566dd63782c31c0"
+              ],
+              "d": "0x21610fefca64719ab71913535768bd3f5d3fc0c2d2fb1c82b2143aa560238f36",
+              "ipaProof": {
+                "cl": [
+                  "0x1f03b511c25ccc660925dea9e9c794ac5b438a68619cafd81b98b87dbd1443a1",
+                  "0x3b14e2057ef9e691621acc72827aa582d6f42eb645dbd1f0c9ec9a87d5a352fb",
+                  "0x4a2a8db980ae7bc97b8a56816b264e1395c4e0f0bfd48ddde652e6e2a635d865",
+                  "0x220a0618892b745f292d9c73e7fca301295309b7a90e8935da7a161c24ba2595",
+                  "0x5045ddfc3437d9e6e6ce02d0d44f93abb2328e75d90cec4400a987667ef037b4",
+                  "0x5d5acd8899acd307226022c84c1d2d3f47668ddceb8a56f805e09728f5b154d4",
+                  "0x06225f1e9828b4aad9f044b38f163ee4d64417cc830f060962b978e9bf85181f",
+                  "0x1fe178d0f8eb2dcced1aef196d1e50d311fabda1423c98c757929d396869724c"
+                ],
+                "cr": [
+                  "0x4cb0618aa40cd43c17456c9163a3c2ae122ff55fa9ce08f733b49e3e14e800e5",
+                  "0x31bbef9b7a946184f7f3920ee4a0c3340789ad2329694ec9ac8ce6363c7daebd",
+                  "0x54e681ad83ea15de61416c5ec5335de3b9a7921ed8e6cdbaf251c96c80567cf0",
+                  "0x347c16677f12226fce643ad6893b9a4e23b3ab9366aa4af2059c026db387ba8f",
+                  "0x510c9ec434710b99abd1a5e1e56754cb55402287a8b1c2627411b664cdaf30db",
+                  "0x508f96002556039e7dcf3a54ad23619872be3dfcefc70ecede89b95821acf313",
+                  "0x0d93b931f6efb5cb849f2731382778ea4433c14cf5bd464b91202f9177b286b7",
+                  "0x573d0eab060dd06eafd2a458c3743e146370ab90fa6a53fb5b4d3790ccd58ffa"
+                ],
+                "finalEvaluation": "0x02c91faf77c970d0060929fad87425d1e927d9ca69a57ea5675f41c88381422e"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x5e1e8120383e3f73e564c7efe9339c3b11f09c43b8a00ad3a31569cf2f8c74",
+                "suffixDiffs": [
+                  {
+                    "suffix": 152,
+                    "currentValue": "0xac6395be2a70a94b8136392058d4d9b3aeef7a07092c874ef440d770839aeef5",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2023:IT133IU",
+            "course_id": "IT133IU"
+          },
+          "MA001IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x2861a39b8912478219773a6928c447204f305b2f2bb502c56684578b7f8242ee",
+                "0x385c9506f5f1a78f86c7fc8750d0f7fdadea1af69c235dda44fa53966a9334e0"
+              ],
+              "d": "0x32e913e64900c486b9d8ec160f381d648d215ea2517755b57d931bc731fec1ad",
+              "ipaProof": {
+                "cl": [
+                  "0x31b25804231dfa95a4e954e145ebb1e74e1492e9f4a541f0e633780bd8e8d236",
+                  "0x671a427010d18a23ad6b0421b15b0cff0e5104b18fe38216a9ca355a9752d66b",
+                  "0x566f1c0d447c8ccc6e1a1f1325161737f247593c381da910b2802412947fcfa3",
+                  "0x15d49db6ccd02240af2e2ffac31bf0bd432eb2e1950427303080c4d2d12a30a3",
+                  "0x079d52a02d113e8d5d5add72ea4dbf4d2646f35a0a4239b3488fe9a263002788",
+                  "0x24985af109e6a1011ab7b921cc0c576540575629367d78d58a18ac53edca305f",
+                  "0x609bb24a0e416fe7cd53cd01530b4efd1389051ac13c2be6711a0c12263eb7ba",
+                  "0x19bd6c5e530758bf6164800e277bf4e789a9146b76b858b6464743a85aed67fc"
+                ],
+                "cr": [
+                  "0x5eebe8e03175422d6433ec35a05847f12e5b37e99e12d2e40ad94daba1ab67b9",
+                  "0x2681f8d6d640a05588dd065d7f397d2787b192b44ebde88dccd716764fe83825",
+                  "0x7202a39a7737c25a35faceccd05d19908cdecb0a40af6b5ae608bc9be3daca81",
+                  "0x087ed3f0b2dabee5b0a5c01602708ec6fc6899d43c94803d59876a4b50b692da",
+                  "0x19fa87b3918fd0cb4d0876ab5c32aae6e1399b125488c9a3e2ea97ddc5969636",
+                  "0x604cbaef306caea3ebe73ad9635e5a995603d66d51e2b09509b7d3f5f7f6ce9a",
+                  "0x24e8bc14801c9d192d86d92afb66c44587d07a3b2d40b744912edf388d0193e7",
+                  "0x0d24e1eff2e7b34a309426f272dfa3eb8362ef610482625621ad5fcf89f2fa70"
+                ],
+                "finalEvaluation": "0x1910727c15ddc7f106ea9ed7ebf7b6b804e43f397a02c82f321fef7ecdea114b"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xa525a8b253a27e1440cc3e4e0287ccf5a505f8c5fe3e6a811b0ce6946d2b83",
+                "suffixDiffs": [
+                  {
+                    "suffix": 31,
+                    "currentValue": "0x02030f1bb9ddd4896fc55fc7655825424b3b99a59591327da9db0bce14998819",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2023:MA001IU",
+            "course_id": "MA001IU"
+          }
+        },
+        "metadata": {
+          "generated_at": "2025-10-10T23:19:00.800026+07:00",
+          "total_courses": 5,
+          "revealed_courses": 5,
+          "verification_level": "full"
+        },
+        "proof_type": "verkle_32_byte",
+        "revealed_courses": [
+          {
+            "issuer_id": "IU-MATH",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2023",
+            "course_id": "IT067IU",
+            "course_name": "Digital Logic Design",
+            "attempt_no": 1,
+            "started_at": "2024-01-26T10:24:56.332664934Z",
+            "completed_at": "2024-03-27T18:47:48.75033631Z",
+            "assessed_at": "2024-04-01T18:47:48.75033631Z",
+            "issued_at": "2024-04-02T18:47:48.75033631Z",
+            "grade": "A-",
+            "credits": 3,
+            "instructor": "Prof. Johnson"
+          },
+          {
+            "issuer_id": "IU-PHYS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2023",
+            "course_id": "IT091IU",
+            "course_name": "Computer Networks",
+            "attempt_no": 1,
+            "started_at": "2024-02-01T20:51:51.821392797Z",
+            "completed_at": "2024-03-21T04:56:20.521527459Z",
+            "assessed_at": "2024-03-27T04:56:20.521527459Z",
+            "issued_at": "2024-04-03T04:56:20.521527459Z",
+            "grade": "C",
+            "credits": 4,
+            "instructor": "Prof. Smith"
+          },
+          {
+            "issuer_id": "IU-MATH",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2023",
+            "course_id": "IT133IU",
+            "course_name": "Mobile Application Development",
+            "attempt_no": 1,
+            "started_at": "2024-01-08T13:25:39.959713523Z",
+            "completed_at": "2024-03-28T07:40:55.999094157Z",
+            "assessed_at": "2024-03-29T07:40:55.999094157Z",
+            "issued_at": "2024-04-08T07:40:55.999094157Z",
+            "grade": "C-",
+            "credits": 4,
+            "instructor": "Prof. White"
+          },
+          {
+            "issuer_id": "IU-PHYS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2023",
+            "course_id": "MA001IU",
+            "course_name": "Calculus 1",
+            "attempt_no": 1,
+            "started_at": "2024-01-10T17:01:51.105803566Z",
+            "completed_at": "2024-03-27T05:58:22.253207207Z",
+            "assessed_at": "2024-03-28T05:58:22.253207207Z",
+            "issued_at": "2024-03-31T05:58:22.253207207Z",
+            "grade": "B",
+            "credits": 4,
+            "instructor": "Prof. Taylor"
+          },
+          {
+            "issuer_id": "IU-PHYS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2023",
+            "course_id": "IT069IU",
+            "course_name": "Object-Oriented Programming",
+            "attempt_no": 1,
+            "started_at": "2024-01-23T15:41:50.916124917Z",
+            "completed_at": "2024-04-01T11:35:56.698050835Z",
+            "assessed_at": "2024-04-04T11:35:56.698050835Z",
+            "issued_at": "2024-04-11T11:35:56.698050835Z",
+            "grade": "A-",
+            "credits": 4,
+            "instructor": "Prof. Smith"
+          }
+        ],
+        "selective_disclosure": false,
+        "student_id": "did:example:ITITIU00003",
+        "term_id": "Semester_2_2023",
+        "timestamp": "2025-10-10T22:24:53+07:00",
+        "verification_path": "single_verkle_proof",
+        "verkle_root": "253f6449cc516ab3c753170db9270b5da16392616cd843744bf2424fcb96ccc2"
+      },
+      "revealed_courses": 5,
+      "student_id": "ITITIU00003",
+      "term_id": "Semester_2_2023",
+      "total_courses": 5,
+      "verkle_root": "253f6449cc516ab3c753170db9270b5da16392616cd843744bf2424fcb96ccc2"
+    },
+    "Semester_2_2025": {
+      "generated_at": "2025-10-10T23:19:00+07:00",
+      "receipt": {
+        "course_proofs": {
+          "IT069IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x669bcfc187f977a781d646f0e1ff6738849285225aa0aedc6808f56264daf060",
+                "0x1c1db05a3338e0d706546b82028b89da7ee3383639a55343bfb70630f1231105"
+              ],
+              "d": "0x6e20d2bbaaa7fd4683140d03391a345261cbb71ffefb5589f56406704bf08f5c",
+              "ipaProof": {
+                "cl": [
+                  "0x379ec3ab0a0126f79641881132448f3bb7b4c3ed54f69380247c883de1456f35",
+                  "0x2c9c546fb79420165a9b5956c3aa7cb6a1c83b8592682127dd324204a6db820e",
+                  "0x71571e5647add10694b57e17f60f288e2b2dffa06524e049ace614224cb5c535",
+                  "0x3543e9dc0358b0efa9e814ec3a7896a04c4541867f1ce0d46242fbe97c847f92",
+                  "0x06aa98383de196f1fda227ccd71a3d29f949eb295bee2bdaf6f3e06de4c5e5ca",
+                  "0x5018a7dc7c465cc83689c0feb067b365d7deed815891a703e81a3771b776bd48",
+                  "0x6696ebfea4c95030e325768fa72ba60c5f745a7330008667ed64c99fda34f09b",
+                  "0x0205b25bea5b0b89a9d672a97b3054961f409e6320b67c1d3f919f6da419c6f3"
+                ],
+                "cr": [
+                  "0x628f23a406ffd4cd34a64adb82878cfcf9a2e0779931ede25c88f989b3eaba3c",
+                  "0x0366001603fb03102ddd91031ff7727b093907908ffe8fc166ab65ca79008ec5",
+                  "0x0737dbdcee3ee68fdf1224c51e8540ca5d5fa4f074aceb3aea3e16d365fad929",
+                  "0x147b9aee3471c6bfb3c05c178a4cd8f273aad4043140ddf60c645bdcc4152f6e",
+                  "0x565585ead89b91d653ba5fa27a3b74b8fec71559c587c4fdc6dc0b1ece561661",
+                  "0x04cb426a9fb42166a7297cb94c49b0ab917fe00d62d2fef60fb5e720d3727ba9",
+                  "0x22ae3342dac5cb4401b645fa5c949de5f5904c8c684ea70259b0ff3669d72802",
+                  "0x14a20c61ed7955df2a63030e4b4ddf58d297aff4d1806e54362f6aeedeb16173"
+                ],
+                "finalEvaluation": "0x197ba8ea03d39661a6d7c377daa9791d4f499b445ac0e86a8f1faee8763fc330"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x63f7614a3bcc3de78ef6063833aecd1717275b487eefe9d333fc54378b3fe2",
+                "suffixDiffs": [
+                  {
+                    "suffix": 65,
+                    "currentValue": "0x7b5c68b995fe8cce93f692af4725c75531328e5ed13abb1f726ed01f3a00f1da",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2025:IT069IU",
+            "course_id": "IT069IU"
+          },
+          "IT116IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x4d46487ca651ae35531e833e33a65c73e9aac73539edfb565ccc09fea8321aa5",
+                "0x208d183f88f6bb5ce81450dca3c29d3527f12a4e3b98732d1c3f546eb6074c0f"
+              ],
+              "d": "0x1b8d9d0d3f9fa718ed2d4f972672c961e637957cdd3d70688446792d8a4913ae",
+              "ipaProof": {
+                "cl": [
+                  "0x0ffca063f51473b83d27b265c0f5def88f6afdb0ddf8a14efe0fd4168bd9b1c0",
+                  "0x3347c6f8e21d7f1885572fe98b8c7658e116379d2b6a065d90f4b4cb989a4a4b",
+                  "0x046b152e571e6ce5103daf54806df72043b105312285873fd7ab4951a7be4fd9",
+                  "0x0ba8e5794122b1d9b6fe359cae550a64bd1bc0264e03fd3acfc6f7cd787932fe",
+                  "0x2383ddb334892f4dfa27ea17ed6c333f934c1b356ef558ba4f52bb2b1b4aed1e",
+                  "0x1a4185d3b5cb4aaffd9d983790d3c7a55fcc5773054e1203b6f9457082d1f913",
+                  "0x04daf1c8fa2da028ce29ef3d86bba73acec6dc863953a97659c51ed244691c4c",
+                  "0x6b7ba9ad5a39395cce8514f876b99e35fc9f4d7dd246877cb9befcbcd1b5909b"
+                ],
+                "cr": [
+                  "0x0691241285fe204acab3a47caba076954f1e89205434e7ba1fa3b8ebe91cb924",
+                  "0x5a55f174bb9229e75433017a8829e5183622aa217519b403e9b861edeb425b7d",
+                  "0x50d030fd229c8c25e98cfd2ec2938dd18987122167fa9481a8b4a1d5bd654c9c",
+                  "0x30c3f4c0543f8241c773bd408c5b9d02401aa410b4506bcb9526dac4e62de963",
+                  "0x4bc016cb3a1882412240d3657580857e46e4043b1c22a8763ee06c9d00644e0f",
+                  "0x67df5d17639473049e3cae4258041c64062f991ff160f3b390dcf925754eda1d",
+                  "0x137b006a0b8c7624b1624074eeab07d326a4c71da14d96c90105051d569a01b7",
+                  "0x0aed965c75199e76f4ff7c453e3f70ec217f76adf1dd6267721749fca096deef"
+                ],
+                "finalEvaluation": "0x0d9e2a6528e6266acc98f62b7f41d444660fe87cea2a781fdd32172c5bf5dffc"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x27e58d05adac427a959734ef7418aa2c2eb45935d2a5f686aaf1b41a6c2835",
+                "suffixDiffs": [
+                  {
+                    "suffix": 102,
+                    "currentValue": "0x2b69c131daf50171dc8fdbd6d83dcda70f43482a946b4d9460c706465f0ea8b5",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2025:IT116IU",
+            "course_id": "IT116IU"
+          },
+          "IT133IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x2bd933d4db52ce2cf17e0dca4d16d00162e613cb3b3df944656d45f49d838194",
+                "0x1c3ca27a17a73432583fb62fc5b5d7b3018c7ff810b1fa5f8eaaf0faef477c9e"
+              ],
+              "d": "0x4e19c6c361bd5b17125230e913ce073cb01aff66546a50f675f8351794a2a9f3",
+              "ipaProof": {
+                "cl": [
+                  "0x02b0055ae8e2bf09fd94360dba8ea0604917e2e26f3a38b256e836b2ed529d8b",
+                  "0x1eaf44eb498e66a7ae336c63fe9905f79ea277ae83787ecd82f06a7bc62100f9",
+                  "0x0acaccd11ff838c11fccecc524ad3ca7914e6fb99609f526d0d351cfb98d3bea",
+                  "0x42818abbf06dbcda260269dcf57640417ce3f717331a9359387c7524377019ba",
+                  "0x6d7f673ea99bb5167edb24753361c03e16d2030fcd9c076990a0ca28178be3f9",
+                  "0x2825cf00ea937b413d78b1f2a9fd9b2adf6e3431541fc7986c93ca3cc606408d",
+                  "0x03e6be7d427af80b2fe4deaa2697faca4829638f6d928bba14089e134787d82e",
+                  "0x375a655078a0e1c5147a481a1b70ee7b8320a8f579b64fe1366844e6e00223d8"
+                ],
+                "cr": [
+                  "0x430712f1bd2482daceb483fddc782b3f498b8de01a4e7d01055748b6f1cc7265",
+                  "0x673fb95402c7a230e3b571d7a0f99168148ad2c2893e1dff148ace120a8934f6",
+                  "0x55b96280c68ea486d844f60df38347bead93d59aa9b20b0bafa7895c69fa1c89",
+                  "0x705965a4b8712c97ca8f57ba932926b2cd181968b9081e5be24eb1e317a584eb",
+                  "0x6a383eb8eb86fa7134008716436f0e4f6261654b96cf1d7510243e285c2e3d43",
+                  "0x5f48fc369c24ea36360c54f909635fba8f76c991cd0327a615386435aa1ac035",
+                  "0x68d6440d80dad3193edff2e3cfa4685400f533924ea8037f2954627749505d6d",
+                  "0x33ab083b797ff2b579adff57cf7b2b025f148faa09dfc8edce31114680d28211"
+                ],
+                "finalEvaluation": "0x0c0bdb2c89e18ca36ec86672b5b96b9c576cfe94e4ed756465d4ba80575a8b6b"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x45b7a2a588638416664295c9ebe6ac9e71487d9f70293dfe5d9166b9e48e77",
+                "suffixDiffs": [
+                  {
+                    "suffix": 11,
+                    "currentValue": "0xede3fb8bc72e657a4f3688750a1c606d7cd08ad28d727454ef259c4e9c0e1720",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2025:IT133IU",
+            "course_id": "IT133IU"
+          },
+          "PE008IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x6fdbf0efbe97ba72f77c7fd8ad1fc168bf25e5f26bf5c62067269171e2c09b14",
+                "0x2c65b7c38c444481c3cbb4258267c03bb744ac2863d69856a440929a9240580a"
+              ],
+              "d": "0x72620d14c8c397ba3fe33f89a526090fe92473924c1d68a36a34b8ce4f51efdc",
+              "ipaProof": {
+                "cl": [
+                  "0x6b4d15e2ca047def2b6eaa5eef4fec90dc54fbe2f1f64ef7024eb7ddc81e7190",
+                  "0x388472a7c0195e78c367c6f7b3f80ecf6d57c4e64bb95e027a4d063446f20480",
+                  "0x70503440d6e082afbd0fcb92d38e83e9ffe3500185ef9325737b712601bbce22",
+                  "0x5be14749fdd6b1024020dfc052f09af3b0132081536a8815847adbc69367ee46",
+                  "0x28d644171665461a826bf9b7ac38f4b58b7b447c51efebf0119b277a02988b61",
+                  "0x0530304b8e9e9aa3736357d824cbc0bf7fe5edb527b450ef9d3e22beef35f91f",
+                  "0x486037bd6f26dec79e6eec918644f8026df90e49367aaff7e9a8779214f67469",
+                  "0x693dc4011db85fcb838d0dc148a18dc053e9e1a1e5be4bfbc01d07bbe37282e5"
+                ],
+                "cr": [
+                  "0x0c193682673b97dff1ed67181c76d3c84ecf50a0af0c5e015b8c141ee9890b99",
+                  "0x6cc33909d077ab45c5cb42d6f5521c3b91228dee5d405cfabd0b261236bef50f",
+                  "0x3e63da14a1aea7a7e1372ec097b7241edfd3932acea2d7b2116136510bdaa46b",
+                  "0x4bfcc717ff7b439de6a0b999f28cc62cdb0a0a047547a0d0783c092a96c8c50c",
+                  "0x33bac24871fc71e04fad2c8ce60bf839ad09d53b18a47868b76b2858dc697b63",
+                  "0x36878e401afa7cd0ccd0c921d22390a613f25fa72e0ce19b44a4189b6a1b13f2",
+                  "0x46e85e54801770f0abf331256d97efc4337564c063ee95536804ff6a8a7f56d4",
+                  "0x63e9034500deeb11f1224b37a08399494df72852db781d7a2ffa5b9f1095736f"
+                ],
+                "finalEvaluation": "0x0250802288482e869773604a649ef9b525a7764b9e824e9d6f2df24eb3f21ce1"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x36bc8695a0fdae67c2e89c751c1afca54cb5995683ac14076040467c4eb745",
+                "suffixDiffs": [
+                  {
+                    "suffix": 238,
+                    "currentValue": "0xb2868c6f21a0409ae5ef760635f69f52367c7df4390be065db5a259ad272e2ea",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2025:PE008IU",
+            "course_id": "PE008IU"
+          },
+          "PH014IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x2d9255ae1393bc77824f95180afffd5a7b2afd7345920d0a2e619326cc0b89b6",
+                "0x65174281392d834bfb1228b96b9bfc8b31418ffe570935b345bd476bf3e6c60f"
+              ],
+              "d": "0x3727fa191b23c471625e030357387929f5943e8e4bc9b9562079b7b801b7ef7a",
+              "ipaProof": {
+                "cl": [
+                  "0x0dd616cec60427bf14faf48b5e98b1b70933cf5fdbe4d39130067847d466bcf1",
+                  "0x67610ace628d1fc4d750cd268dfc68128ae604233fe5561edef06f7ec682b99a",
+                  "0x185d3c787ec84b6c799575494c84ed8ad2d21b7bc6e0b9f188332f3e6a4fa796",
+                  "0x0cd0d47a94042168724130b5103e84e2be2bdec86e6282cbbab25321aad0945a",
+                  "0x6bbbb8dabe207011a4e642ffe4ff84d71c5c13621135e8757284a0dc142a9286",
+                  "0x33f124934f994b87570475644a4ee99d55903fde77464712a1b4113a78cf11b7",
+                  "0x5ff47d4e9fdfb13c7d5af0bda1d9200594f31036b891798b513dce105474df62",
+                  "0x3c2cf0900a9c127f1f9e8e6e83a340b794c0f4749451deeb94b354216ad285f3"
+                ],
+                "cr": [
+                  "0x1d7e78199908cf4504506d3caf78968007e2799eb566d880ac55f1ea82f2f3d4",
+                  "0x716db3703d135e4dd6560f5e3339b19dd10874287a1d8e76943dfa753f68b375",
+                  "0x52e824ead529b69aa261680ea611feb06ce4a3e6f534eaded059fc994a0af558",
+                  "0x661e0ff47a03d949740199573f93a03513afd90703c20fd85cfcd8af6b5715ba",
+                  "0x44a0e813326bc031dd5da9766fd0e7486509304e2ef646170fe2395d938bef96",
+                  "0x429908fa0f164d3a62482506fec1db69bfb7749c37ba8e6ecf20e95ac399a690",
+                  "0x0c488d711f3567e88cfff538fb770a0a4126beab0042629e2f2acc72e0c7d3e9",
+                  "0x0f378723b8ee1211d80f4ba9ee1a179133e47393bf3c67d11839f20e1bedd162"
+                ],
+                "finalEvaluation": "0x13ffcf2d4a5df008f9e5ef7282dd3651582a473bcf9ac9f248855745849d990f"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x5377d2bb1300d5684815267e3a922aa77a8b5df7f426e242027fe9b32a3ded",
+                "suffixDiffs": [
+                  {
+                    "suffix": 78,
+                    "currentValue": "0x308eac029a9876a1bf5e4d6af4068b43e30ede019bc806353171b78d3a6082b2",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Semester_2_2025:PH014IU",
+            "course_id": "PH014IU"
+          }
+        },
+        "metadata": {
+          "generated_at": "2025-10-10T23:19:00.904313+07:00",
+          "total_courses": 5,
+          "revealed_courses": 5,
+          "verification_level": "full"
+        },
+        "proof_type": "verkle_32_byte",
+        "revealed_courses": [
+          {
+            "issuer_id": "IU-PHYS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2025",
+            "course_id": "PH014IU",
+            "course_name": "Physics 2",
+            "attempt_no": 1,
+            "started_at": "2026-01-27T04:56:52.763740214Z",
+            "completed_at": "2026-03-19T09:10:26.606905051Z",
+            "assessed_at": "2026-03-24T09:10:26.606905051Z",
+            "issued_at": "2026-04-04T09:10:26.606905051Z",
+            "grade": "A",
+            "credits": 2,
+            "instructor": "Prof. Harris"
+          },
+          {
+            "issuer_id": "IU-PHYS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2025",
+            "course_id": "IT069IU",
+            "course_name": "Object-Oriented Programming",
+            "attempt_no": 1,
+            "started_at": "2026-01-20T23:40:14.073438385Z",
+            "completed_at": "2026-03-15T08:57:11.283212877Z",
+            "assessed_at": "2026-03-22T08:57:11.283212877Z",
+            "issued_at": "2026-03-31T08:57:11.283212877Z",
+            "grade": "C",
+            "credits": 4,
+            "instructor": "Prof. Jackson"
+          },
+          {
+            "issuer_id": "IU-MATH",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2025",
+            "course_id": "IT116IU",
+            "course_name": "C/C++ Programming",
+            "attempt_no": 1,
+            "started_at": "2026-02-01T02:45:04.387815182Z",
+            "completed_at": "2026-03-22T22:35:58.58286065Z",
+            "assessed_at": "2026-03-28T22:35:58.58286065Z",
+            "issued_at": "2026-04-03T22:35:58.58286065Z",
+            "grade": "B+",
+            "credits": 4,
+            "instructor": "Prof. Davis"
+          },
+          {
+            "issuer_id": "IU-CS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2025",
+            "course_id": "IT133IU",
+            "course_name": "Mobile Application Development",
+            "attempt_no": 1,
+            "started_at": "2026-01-17T05:10:45.895874114Z",
+            "completed_at": "2026-03-24T08:53:53.4483244Z",
+            "assessed_at": "2026-03-31T08:53:53.4483244Z",
+            "issued_at": "2026-04-10T08:53:53.4483244Z",
+            "grade": "A-",
+            "credits": 4,
+            "instructor": "Prof. Brown"
+          },
+          {
+            "issuer_id": "IU-PHYS",
+            "student_id": "ITITIU00003",
+            "term_id": "Semester_2_2025",
+            "course_id": "PE008IU",
+            "course_name": "Critical Thinking",
+            "attempt_no": 1,
+            "started_at": "2026-01-31T09:41:02.657778569Z",
+            "completed_at": "2026-03-13T12:29:49.579009745Z",
+            "assessed_at": "2026-03-18T12:29:49.579009745Z",
+            "issued_at": "2026-03-21T12:29:49.579009745Z",
+            "grade": "C+",
+            "credits": 3,
+            "instructor": "Prof. Taylor"
+          }
+        ],
+        "selective_disclosure": false,
+        "student_id": "did:example:ITITIU00003",
+        "term_id": "Semester_2_2025",
+        "timestamp": "2025-10-10T22:25:29+07:00",
+        "verification_path": "single_verkle_proof",
+        "verkle_root": "38e7f2ce18440d3ba153b2c5f8af877d31afea03a4d1a669afb1cc4e26a64a7a"
+      },
+      "revealed_courses": 5,
+      "student_id": "ITITIU00003",
+      "term_id": "Semester_2_2025",
+      "total_courses": 5,
+      "verkle_root": "38e7f2ce18440d3ba153b2c5f8af877d31afea03a4d1a669afb1cc4e26a64a7a"
+    },
+    "Summer_2023": {
+      "generated_at": "2025-10-10T23:19:01+07:00",
+      "receipt": {
+        "course_proofs": {
+          "IT013IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x49808d74254c71c8e2fe8d8e5ff752d7987bbcfff83b15e366c49d4bde9828bf",
+                "0x6f2865080f6eda325b07b789555f76d8b8a19906b6dcac0bbc656db22ad681b1"
+              ],
+              "d": "0x43b171ec6b5de21d1dc89885d32b0f8e28571b2a4c27f78daac3c9d1478b8faf",
+              "ipaProof": {
+                "cl": [
+                  "0x59d9a6edab34bc9487736b8694fea885b303712619841f2c3cd637ea29be9a89",
+                  "0x04b541b60d4eb36f76852a2106f47c116eca39f0b349d65be19c0e3010f62ae8",
+                  "0x500c1965351649fc4ed83beb252d34d699addd788bbcda33dede0c5825e141f7",
+                  "0x676431c554127a330490392eb58e2ee705df4f695cd2f184cb9337054a957002",
+                  "0x553d0bb9d89664de7e003596594c8ca52beeba2bf8b2bab57f814ee22c23834e",
+                  "0x2489aa2d133c9185e5adffcbd2f8d22dbe655027aa40e97bec2acff726255be7",
+                  "0x0c6d7ae61fe0401a80d3a820af84a0c3d098304dbd50bc5220c0894ea514e656",
+                  "0x08cb462810d30e35e00e30bda009a345d5e82884e626b43f45443860ee61cb7b"
+                ],
+                "cr": [
+                  "0x3dbe344deecadb75d7efa017dc8fd31180cd119036298b9a597255ab0d0e08ce",
+                  "0x1b49ab15cfa0549a1284f354c1e799ee41327f365581e18402b505f1ee0c0e81",
+                  "0x2248d91e1bdf38c3699d7bfbde5e69718e2e35c348ea8db1e68fe217e589176a",
+                  "0x4757b3ad2d009a0aced96a3cf23059ccb62309c823f10a696bcccacb17ebb592",
+                  "0x72f037463eea959d8d82900a5ae5030a1c9dfb16cb1e74993c1c17801cf9528b",
+                  "0x6c75158dd718bab2bd5ffdfa61c4f69dbb2f2c12faa974de6600b2b35d9d6b6f",
+                  "0x1d89e14aca609bd2062f847b46643a3f29ab6a72c65e46364ea06f0a2325cb66",
+                  "0x1fbb13cc4da237245544fe0bf2280e6c386825981987e51d5a99f8d759bff1d3"
+                ],
+                "finalEvaluation": "0x0c5844eac4efb6de2f42d70718f57def9c0b52ca746ddbd42bc4e922ef6e8933"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x3f9ed4694428f63dfc7eb379f9b909a8c2299c30d3b42ee5633eb252d528ae",
+                "suffixDiffs": [
+                  {
+                    "suffix": 25,
+                    "currentValue": "0xa1e9a89cef8559de1806b604e0cde1ecb7b89a5db9cb6c3b07ab93d9e01b314c",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Summer_2023:IT013IU",
+            "course_id": "IT013IU"
+          },
+          "IT134IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x6f40ce3c10678abf7ff3163e9828be1bdc453aab6fd2e0351a311720654db96f",
+                "0x4c2b52bc096bf944c92885295fd54795899ea77cd79ed04768657f20f1e9b64c"
+              ],
+              "d": "0x2dee871b79db013b342c40f32436261f3666ab54286df3de74f47f2d3e5906d7",
+              "ipaProof": {
+                "cl": [
+                  "0x12920b44df4ff6650f0bd002ba5bbe4527980a6f27051feb3d95ea42ddc9305b",
+                  "0x414802c2ff9f8a95ed7c24722b0787946ea78a74f08eab44e60eb7362073b098",
+                  "0x3ec6d3ab1aa897ecdf7d82a6218de788ba2054ce65354245912f21c1b8df8a2e",
+                  "0x29904fa2ce9daeb9a920483878311230fa46d0a4d95ff4584d2cf17f73620817",
+                  "0x6fd9bb4f8bd88434989c3fc6742a9190be1dc4c083df584961f61d4102362c5f",
+                  "0x3e2b1dd733f983579a5cda77040b34ccb56d94407ece0fede52424ef09e5d4fe",
+                  "0x5a8d39412809f976820ef7bf218146aa285923f5b8ebd4efeac7016aa5ef2963",
+                  "0x2e1e44f42cce7c759f9c2400fb8ee89409580fa711d8ebd1c33fefbef459f3bb"
+                ],
+                "cr": [
+                  "0x0de9689cac5d1460300bb9e2f1612d59b46f4fc16ba75b470143f48e212a8666",
+                  "0x2270ec612a5363e916214d321c1f414e3f4e90095d02a583d048ab98c39ce383",
+                  "0x33fb6cf94d432f76dfed45c808381bcf3aa94079ad1076be4a84111956eb1cc3",
+                  "0x0f3ea00147837f0bf264616a39518a4037fa8474af29bb964cc020e96139d91f",
+                  "0x2823203d120136a1e77e9322b85ed0bc5cd2903b81d06486c3f2734ffbee69d6",
+                  "0x64516a7a2b02de0e9a1e4cf2817fd75adfdb6da46ffdd87f8e6d5d24252ca44f",
+                  "0x1004a535b51b23e01eecfb3c86d7d71b29da1c197a55808b4992b6676855b6b1",
+                  "0x1d506b11a9f0337b0c19dfd945d097d5a4f6afd215f6194e3ceb7d0f21f6eb42"
+                ],
+                "finalEvaluation": "0x01cc940d29caa7110279ef2e2bf91fd594e2c8f338eb4fd6960032f452a3b0c9"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x772927964d10c2ca104e6891ee2b3ab91d3956db7b773ebc1506ddd1ab4144",
+                "suffixDiffs": [
+                  {
+                    "suffix": 71,
+                    "currentValue": "0x90537be5c829885d78513a34e05ce6b878234e3f7e2b0e63a69ad1b9e82792e6",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Summer_2023:IT134IU",
+            "course_id": "IT134IU"
+          },
+          "IT160IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x05638160f632416ffc0bbe9e7b6e08336d9bda988a208df035e4ef6d96e28fd7",
+                "0x72572c2f28f3ea66a6f6fa5c25f13cf88f61b433c10bf7a492eb69199b3d639e"
+              ],
+              "d": "0x3318d00835910daa0e3edb67bfb443070af4df11c1bc0f0dd975ba364979ed91",
+              "ipaProof": {
+                "cl": [
+                  "0x66bd6547c75f690f14a5c8faf0d8b103c235b54199eb60631c5f42966a84d7cc",
+                  "0x46dc9281ba4f6ed8cf978ae08820efc31decacfa017b9450149bed1794b3f39b",
+                  "0x311c03c894cbdf776da9bafb04c8871d957aa0a94505168390d4efaafa603c8c",
+                  "0x0c1bf729202656d65eeb9242bb1407a79b8886b58ab4f0fe51a1dfacb764bcc9",
+                  "0x4dc17595541e55d5156e637a09e895dd350fa2c3e42d8d0550d3591c68aa2ca4",
+                  "0x3e84e13bb7802f7322272be122427bc1a63e94de651c69235901f30cf0b31ad6",
+                  "0x30131a1405011a6493689d3d8fb53a8cb2df6f2ce0f83319480338473640f0d7",
+                  "0x595832be66ff17f04674b34413bcaf200225d9a1e17e9bc6b297cbb05e3440f8"
+                ],
+                "cr": [
+                  "0x04658ff405bdd9359e04d02cefd2003a0f4fbc431484fc9fd3b59205ba2f2f0a",
+                  "0x40ecbc1ff442840e8e461a9f39175d31eff5cffb0c9c7975a4aef165ef0a7d17",
+                  "0x508c77208a08b61d1a04be8f16abb37acfe638b86c01e91fa447bccb3dbf06cd",
+                  "0x20f1453291801b99651b08c91436430f5b314b51de87b2fe25d1867054c404e3",
+                  "0x18d32e82c6d03aabc9e5ee3ef98e30a1a3567997dbae59305b6925be9d956d80",
+                  "0x2ef0b984df8f9ad50db4a015ac1c58ddf83d5d5e855e5520bd9149355adb73e4",
+                  "0x5a811d59e6fab572f8b2e01964544a2d7e587e0b6c5b4d7eb6ec24b162c29854",
+                  "0x250eb597d27babd97e474a752b9b8c7052b9ed799c4023978198c4dcf9cfe8fc"
+                ],
+                "finalEvaluation": "0x07f38c4d73decce8f5a864da72a0ef5ace30517f865dd4d30914f8841c1bf5ef"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xe996db8582062c76bbc94525c2915b797a067c1f320aaaa4eff21807524eab",
+                "suffixDiffs": [
+                  {
+                    "suffix": 145,
+                    "currentValue": "0xdf61ed9ad03d572d1de714dd03b0e6aa462f6945af6ed6470d60db8de174ca12",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Summer_2023:IT160IU",
+            "course_id": "IT160IU"
+          },
+          "PH013IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x100831f48f45efe93924279e0c6c3375e431fc3019efc25e57dd841bf26a20ca",
+                "0x1e936332c1995cbf9c7270af28e8dc9e719793e2df8170bc14c324f59a5d8279"
+              ],
+              "d": "0x15a7940152b72a1c01fc54d03c90a76673677c26f1030a74bea4b6de29897442",
+              "ipaProof": {
+                "cl": [
+                  "0x372a9d40edd2a66833dd316aeb680ea713ddde258390c49f78b5136cb7c987dc",
+                  "0x61e04280971a2c4094e80492848a76fe325e499368f3c9775eb57b1a331487bb",
+                  "0x6d91330057ea554e9d0da74d9db1145ebd5d46dbba1ac97e292764189565b19e",
+                  "0x2999e37e44ed74812120da2c44c06fcf64621b072abe802f64715391fe8c92e0",
+                  "0x037d7df3d78ad481795b3e9fef29b9e4f887743cbb1a36bf77ef1190aca9af23",
+                  "0x6f65b6f8d371bd0c136c9a2c6c24627abe5de613915ad8dcc29d83f7d5258dcf",
+                  "0x46f0d158990c0000cf4816ce90086c3a74dadd7c6c9ddf78f816dbf101475b43",
+                  "0x6845986bc7b5e17138cdfe92c90dfb7be0cd937d5b18f859dff127ecd754bb68"
+                ],
+                "cr": [
+                  "0x66422a4176a51eb68e431345f19dca4a56bf5a31814aa3dae0ec72b243bf4fbf",
+                  "0x12cf8266d69e3c63c93ac67f7a64cd429803ca013f33d0b9ef8e901baeda451b",
+                  "0x6773e3204ef9a7457527062ecaa04cb970204022408545dba78bedf9242fe43e",
+                  "0x60db39d2b0f0c702c4d534db95c3169e4fdeae5c4209648fb6b0d1550cda9c31",
+                  "0x47f873b4a250c620e66e18ecd827426e05e6cbebbef8974fe1095a856a1c11e9",
+                  "0x73980231171308ecd6348b249d676ffd615de54fd148afec5a2cbf38dde53955",
+                  "0x02fe6dac78f5beac73424124dbc9a6edff9d13a9c9c2aa930b1e6c31e459ebcb",
+                  "0x4e807a6dc140b2d65036cb48916509f303e7d9e116c7e99a3a36fbf9c8822d3a"
+                ],
+                "finalEvaluation": "0x01612ef137433294f06800d3fba98dbcf4cb07840d591e7406920397e487dcc0"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0x0c5c8b8af72586a0f9627a30144bf14b3d2e5a54361f95a2d5a75f418cb3ef",
+                "suffixDiffs": [
+                  {
+                    "suffix": 105,
+                    "currentValue": "0x277ac67109e53f44d2caa3d0a79a4b0af7d9cc099f152d8dff004dd48c96a46f",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Summer_2023:PH013IU",
+            "course_id": "PH013IU"
+          },
+          "PH015IU": {
+            "verkle_proof": {
+              "otherStems": [],
+              "depthExtensionPresent": "0x0a",
+              "commitmentsByPath": [
+                "0x28b22880bb595dcccec520953114249cc132014c062a7b29c878f4a0d1621c75",
+                "0x4996ffebdf3c8849638d5534413d23d21e183d25ac96f2fa17919447df8dadc2"
+              ],
+              "d": "0x3f4fd04660466f2d5ba921621d515bbd86c760ad67fe4a15b51f3c88d4a5ad6e",
+              "ipaProof": {
+                "cl": [
+                  "0x66ef33db829fdcf13ef0605f9466ee710a3c24a6aab5d37907555612cd304b62",
+                  "0x06506fd8f82dc85c40295bb72911ae7a47950a6492eea96acf4326e58a641db6",
+                  "0x5e22ba0dee6bec97a0f043b190075b10cc6653a62753a05ce2157fe647a4978a",
+                  "0x5f5caae8095be45c001d6b4f91680a29c0e7ba7d5a8c70b2ec5dd0b979816ce9",
+                  "0x3141e798c535f3c3c7e5dbc738438b1807a856615a5c4f4af4bd5edfb459ce71",
+                  "0x4d6402525fccdc5179567f95b01b71e957d3e7023acd7da2511c1e075a4dc79b",
+                  "0x0efdf421a3219cc37cc03c41d07cfb5c3850d501147a6b19d695cd9fc47d4a70",
+                  "0x6860efef921a99e5241eed4362041fabbc60c435ffff7b6161c86fa2d78f919c"
+                ],
+                "cr": [
+                  "0x3022d9a81fdf68218e45b57a997dec3934ee33f97df218a6acd2634368b9f0ed",
+                  "0x4ffb19787f26858ee5901786097bb10737f34ee92fa7b875ec66eb339c6e6703",
+                  "0x1e6253bbabfcd46f137f41e573689dff99dcf5f074a7edc046bff9324cb75316",
+                  "0x21151d7bd1aba598e558d17cc86523e94cd45a9e3cc8bcb673f8baf48e22ef48",
+                  "0x069d5fa98ff89f6c6e4fb3eb7c50c40963c959c65828814831c6ad6f6c2c704d",
+                  "0x6cbe4162bee158a1315e9ea0510fb32739d6043c018be7a17e8017b1dfb7463c",
+                  "0x374ddd17daf79c90d4f31babf3aae29cdfb3d6b1874112d34de5c02827a99bb9",
+                  "0x7171c38b2d3244de08c664fb1908df46749b80a064c6392be0b0e2ff56cb1492"
+                ],
+                "finalEvaluation": "0x07bfa903cfa5e57db4d4477a429fe1d25a66114912d322007affc758b2f96257"
+              }
+            },
+            "state_diff": [
+              {
+                "stem": "0xec8a3356f9659ceb102a6d35167ca49dd34bdfb63c880ccee1f09aa8631341",
+                "suffixDiffs": [
+                  {
+                    "suffix": 162,
+                    "currentValue": "0x15bbf06b41ba49d0c718572ec6c18a66bc8043cd711508bbbd60f72195a931eb",
+                    "newValue": null
+                  }
+                ]
+              }
+            ],
+            "course_key": "did:example:ITITIU00003:Summer_2023:PH015IU",
+            "course_id": "PH015IU"
+          }
+        },
+        "metadata": {
+          "generated_at": "2025-10-10T23:19:01.013299+07:00",
+          "total_courses": 5,
+          "revealed_courses": 5,
+          "verification_level": "full"
+        },
+        "proof_type": "verkle_32_byte",
+        "revealed_courses": [
+          {
+            "issuer_id": "IU-BUS",
+            "student_id": "ITITIU00003",
+            "term_id": "Summer_2023",
+            "course_id": "IT013IU",
+            "course_name": "Algorithms \u0026 Data Structures",
+            "attempt_no": 1,
+            "started_at": "2023-06-07T04:02:24.737090271Z",
+            "completed_at": "2023-07-01T00:45:12.797130639Z",
+            "assessed_at": "2023-07-08T00:45:12.797130639Z",
+            "issued_at": "2023-07-11T00:45:12.797130639Z",
+            "grade": "D+",
+            "credits": 4,
+            "instructor": "Prof. Anderson"
+          },
+          {
+            "issuer_id": "IU-MATH",
+            "student_id": "ITITIU00003",
+            "term_id": "Summer_2023",
+            "course_id": "IT134IU",
+            "course_name": "Internet of Things",
+            "attempt_no": 1,
+            "started_at": "2023-06-06T21:43:11.943727086Z",
+            "completed_at": "2023-07-02T08:24:10.280877924Z",
+            "assessed_at": "2023-07-09T08:24:10.280877924Z",
+            "issued_at": "2023-07-13T08:24:10.280877924Z",
+            "grade": "C-",
+            "credits": 4,
+            "instructor": "Prof. Harris"
+          },
+          {
+            "issuer_id": "IU-MATH",
+            "student_id": "ITITIU00003",
+            "term_id": "Summer_2023",
+            "course_id": "IT160IU",
+            "course_name": "Data Mining",
+            "attempt_no": 1,
+            "started_at": "2023-06-11T11:50:28.19196893Z",
+            "completed_at": "2023-07-02T07:42:58.177463592Z",
+            "assessed_at": "2023-07-03T07:42:58.177463592Z",
+            "issued_at": "2023-07-12T07:42:58.177463592Z",
+            "grade": "A+",
+            "credits": 4,
+            "instructor": "Prof. Harris"
+          },
+          {
+            "issuer_id": "IU-PHYS",
+            "student_id": "ITITIU00003",
+            "term_id": "Summer_2023",
+            "course_id": "PH013IU",
+            "course_name": "Physics 1",
+            "attempt_no": 1,
+            "started_at": "2023-06-09T03:08:17.701227444Z",
+            "completed_at": "2023-06-27T00:34:04.255937466Z",
+            "assessed_at": "2023-07-01T00:34:04.255937466Z",
+            "issued_at": "2023-07-03T00:34:04.255937466Z",
+            "grade": "D+",
+            "credits": 2,
+            "instructor": "Prof. Anderson"
+          },
+          {
+            "issuer_id": "IU-CS",
+            "student_id": "ITITIU00003",
+            "term_id": "Summer_2023",
+            "course_id": "PH015IU",
+            "course_name": "Physics 3",
+            "attempt_no": 1,
+            "started_at": "2023-06-09T00:24:17.684622196Z",
+            "completed_at": "2023-06-29T13:26:31.991408595Z",
+            "assessed_at": "2023-07-03T13:26:31.991408595Z",
+            "issued_at": "2023-07-13T13:26:31.991408595Z",
+            "grade": "C",
+            "credits": 3,
+            "instructor": "Prof. Thomas"
+          }
+        ],
+        "selective_disclosure": false,
+        "student_id": "did:example:ITITIU00003",
+        "term_id": "Summer_2023",
+        "timestamp": "2025-10-10T22:24:54+07:00",
+        "verification_path": "single_verkle_proof",
+        "verkle_root": "3354483a21c397a865985f9366d482df7676d186d4152e13e477f62bcf1e1a14"
+      },
+      "revealed_courses": 5,
+      "student_id": "ITITIU00003",
+      "term_id": "Summer_2023",
+      "total_courses": 5,
+      "verkle_root": "3354483a21c397a865985f9366d482df7676d186d4152e13e477f62bcf1e1a14"
+    }
+  },
+  "terms_included": [
+    "Semester_1_2023",
+    "Semester_2_2023",
+    "Semester_2_2025",
+    "Summer_2023"
+  ]
+}

@@ -37,24 +37,14 @@ export default function Header() {
           {/* Navigation links */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link
-              href="/verify"
+              href="/verifier"
               className="text-white/80 hover:text-white font-medium transition duration-300 text-sm font-inter"
               style={{
                 fontFamily: "var(--font-inter), sans-serif",
-                viewTransitionName: "nav-verify",
+                viewTransitionName: "nav-verifier",
               }}
             >
-              Verify
-            </Link>
-            <Link
-              href="/revoke"
-              className="text-white/80 hover:text-white font-medium transition duration-300 text-sm font-inter"
-              style={{
-                fontFamily: "var(--font-inter), sans-serif",
-                viewTransitionName: "nav-revoke",
-              }}
-            >
-              Revoke
+              Verifier Dashboard
             </Link>
 
             <a

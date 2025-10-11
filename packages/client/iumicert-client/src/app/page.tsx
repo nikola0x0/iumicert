@@ -51,6 +51,8 @@ const LandingPage = () => {
   const heroButtonRef = useRef<HTMLDivElement>(null);
   const heroContainerRef = useRef<HTMLDivElement>(null);
   const heroTitleContainerRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const floatAnimationRef = useRef<gsap.core.Tween | null>(null);
 
   const slides = [
     {
@@ -185,18 +187,63 @@ const LandingPage = () => {
     [isAnimating, currentSlide]
   );
 
-  // Auto-advance slides (disable)
+  // Auto-advance slides with proper cleanup
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isAnimating) {
+      if (!isAnimating && document.visibilityState === 'visible') {
         nextSlide();
       }
     }, 300000);
-    return () => clearInterval(interval);
+    
+    // Pause animations when page is not visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (timelineRef.current) {
+          timelineRef.current.pause();
+        }
+        if (floatAnimationRef.current) {
+          floatAnimationRef.current.pause();
+        }
+      } else {
+        if (timelineRef.current) {
+          timelineRef.current.resume();
+        }
+        if (floatAnimationRef.current) {
+          floatAnimationRef.current.resume();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [isAnimating, nextSlide]);
+
+  // Cleanup animations on unmount
+  useEffect(() => {
+    return () => {
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+      }
+      if (floatAnimationRef.current) {
+        floatAnimationRef.current.kill();
+      }
+    };
+  }, []);
 
   // GSAP Hero Animation
   useEffect(() => {
+    // Cleanup previous animations
+    if (timelineRef.current) {
+      timelineRef.current.kill();
+    }
+    if (floatAnimationRef.current) {
+      floatAnimationRef.current.kill();
+    }
+
     // Always set initial states first to prevent flash
     if (currentSlide === 0) {
       gsap.set(
@@ -215,10 +262,10 @@ const LandingPage = () => {
 
     if (currentSlide === 0 && animationPhase === "idle") {
       // Reset and animate hero elements
-      const tl = gsap.timeline();
+      timelineRef.current = gsap.timeline();
 
       // Animate in sequence - simplified for performance
-      tl.to(heroTitleContainerRef.current, {
+      timelineRef.current.to(heroTitleContainerRef.current, {
         opacity: 1,
         y: 0,
         duration: 1.2,
@@ -256,7 +303,7 @@ const LandingPage = () => {
         );
 
       // Add subtle floating animation to the entire title container (includes backdrop)
-      gsap.to(heroTitleContainerRef.current, {
+      floatAnimationRef.current = gsap.to(heroTitleContainerRef.current, {
         y: -8,
         duration: 3,
         repeat: -1,
@@ -289,42 +336,34 @@ const LandingPage = () => {
             ref={heroContainerRef}
             className="text-center space-y-8 relative"
           >
-            {/* Animated particles background */}
-            <div className="absolute inset-0 pointer-events-none">
-              {[
-                { left: 22, top: 15, duration: 4.2, delay: 0.5 },
-                { left: 78, top: 35, duration: 5.1, delay: 1.2 },
-                { left: 12, top: 75, duration: 3.8, delay: 0.8 },
-                { left: 65, top: 25, duration: 4.7, delay: 1.8 },
-                { left: 35, top: 85, duration: 3.9, delay: 0.3 },
-                { left: 88, top: 55, duration: 5.3, delay: 1.5 },
-                { left: 8, top: 45, duration: 4.1, delay: 0.9 },
-                { left: 55, top: 15, duration: 4.8, delay: 1.1 },
-                { left: 75, top: 65, duration: 3.7, delay: 1.7 },
-                { left: 25, top: 95, duration: 5.0, delay: 0.4 },
-                { left: 92, top: 35, duration: 4.3, delay: 1.3 },
-                { left: 15, top: 55, duration: 3.9, delay: 0.7 },
-                { left: 68, top: 85, duration: 4.6, delay: 1.9 },
-                { left: 42, top: 25, duration: 5.2, delay: 0.6 },
-                { left: 85, top: 75, duration: 4.0, delay: 1.4 },
-                { left: 18, top: 5, duration: 4.9, delay: 0.2 },
-                { left: 72, top: 45, duration: 3.6, delay: 1.6 },
-                { left: 38, top: 65, duration: 4.4, delay: 1.0 },
-                { left: 62, top: 35, duration: 5.1, delay: 0.1 },
-                { left: 5, top: 85, duration: 4.5, delay: 1.8 },
-              ].map((particle, i) => (
-                <div
-                  key={i}
-                  className="absolute w-1 h-1 bg-blue-400/30 rounded-full"
-                  style={{
-                    left: `${particle.left}%`,
-                    top: `${particle.top}%`,
-                    animation: `float ${particle.duration}s ease-in-out infinite`,
-                    animationDelay: `${particle.delay}s`,
-                  }}
-                />
-              ))}
-            </div>
+            {/* Optimized particles background - only show on hero slide */}
+            {currentSlide === 0 && (
+              <div className="absolute inset-0 pointer-events-none">
+                {[
+                  { left: 22, top: 15, duration: 4.2, delay: 0.5 },
+                  { left: 78, top: 35, duration: 5.1, delay: 1.2 },
+                  { left: 12, top: 75, duration: 3.8, delay: 0.8 },
+                  { left: 65, top: 25, duration: 4.7, delay: 1.8 },
+                  { left: 35, top: 85, duration: 3.9, delay: 0.3 },
+                  { left: 88, top: 55, duration: 5.3, delay: 1.5 },
+                  { left: 8, top: 45, duration: 4.1, delay: 0.9 },
+                  { left: 55, top: 15, duration: 4.8, delay: 1.1 },
+                  { left: 75, top: 65, duration: 3.7, delay: 1.7 },
+                  { left: 25, top: 95, duration: 5.0, delay: 0.4 },
+                ].map((particle, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-blue-400/30 rounded-full will-change-transform"
+                    style={{
+                      left: `${particle.left}%`,
+                      top: `${particle.top}%`,
+                      animation: `float ${particle.duration}s ease-in-out infinite`,
+                      animationDelay: `${particle.delay}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
 
             <div className="space-y-6 relative z-10">
               <div
@@ -418,7 +457,7 @@ const LandingPage = () => {
             </p>
 
             <div ref={heroButtonRef} className="flex justify-center">
-              <Link href="/verify" passHref>
+              <Link href="/verifier" passHref>
                 <button className="hover:cursor-pointer group relative bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-10 py-4 rounded-full font-semibold text-white transition-all duration-300 hover:scale-110 hover:shadow-2xl flex items-center gap-3 font-inter overflow-hidden">
                   <span className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
                   <span className="relative z-10">{slide.cta}</span>
@@ -447,6 +486,11 @@ const LandingPage = () => {
                 50% {
                   transform: translateY(-20px) rotate(180deg);
                 }
+              }
+
+              /* Optimize animations for better performance */
+              .will-change-transform {
+                will-change: transform;
               }
 
               /* Performance optimization for slide transitions */
@@ -609,7 +653,7 @@ const LandingPage = () => {
               {slide.description}
             </p>
             <div className="flex flex-col items-center gap-4">
-              <Link href="/verify" passHref>
+              <Link href="/verifier" passHref>
                 <button className="bg-gradient-to-r hover:cursor-pointer from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 px-10 py-4 rounded-full font-bold text-white text-lg transition-all duration-300 hover:scale-110 hover:shadow-xl flex items-center gap-3 font-inter">
                   <Eye className="w-6 h-6" />
                   {slide.cta}
@@ -679,13 +723,6 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-black/20 z-20">
-        <div
-          className="h-full bg-gradient-to-r from-blue-400 to-purple-400 transition-all duration-300"
-          style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
-        ></div>
-      </div>
     </div>
   );
 };
