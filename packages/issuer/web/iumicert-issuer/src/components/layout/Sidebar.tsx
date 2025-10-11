@@ -49,7 +49,9 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">IU-MiCert</h1>
-            <p className="text-xs text-blue-200/80 font-medium">Issuer Dashboard</p>
+            <p className="text-xs text-blue-200/80 font-medium">
+              Issuer Dashboard
+            </p>
           </div>
         </div>
       </div>
@@ -75,13 +77,19 @@ export function Sidebar() {
                   <Icon
                     className={cn(
                       "w-5 h-5 transition-colors",
-                      isActive ? "text-white" : "text-blue-200/70 group-hover:text-white"
+                      isActive
+                        ? "text-white"
+                        : "text-blue-200/70 group-hover:text-white"
                     )}
                   />
-                  <span className={cn(
-                    "font-semibold text-sm transition-colors",
-                    isActive ? "text-white" : ""
-                  )}>{item.label}</span>
+                  <span
+                    className={cn(
+                      "font-semibold text-sm transition-colors",
+                      isActive ? "text-white" : ""
+                    )}
+                  >
+                    {item.label}
+                  </span>
                 </Link>
               </li>
             );

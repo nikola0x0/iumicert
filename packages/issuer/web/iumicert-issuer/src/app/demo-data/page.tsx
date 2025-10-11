@@ -264,55 +264,6 @@ export default function DemoDataPage() {
         </div>
       </div>
 
-      {/* System Reset Section */}
-      <Card className="relative overflow-hidden rounded-3xl shadow-xl border-2 border-red-200 hover:border-red-300 transition-all duration-300 bg-white group">
-        <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-red-500 to-rose-600"></div>
-
-        <CardHeader className="relative">
-          <div className="flex items-start gap-4">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30 transform group-hover:scale-110 transition-transform duration-300">
-                <Trash2 className="w-7 h-7 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-ping"></div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full"></div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <CardTitle className="text-2xl text-red-700">System Reset</CardTitle>
-                <Badge variant="destructive" className="text-[10px] px-2 py-0.5">DESTRUCTIVE</Badge>
-              </div>
-              <CardDescription className="text-base text-gray-600">
-                This action will permanently delete <strong className="text-red-600">all generated data</strong>, including terms,
-                receipts, and Verkle trees. This operation cannot be undone.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 relative">
-          <Button
-            onClick={handleReset}
-            disabled={resetStatus.status === "running"}
-            variant="destructive"
-            className="rounded-2xl shadow-lg hover:shadow-xl hover:shadow-red-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            {resetStatus.status === "running" ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Resetting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Execute Reset (./reset.sh)
-              </>
-            )}
-          </Button>
-
-          <StatusBadge {...resetStatus} />
-        </CardContent>
-      </Card>
-
       {/* Full Data Generation Section */}
       <Card className="relative overflow-hidden rounded-3xl shadow-2xl border-2 border-blue-200 hover:border-blue-300 transition-all duration-300 bg-white group">
 
@@ -541,6 +492,53 @@ export default function DemoDataPage() {
           </AlertDescription>
         </div>
       </Alert>
+
+      {/* System Reset Section */}
+      <Card className="relative overflow-hidden rounded-3xl shadow-xl border-2 border-red-200 hover:border-red-300 transition-all duration-300 bg-white group">
+        <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-red-500 to-rose-600"></div>
+
+        <CardHeader className="relative">
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+                <Trash2 className="w-7 h-7 text-white" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <CardTitle className="text-2xl text-red-700">System Reset</CardTitle>
+                <Badge variant="destructive" className="text-[10px] px-2 py-0.5">DESTRUCTIVE</Badge>
+              </div>
+              <CardDescription className="text-base text-gray-600">
+                This action will permanently delete <strong className="text-red-600">all generated data</strong>, including terms,
+                receipts, and Verkle trees. This operation cannot be undone.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4 relative">
+          <Button
+            onClick={handleReset}
+            disabled={resetStatus.status === "running"}
+            variant="destructive"
+            className="rounded-2xl shadow-lg hover:shadow-xl hover:shadow-red-500/30 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            {resetStatus.status === "running" ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Resetting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Execute Reset (./reset.sh)
+              </>
+            )}
+          </Button>
+
+          <StatusBadge {...resetStatus} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
