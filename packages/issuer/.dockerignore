@@ -1,0 +1,43 @@
+# Ignore build artifacts
+micert
+*.log
+*.out
+
+# Ignore data directories
+data/
+publish_ready/
+logs/
+
+# Ignore configuration
+.env
+.env.local
+.env.production
+
+# Ignore git
+.git
+.gitignore
+
+# Ignore Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Ignore scripts
+*.sh
+
+# Ignore IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Ignore web frontend
+web/
+
+# Ignore documentation
+docs/
+*.md
+
+# Ignore test files
+*_test.go

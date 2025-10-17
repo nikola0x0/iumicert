@@ -3,12 +3,11 @@ import { Link } from "next-view-transitions";
 import {
   Shield,
   X,
-  BarChart3,
   Settings,
   Home,
-  Search,
   Palette,
   Book,
+  Lock,
 } from "lucide-react";
 import Image from "next/image";
 import SystemStatus from "./ui/SystemStatus";
@@ -36,25 +35,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       description: "Verify credentials",
     },
     {
+      id: "selective",
+      name: "Selective",
+      href: "/selective",
+      icon: Lock,
+      description: "Create filtered receipt",
+    },
+    {
       id: "revoke",
       name: "Revoke",
       href: "/revoke",
       icon: X,
-      description: "Revoke certificates",
-    },
-    {
-      id: "search",
-      name: "Search",
-      href: "/search",
-      icon: Search,
-      description: "Search certificates",
-    },
-    {
-      id: "analytics",
-      name: "Analytics",
-      href: "/analytics",
-      icon: BarChart3,
-      description: "View statistics",
+      description: "Contact issuer",
     },
     {
       id: "styleguide",
@@ -120,14 +112,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           return (
             <Link key={item.id} href={item.href} className="block mb-2">
               <div
-                className={`flex items-center px-3 py-3 rounded-lg transition-all duration-200 group cursor-pointer border ${
+                className={`flex items-center px-3 py-3 rounded-lg transition-all duration-75 group cursor-pointer border ${
                   isActive
                     ? "bg-white/15 text-white shadow-sm border-white/20"
                     : "text-white/70 hover:bg-white/10 hover:text-white border-transparent"
                 }`}
               >
                 <item.icon
-                  className={`w-5 h-5 mr-3 transition-colors duration-200 ${
+                  className={`w-5 h-5 mr-3 transition-colors duration-75 ${
                     isActive
                       ? "text-blue-300"
                       : "text-white/60 group-hover:text-blue-300"
@@ -172,9 +164,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center px-3 py-3 rounded-lg transition-all duration-200 group cursor-pointer text-white/70 hover:bg-white/10 hover:text-white mb-2 border border-transparent"
+                className="flex items-center px-3 py-3 rounded-lg transition-all duration-75 group cursor-pointer text-white/70 hover:bg-white/10 hover:text-white mb-2 border border-transparent"
               >
-                <item.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-blue-300 transition-colors duration-200" />
+                <item.icon className="w-5 h-5 mr-3 text-white/60 group-hover:text-blue-300 transition-colors duration-75" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium font-inter">{item.name}</div>
                   <div className="text-xs text-white/50 font-inter">
@@ -203,14 +195,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           return (
             <Link key={item.id} href={item.href} className="block mb-2">
               <div
-                className={`flex items-center px-3 py-3 rounded-lg transition-all duration-200 group cursor-pointer border ${
+                className={`flex items-center px-3 py-3 rounded-lg transition-all duration-75 group cursor-pointer border ${
                   isActive
                     ? "bg-white/15 text-white shadow-sm border-white/20"
                     : "text-white/70 hover:bg-white/10 hover:text-white border-transparent"
                 }`}
               >
                 <item.icon
-                  className={`w-5 h-5 mr-3 transition-colors duration-200 ${
+                  className={`w-5 h-5 mr-3 transition-colors duration-75 ${
                     isActive
                       ? "text-blue-300"
                       : "text-white/60 group-hover:text-blue-300"

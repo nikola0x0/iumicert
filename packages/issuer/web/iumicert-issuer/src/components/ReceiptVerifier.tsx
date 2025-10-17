@@ -73,7 +73,9 @@ export default function ReceiptVerifier() {
 
   // Selective disclosure state
   const [selectedTerms, setSelectedTerms] = useState<Set<string>>(new Set());
-  const [selectedCourses, setSelectedCourses] = useState<Record<string, Set<string>>>({}); // termId -> Set<courseId>
+  const [selectedCourses, setSelectedCourses] = useState<
+    Record<string, Set<string>>
+  >({}); // termId -> Set<courseId>
   const [isSelectiveMode, setIsSelectiveMode] = useState(false);
 
   // Handle file upload
@@ -468,9 +470,6 @@ export default function ReceiptVerifier() {
               className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 bg-gradient-to-r from-purple-500 to-indigo-600 hover:shadow-lg hover:shadow-purple-500/30 text-white"
             >
               <span className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
                 Create Selective Receipt
               </span>
             </button>
@@ -486,10 +485,21 @@ export default function ReceiptVerifier() {
                 } text-white`}
               >
                 <span className="flex items-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
                   </svg>
-                  Download Selective Receipt ({getSelectedCounts().totalCourses} courses)
+                  Download Selective Receipt ({getSelectedCounts().totalCourses}{" "}
+                  courses)
                 </span>
               </button>
               <button
@@ -518,14 +528,27 @@ export default function ReceiptVerifier() {
         {isSelectiveMode && (
           <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-xl">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-purple-600 mt-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-purple-800 mb-1">Selective Disclosure Mode</p>
+                <p className="text-sm font-semibold text-purple-800 mb-1">
+                  Selective Disclosure Mode
+                </p>
                 <p className="text-sm text-purple-700">
-                  Click on terms and courses below to include/exclude them from your selective receipt.
-                  Unchecked items will be removed, but all remaining courses will still verify cryptographically.
+                  Click on terms and courses below to include/exclude them from
+                  your selective receipt. Unchecked items will be removed, but
+                  all remaining courses will still verify cryptographically.
                 </p>
               </div>
             </div>
@@ -844,18 +867,24 @@ export default function ReceiptVerifier() {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   {/* Selective Disclosure Checkbox for Course */}
-                                  {isSelectiveMode && selectedTerms.has(termId) && (
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedCourses[termId]?.has(course.course_id || "")}
-                                      onChange={(e) => {
-                                        e.stopPropagation();
-                                        toggleCourseSelection(termId, course.course_id || "");
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                                    />
-                                  )}
+                                  {isSelectiveMode &&
+                                    selectedTerms.has(termId) && (
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedCourses[termId]?.has(
+                                          course.course_id || ""
+                                        )}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          toggleCourseSelection(
+                                            termId,
+                                            course.course_id || ""
+                                          );
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                      />
+                                    )}
                                   <div
                                     className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                                       isCourseExpanded

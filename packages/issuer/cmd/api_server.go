@@ -201,10 +201,32 @@ func startAPIServer(port string, corsEnabled bool) error {
 	// Setup CORS if enabled
 	var handler http.Handler = r
 	if corsEnabled {
+		allowedOrigins := []string{
+			"http://localhost:3000",
+			"http://localhost:3001",
+			"http://localhost:5173",
+		}
+
+		// Add production frontend URLs from environment
+		// Student/Verifier Portal
+		if studentPortalURL := os.Getenv("STUDENT_PORTAL_URL"); studentPortalURL != "" {
+			allowedOrigins = append(allowedOrigins, studentPortalURL)
+		}
+
+		// Issuer Portal (Admin Dashboard)
+		if issuerPortalURL := os.Getenv("ISSUER_PORTAL_URL"); issuerPortalURL != "" {
+			allowedOrigins = append(allowedOrigins, issuerPortalURL)
+		}
+
+		// Legacy support for FRONTEND_URL
+		if prodOrigin := os.Getenv("FRONTEND_URL"); prodOrigin != "" {
+			allowedOrigins = append(allowedOrigins, prodOrigin)
+		}
+
 		c := cors.New(cors.Options{
-			AllowedOrigins: []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:5173"}, // React dev servers
-			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowedHeaders: []string{"*"},
+			AllowedOrigins:   allowedOrigins,
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"*"},
 			AllowCredentials: true,
 		})
 		handler = c.Handler(r)
@@ -1418,21 +1440,19 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		errorMessage = fmt.Sprintf("IPA verification failed (blockchain verification successful): %v", verificationErr)
 	}
 
-	// Query database to get blockchain transaction info for this term
-	db, err := database.Connect()
-	if err != nil {
-		log.Printf("⚠️ Failed to connect to database for blockchain info: %v", err)
-	}
-	defer database.Close(db)
-
+	// Try to get blockchain transaction info from database
 	var blockchainInfo map[string]interface{}
-	if db != nil {
+
+	db, err := database.Connect()
+	if err == nil {
+		defer database.Close(db)
+
+		// Query any term_receipt for this term_id that has blockchain info
 		var termReceipt database.TermReceipt
-		result := db.Where("term_id = ?", request.TermID).First(&termReceipt)
+		result := db.Where("term_id = ? AND blockchain_tx_hash IS NOT NULL", request.TermID).First(&termReceipt)
 		if result.Error == nil && termReceipt.BlockchainTxHash != nil {
 			blockchainInfo = map[string]interface{}{
 				"tx_hash": *termReceipt.BlockchainTxHash,
-				"publisher_address": termReceipt.PublisherAddress,
 				"published_at": termRootInfo.PublishedAt,
 				"block_number": termReceipt.BlockchainBlock,
 			}
@@ -2262,14 +2282,47 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 			verifiedCourses++
 		}
 
-		verificationResults[termID] = map[string]interface{}{
-			"status":              "completed",
-			"verkle_root":         verkleRootHex,
-			"courses_verified":    termVerified,
-			"courses_failed":      termFailed,
-			"course_results":      termResults,
-			"blockchain_verified": true,
-			"blockchain_published_at": termRootInfo.PublishedAt.String(),
+		// Try to get blockchain transaction info from database term_receipts table
+		var blockchainTxHash string
+		var blockchainBlock *uint64
+
+		db, dbErr := database.Connect()
+		if dbErr == nil {
+			defer database.Close(db)
+
+			// Query any term_receipt for this term_id that has blockchain info
+			var termReceipt database.TermReceipt
+			result := db.Where("term_id = ? AND blockchain_tx_hash IS NOT NULL", termID).First(&termReceipt)
+			if result.Error == nil && termReceipt.BlockchainTxHash != nil {
+				blockchainTxHash = *termReceipt.BlockchainTxHash
+				blockchainBlock = termReceipt.BlockchainBlock
+			}
+		}
+
+		// Build verification result with transaction info if available
+		if blockchainTxHash != "" {
+			verificationResults[termID] = map[string]interface{}{
+				"status":              "completed",
+				"verkle_root":         verkleRootHex,
+				"courses_verified":    termVerified,
+				"courses_failed":      termFailed,
+				"course_results":      termResults,
+				"blockchain_verified": true,
+				"blockchain_published_at": termRootInfo.PublishedAt.String(),
+				"blockchain_tx_hash":  blockchainTxHash,
+				"blockchain_block":    blockchainBlock,
+			}
+		} else {
+			// No transaction info available
+			verificationResults[termID] = map[string]interface{}{
+				"status":              "completed",
+				"verkle_root":         verkleRootHex,
+				"courses_verified":    termVerified,
+				"courses_failed":      termFailed,
+				"course_results":      termResults,
+				"blockchain_verified": true,
+				"blockchain_published_at": termRootInfo.PublishedAt.String(),
+			}
 		}
 	}
 
