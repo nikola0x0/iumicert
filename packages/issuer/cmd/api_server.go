@@ -708,33 +708,111 @@ func countTotalCourses(students map[string][]map[string]interface{}) int {
 	return total
 }
 
-// handleDemoReset executes ./reset.sh to clean all generated data
+// handleDemoReset cleans all generated data (database and file system)
 func handleDemoReset(w http.ResponseWriter, r *http.Request) {
-	log.Printf("🧹 Executing system reset (./reset.sh)...")
+	log.Printf("🧹 Executing system reset...")
 
-	// Execute reset.sh script
-	cmd := exec.Command("./reset.sh")
-	cmd.Dir = "." // Run in current directory
+	var output strings.Builder
+	output.WriteString("🧹 IU-MiCert System Reset\n")
+	output.WriteString("=========================\n\n")
 
-	// Capture output
-	output, err := cmd.CombinedOutput()
+	// Step 1: Clear file system directories
+	log.Printf("📁 Step 1: Clearing file system data...")
+	output.WriteString("📁 Step 1: Clearing file system data...\n")
 
+	dirsToClean := []string{
+		"data/student_journeys",
+		"data/verkle_terms",
+		"publish_ready/receipts",
+		"publish_ready/roots",
+		"publish_ready/proofs",
+		"publish_ready/transactions",
+	}
+
+	for _, dir := range dirsToClean {
+		if err := os.RemoveAll(dir); err != nil {
+			log.Printf("⚠️  Warning: Failed to remove %s: %v", dir, err)
+			output.WriteString(fmt.Sprintf("⚠️  Warning: Failed to remove %s: %v\n", dir, err))
+		}
+	}
+
+	// Recreate directory structure
+	dirsToCreate := []string{
+		"data/student_journeys/students",
+		"data/student_journeys/terms",
+		"data/verkle_terms",
+		"publish_ready/receipts",
+		"publish_ready/roots",
+		"publish_ready/proofs",
+		"publish_ready/transactions",
+	}
+
+	for _, dir := range dirsToCreate {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Printf("❌ Failed to create directory %s: %v", dir, err)
+			output.WriteString(fmt.Sprintf("❌ Failed to create directory %s: %v\n", dir, err))
+			respondJSON(w, http.StatusInternalServerError, APIResponse{
+				Success: false,
+				Error:   fmt.Sprintf("Failed to create directory %s: %v", dir, err),
+			})
+			return
+		}
+	}
+
+	output.WriteString("✅ File system cleaned and directories recreated\n\n")
+
+	// Step 2: Reset database
+	log.Printf("🗄️  Step 2: Resetting database...")
+	output.WriteString("🗄️  Step 2: Resetting database...\n")
+
+	db, err := database.Connect()
 	if err != nil {
-		log.Printf("❌ Reset failed: %v\nOutput: %s", err, string(output))
-		respondJSON(w, http.StatusInternalServerError, APIResponse{
-			Success: false,
-			Error:   fmt.Sprintf("Reset script failed: %v", err),
-		})
-		return
+		log.Printf("⚠️  Database connection failed: %v", err)
+		output.WriteString(fmt.Sprintf("⚠️  Database not available: %v\n", err))
+		output.WriteString("⚠️  Skipping database reset\n\n")
+	} else {
+		// Drop all tables
+		tables := []string{
+			"verification_logs",
+			"blockchain_transactions",
+			"accumulated_receipts",
+			"term_receipts",
+			"terms",
+			"students",
+		}
+
+		for _, table := range tables {
+			if err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", table)).Error; err != nil {
+				log.Printf("⚠️  Warning: Failed to drop table %s: %v", table, err)
+				output.WriteString(fmt.Sprintf("⚠️  Warning: Failed to drop table %s: %v\n", table, err))
+			}
+		}
+
+		// Run migrations to recreate tables
+		if err := db.AutoMigrate(
+			&database.Student{},
+			&database.Term{},
+			&database.TermReceipt{},
+			&database.AccumulatedReceipt{},
+			&database.VerificationLog{},
+			&database.BlockchainTransaction{},
+		); err != nil {
+			log.Printf("❌ Database migration failed: %v", err)
+			output.WriteString(fmt.Sprintf("❌ Database migration failed: %v\n", err))
+		} else {
+			output.WriteString("✅ Database reset complete (all tables recreated)\n\n")
+		}
 	}
 
 	log.Printf("✅ Reset completed successfully")
+	output.WriteString("🎉 Reset completed successfully!\n")
+	output.WriteString("System ready for data generation.\n")
 
 	respondJSON(w, http.StatusOK, APIResponse{
 		Success: true,
 		Data: map[string]interface{}{
-			"message": "System reset completed successfully",
-			"output":  string(output),
+			"message":   "System reset completed successfully",
+			"output":    output.String(),
 			"timestamp": time.Now().Format(time.RFC3339),
 		},
 	})
@@ -1490,22 +1568,54 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 func handleListReceipts(w http.ResponseWriter, r *http.Request) {
 	receipts := []map[string]interface{}{}
 
+	// Connect to database to get blockchain publication timestamps
+	db, dbErr := database.Connect()
+
 	if files, err := filepath.Glob("publish_ready/receipts/*_journey.json"); err == nil {
 		for _, file := range files {
 			if receiptData, err := os.ReadFile(file); err == nil {
 				var receipt map[string]interface{}
 				if err := json.Unmarshal(receiptData, &receipt); err == nil {
-					receipts = append(receipts, map[string]interface{}{
-						"filename": filepath.Base(file),
+					receiptInfo := map[string]interface{}{
+						"filename":   filepath.Base(file),
 						"student_id": receipt["student_id"],
-						"timestamp": receipt["generation_timestamp"],
-						"selective": receipt["receipt_type"],
-					})
+						"timestamp":  receipt["generation_timestamp"],
+						"selective":  receipt["receipt_type"],
+					}
+
+					// Get latest blockchain publication timestamp for this student's terms
+					if dbErr == nil && receipt["term_receipts"] != nil {
+						var latestPublishedAt *time.Time
+
+						// Extract term IDs from the receipt
+						if termReceipts, ok := receipt["term_receipts"].(map[string]interface{}); ok {
+							for termID := range termReceipts {
+								var term database.Term
+								if err := db.Where("term_id = ? AND published_at IS NOT NULL", termID).First(&term).Error; err == nil {
+									if term.PublishedAt != nil {
+										if latestPublishedAt == nil || term.PublishedAt.After(*latestPublishedAt) {
+											latestPublishedAt = term.PublishedAt
+										}
+									}
+								}
+							}
+						}
+
+						// Use blockchain publication timestamp if available
+						if latestPublishedAt != nil {
+							receiptInfo["timestamp"] = latestPublishedAt.Format(time.RFC3339)
+							receiptInfo["blockchain_published"] = true
+						} else {
+							receiptInfo["blockchain_published"] = false
+						}
+					}
+
+					receipts = append(receipts, receiptInfo)
 				}
 			}
 		}
 	}
-	
+
 	respondJSON(w, http.StatusOK, APIResponse{Success: true, Data: receipts})
 }
 
