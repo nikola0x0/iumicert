@@ -307,5 +307,4 @@ The implementation uses Ethereum's official `go-verkle` library, ensuring compat
 ---
 
 *Document Version: 1.0*  
-*Last Updated: September 24, 2025*  
 *Author: IU-MiCert Development Team*

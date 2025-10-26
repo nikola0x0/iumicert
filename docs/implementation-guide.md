@@ -382,5 +382,4 @@ The implementation provides **strong security guarantees** while maintaining **c
 ---
 
 **Document Version**: 1.0
-**Last Updated**: 2025-10-06
 **Authors**: IU-MiCert Development Team

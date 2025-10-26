@@ -18,12 +18,13 @@ IU-MiCert is a blockchain-based system designed to address critical limitations 
 
 ## 🎯 Motivation
 
-Traditional credential systems fail to capture the rich mosaic of skills, projects, and competencies that constitute modern education. IU-MiCert addresses this by:
+Traditional credential systems treat courses as isolated achievements without preserving the temporal context of a student's learning journey. IU-MiCert addresses this by:
 
-- Providing cryptographic verification of micro-credential sequences
-- Preventing timeline manipulation and backdating of achievements
-- Supporting the shift toward lifelong learning and skills-based assessment
-- Serving as an upgrade to existing blockchain credential systems
+- Treating individual courses as verifiable micro-credentials
+- Enabling term-by-term verification of academic progress
+- Maintaining a complete, tamper-proof academic provenance timeline
+- Preventing backdating and timeline manipulation of achievements
+- Supporting selective disclosure while preserving cryptographic integrity
 
 ## 🔍 Problem Statement
 
@@ -60,11 +61,12 @@ graph TD
 
 | Feature                    | Benefit                                            |
 | -------------------------- | -------------------------------------------------- |
-| Verkle Tree Implementation | 40-50% smaller proofs than Merkle trees            |
-| Temporal Verification      | Detects backdating and timeline manipulation       |
-| Micro-Credential Tracking  | Captures courses, projects, and skill achievements |
-| Compatibility Layer        | Works alongside existing credential systems        |
-| Intuitive Interfaces       | For students, employers, and institutions          |
+| Verkle Tree Implementation | Compact proofs with efficient verification         |
+| Term-by-Term Verification  | Verify specific academic periods independently     |
+| Academic Provenance        | Complete, tamper-proof timeline of achievements    |
+| Micro-Credential Tracking  | Each course becomes an independently verifiable credential |
+| Selective Disclosure       | Share specific achievements without revealing full transcript |
+| Temporal Integrity         | Prevents backdating and timeline manipulation       |
 
 ## 📚 Thesis Chapters
 
@@ -88,15 +90,18 @@ graph TD
 
 ```
 iumicert/
-├── contracts/                    # Smart contract source code
 ├── packages/
-│   ├── client/                  # Client-side applications
-│   │   └── iumicert-client/     # Next.js web application for verification
-│   └── issuer/                  # Credential issuing system
-│       ├── data/                # Test data and academic records
-│       └── backup_scripts/      # Backup and maintenance scripts
-├── LICENSE                      # MIT License
-└── README.md                   # This file
+│   ├── issuer/                  # Issuer System (Go + CLI + REST API)
+│   │   ├── cmd/                 # CLI commands & API server
+│   │   ├── crypto/verkle/       # Verkle tree implementation
+│   │   ├── data/                # Academic data & test generation
+│   │   ├── publish_ready/       # Receipts, roots, blockchain records
+│   │   └── web/iumicert-issuer/ # Admin dashboard (Next.js)
+│   ├── client/                  # Verification Portal (Next.js)
+│   │   └── iumicert-client/     # Public verification interface
+│   └── contracts/               # Smart contracts (Solidity + Foundry)
+├── docs/                        # Technical documentation
+└── README.md                    # This file
 ```
 
 ## 🔬 Evaluation Metrics
@@ -124,14 +129,20 @@ If you use this work in your research, please cite:
 }
 ```
 
+## 🌐 Live Demo & Deployed Contracts
+
+**Ethereum Sepolia Testnet:**
+- **IUMiCertRegistry**: [`0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60`](https://sepolia.etherscan.io/address/0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60)
+- **ReceiptRevocationRegistry**: [`0x8814ae511d54Dc10C088143d86110B9036B3aa92`](https://sepolia.etherscan.io/address/0x8814ae511d54Dc10C088143d86110B9036B3aa92)
+
+**Web Applications:**
+- **Student/Verifier Portal**: [https://iu-micert.vercel.app](https://iu-micert.vercel.app)
+- **Issuer Dashboard**: [https://iumicert-issuer.vercel.app](https://iumicert-issuer.vercel.app)
+
 ## ✉️ Contact
 
 For questions about this research, please contact:
 
-**Le Tien Phat**  
-📧 ltphat.developer@gmail.com  
+**Le Tien Phat**
+📧 ltphat.developer@gmail.com
 🏫 International University - Vietnam National University HCM
-
-- IUMiCertRegistry: 0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60
-- ReceiptRevocationRegistry: 0x8814ae511d54Dc10C088143d86110B9036B3aa92
-- Owner: 0xf16221da98b931409195A395b290333edA85f90F (your wallet)
