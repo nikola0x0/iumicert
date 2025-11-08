@@ -19,7 +19,6 @@ const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }) => {
     "/settings",
     "/verifier",
     "/selective",
-    "/styleguide",
   ];
   const isDashboardRoute = dashboardRoutes.includes(pathname);
 

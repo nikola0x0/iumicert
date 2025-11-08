@@ -159,7 +159,7 @@ export default function AcademicJourneyVerifier() {
           verified: result.status === "success",
           ipa_verified: result.verified_courses === result.total_courses,
           blockchain_anchored: true,
-          details: `${result.verified_courses}/${totalCoursesInReceipt} courses verified`,
+          details: `Cryptographically verified: ${result.verified_courses} out of ${totalCoursesInReceipt} courses in this receipt`,
         },
         ...result.term_results,
       });
@@ -468,8 +468,8 @@ export default function AcademicJourneyVerifier() {
                           </p>
                         </div>
                         {verificationResults.overall && hasUnverifiedTerms && (
-                          <div className="px-3 py-1.5 bg-amber-500/20 text-amber-300 rounded-full text-xs font-semibold border border-amber-500/30 font-inter">
-                            ⚠ {verifiedTermsCount}/{totalTerms} verified
+                          <div className="px-3 py-1.5 bg-amber-500/20 text-amber-300 rounded-full text-xs font-semibold border border-amber-500/30 font-inter" title={`${verifiedTermsCount} of ${totalTerms} terms are blockchain-published`}>
+                            ⚠ {verifiedTermsCount}/{totalTerms} terms on blockchain
                           </div>
                         )}
                       </div>
@@ -533,9 +533,12 @@ export default function AcademicJourneyVerifier() {
                                           ? "bg-green-500/20 text-green-300 border-green-500/30"
                                           : "bg-amber-500/20 text-amber-300 border-amber-500/30"
                                       }`}
+                                      title={isBlockchainVerified
+                                        ? `${termResult.courses_verified || 0} courses in this term verified against blockchain`
+                                        : "This term's root is not published on blockchain"}
                                     >
                                       {isBlockchainVerified
-                                        ? `✓ ${termResult.courses_verified || 0}/${Object.values(receipt.term_receipts).reduce((sum, t) => sum + t.total_courses, 0)} verified`
+                                        ? `✓ ${termResult.courses_verified || 0}/${termData.total_courses} courses verified`
                                         : "⚠ Not Published"}
                                     </div>
                                   )}
