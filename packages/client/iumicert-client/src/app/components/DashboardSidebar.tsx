@@ -5,7 +5,6 @@ import {
   X,
   Settings,
   Home,
-  Palette,
   Book,
   Lock,
 } from "lucide-react";
@@ -47,13 +46,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       href: "/revoke",
       icon: X,
       description: "Contact issuer",
-    },
-    {
-      id: "styleguide",
-      name: "Style Guide",
-      href: "/styleguide",
-      icon: Palette,
-      description: "UI components",
     },
   ];
 

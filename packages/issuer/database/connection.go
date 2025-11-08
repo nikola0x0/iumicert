@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -47,8 +48,11 @@ func Connect() (*gorm.DB, error) {
 	}
 
 	// Connection pool settings
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
+	maxIdleConns := getEnvInt("DB_MAX_IDLE", 10)
+	maxOpenConns := getEnvInt("DB_MAX_CONNECTIONS", 100)
+
+	sqlDB.SetMaxIdleConns(maxIdleConns)
+	sqlDB.SetMaxOpenConns(maxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	log.Println("✅ Database connection established")
@@ -124,4 +128,14 @@ func HealthCheck(db *gorm.DB) error {
 		return err
 	}
 	return sqlDB.Ping()
+}
+
+// Helper function to get environment variable as int with default value
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if parsed, err := strconv.Atoi(value); err == nil {
+			return parsed
+		}
+	}
+	return defaultValue
 }
