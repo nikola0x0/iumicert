@@ -1,0 +1,160 @@
+\chapter{PROTOTYPING}
+\label{ch:prototyping}
+
+This chapter presents a prototype design based on the methodology outlined above. Developing a comprehensive and functional blockchain decentralized application necessitates the utilization of a robust technical stack. To realize these functionalities, the system architecture is also designed to support those functionalities. A thorough comprehension of each component, its functionality, and its integration into the system facilitates understanding how they collaborate to ensure the project's success.
+\section{Technology Stack Rationale}
+
+The rationale behind selecting specific technologies to construct the IU-MiCert system is to ensure a robust and efficient micro-credential issuance and verification solution with advanced cryptographic capabilities. Each technology choice—frontend, CLI, and blockchain—is meticulously tailored to address the system's unique requirements while harmonizing with the overall architecture.
+
+By leveraging modern tools such as React.js and Next.js for an intuitive and performant user interface, Go for secure and efficient CLI operations with native Verkle tree support, and Ethers.js with Solidity for seamless blockchain integration, the system balances functionality, security, and user experience. These technologies were selected for their demonstrated performance, ecosystem support, cryptographic capabilities, and integration ability.
+
+The technology choices align with IU-MiCert's mission of establishing a decentralized, privacy-preserving system for micro-credential management with selective disclosure. The frontend strategy ensures accessibility and responsiveness, the CLI strategy leverages native cryptographic libraries for Verkle tree operations, and the blockchain strategy provides transparency and trust through smart contracts and decentralized interactions.
+
+Together, these strategies form a cohesive, modular architecture that supports scalability, efficiency, and security while accommodating future enhancements to meet evolving requirements. Integrating these components, IU-MiCert delivers a seamless and reliable platform for decentralized micro-credential management with advanced privacy features.
+
+\section{Frontend Strategy}
+
+\subsection{React.js}
+
+\begin{center}
+\includegraphics[width=0.25\textwidth]{figures/react-logo.jpg}
+\end{center}
+
+React.js, a widely used JavaScript library, facilitates the creation of user interfaces, particularly for single-page applications. It enables developers to construct reusable UI components, efficiently manage application state, and leverage features such as the virtual DOM for enhanced rendering and performance. In the context of the IU-MiCert system, React.js serves as the cornerstone for constructing a highly interactive and responsive user interface, enabling seamless interaction with the micro-credential verification, selective disclosure, and journey receipt validation functionalities.
+
+React.js exhibits several advantages over traditional HTML or other frontend frameworks such as Angular. Its lightweight nature, modular design, and relatively low learning curve for contemporary web development facilitate ease of maintenance. React.js aligns seamlessly with the IU-MiCert system by employing a component-driven architecture, simplifying the management of dynamic credential interactions and complex verification workflows.
+
+Its compatibility with Next.js accelerates development and provides server-side rendering capabilities, while TypeScript integration ensures type safety and reduces runtime errors. These tools collectively streamline the frontend workflow, ensuring an optimized user experience for credential verification and selective disclosure operations.
+
+\subsection{Next.js}
+
+\begin{center}
+\includegraphics[width=0.25\textwidth]{figures/nextjs-logo.png}
+\end{center}
+
+Next.js is a production-ready React framework that provides advanced features such as server-side rendering (SSR), static site generation (SSG), and automatic code splitting. For IU-MiCert, Next.js enhances the frontend application by providing improved performance, SEO capabilities, and optimized loading times for credential verification interfaces.
+
+In contrast to conventional React applications, Next.js exhibits enhanced performance through automatic optimization, built-in routing, and efficient bundle management. Within the IU-MiCert system, Next.js simplifies the development of complex verification workflows while ensuring that the application remains fast and responsive.
+
+The framework's API routes feature enables seamless integration between frontend components and blockchain interactions, while its built-in optimization ensures that credential verification interfaces load quickly even with complex cryptographic operations. Next.js directly contributes to the system's overall user experience and deployment efficiency.
+
+\subsection{TypeScript}
+
+\begin{center}
+\includegraphics[width=0.25\textwidth]{figures/typescript-logo.png}
+\end{center}
+
+TypeScript is a strongly typed programming language that builds on JavaScript by adding static type definitions. In IU-MiCert, TypeScript ensures code reliability and maintainability across the frontend application, particularly when handling complex credential data structures, Verkle proof objects, and blockchain interactions.
+
+TypeScript's static typing capabilities help prevent runtime errors related to credential verification, proof parsing, and journey receipt processing. Its integration with React.js and Next.js provides enhanced developer experience through better IDE support, code completion, and error detection during development.
+
+For a system handling sensitive cryptographic operations and credential data, TypeScript's type safety ensures that data transformations and API interactions are correctly implemented, reducing the likelihood of security vulnerabilities and improving overall system reliability.
+
+\subsection{Vercel}
+
+\begin{center}
+\includegraphics[width=0.25\textwidth]{figures/vercel-logo.png}
+\end{center}
+
+Vercel is a leading platform for seamless Next.js deployment, offering effortless hosting and unparalleled performance when hosting and serving web applications. Designed to streamline the deployment process, Vercel integrates seamlessly with Next.js frameworks, enabling developers to deploy applications with minimal effort.
+
+Its serverless infrastructure dynamically provisions resources to meet demand, ensuring efficiency for credential verification operations. With a global Edge Network, Vercel delivers IU-MiCert applications at lightning-fast speeds by serving content closer to users, reducing latency for verification requests, and improving load times for credential interfaces.
+
+This seamless integration with Next.js and Git ensures an efficient development-to-deployment pipeline, allowing developers to focus on crafting exceptional user experiences for credential management while Vercel handles the complexities of hosting and content delivery.
+
+\section{CLI Strategy}
+
+\subsection{Go Programming Language}
+
+\begin{center}
+\includegraphics[width=0.25\textwidth]{figures/go-logo.png}
+\end{center}
+
+Go is a statically typed, compiled programming language designed for simplicity, efficiency, and excellent concurrency support. For the IU-MiCert system, Go serves as the primary language for the issuer CLI due to its native compatibility with the ethereum/go-verkle library, which provides the cryptographic foundation for Verkle tree operations.
+
+Go's memory safety, garbage collection, and strong standard library make it ideal for handling sensitive cryptographic operations required for Verkle tree construction, proof generation, and commitment calculations. Unlike interpreted languages, Go's compiled nature ensures optimal performance for computationally intensive operations such as batch credential insertion and multi-proof generation.
+
+The language's excellent concurrency primitives (goroutines and channels) enable efficient parallel processing of credential batches and term-based operations. For IU-MiCert, Go facilitates essential operations such as per-term Verkle tree construction, academic journey receipt generation, and secure commitment publishing to the blockchain.
+
+Go's static typing and explicit error handling align with the security requirements of a credential management system, ensuring that cryptographic operations are performed reliably and securely.
+
+\subsection{ethereum/go-verkle Library}
+
+\begin{center}
+\includegraphics[width=0.4\textwidth]{figures/ethereum-logo.png}
+\end{center}
+
+The ethereum/go-verkle library is the official Go implementation of Verkle trees, providing the cryptographic primitives necessary for IU-MiCert's core functionality. This library offers native support for polynomial commitments, multiproof generation, and efficient tree operations that form the foundation of the credential verification system.
+
+The library provides essential functions such as tree construction, key-value insertion, proof generation (MakeVerkleMultiProof), and proof verification (VerifyVerkleProof) that directly implement the algorithms outlined in the methodology. Its integration with Go ensures optimal performance for cryptographic operations while maintaining compatibility with Ethereum's planned Verkle tree implementation.
+
+For IU-MiCert, this library enables the implementation of per-term Verkle trees, efficient batch credential processing, and the generation of cryptographically secure proofs for academic journey verification. The library's maturity and official status ensure long-term compatibility and security for the credential management system.
+
+\subsection{Additional CLI Tools}
+
+The CLI implementation leverages Go's standard library and additional packages for complete functionality:
+
+\begin{itemize}
+    \item \textbf{cobra/cli:} For building user-friendly command-line interfaces with subcommands for different credential operations
+    \item \textbf{go-ethereum:} For blockchain interactions, transaction signing, and smart contract communication
+    \item \textbf{encoding packages:} For efficient serialization and deserialization of credential data and proof structures
+    \item \textbf{crypto packages:} For additional cryptographic operations and secure key management
+\end{itemize}
+
+These tools collectively provide a robust foundation for building a secure, efficient, and user-friendly CLI for credential issuance and Verkle tree management operations.
+
+\section{Blockchain Strategy}
+
+\subsection{Ethers.js}
+
+\begin{center}
+\includegraphics[width=0.3\textwidth]{figures/ethersjs-logo.png}
+\end{center}
+
+Ethers.js is a JavaScript library facilitating interactions with Ethereum and other EVM-compatible blockchains. It simplifies smart contract interaction, wallet management, and transaction signing tasks. In IU-MiCert, Ethers.js is pivotal in managing blockchain interactions, including publishing term root commitments, verifying proofs against stored commitments, and executing wallet operations for credential verification.
+
+In contrast to web3.js, Ethers.js offers a more intuitive API, enhanced TypeScript support, and reduced bundle sizes, making it a superior choice for contemporary blockchain applications. The library's TypeScript integration aligns perfectly with IU-MiCert's frontend technology stack, ensuring type-safe blockchain interactions.
+
+Ethers.js seamlessly integrates with Solidity smart contracts and Metamask, ensuring secure and efficient interactions with the blockchain. It serves as the intermediary between the frontend and blockchain components of IU-MiCert, providing a reliable interface for decentralized credential verification operations.
+
+\subsection{Solidity}
+
+\begin{center}
+\includegraphics[width=0.25\textwidth]{figures/solidity-logo.png}
+\end{center}
+
+Solidity is the primary programming language for developing smart contracts on Ethereum and EVM-compatible blockchains. In IU-MiCert, Solidity implements the credential management smart contracts that store term root commitments, manage revocations, and provide verification functions for Verkle proofs.
+
+The smart contracts handle term root storage, credential revocation management, and provide on-chain verification capabilities for academic journey receipts. Solidity's seamless integration with Ethereum's architectural framework renders it the most suitable choice for decentralized credential applications.
+
+While other languages such as Vyper exist, Solidity's maturity, extensive documentation, and comprehensive tooling ecosystem make it the preferred option. Solidity seamlessly integrates with Ethers.js and Metamask by providing the smart contract logic with which these tools interact, forming the cornerstone of IU-MiCert's blockchain infrastructure.
+
+\subsection{Sepolia Testnet}
+
+\begin{center}
+\includegraphics[width=0.2\textwidth]{figures/sepolia-logo.png}
+\end{center}
+
+Sepolia is an Ethereum proof-of-stake testnet that provides a realistic testing environment for smart contract development and deployment. For IU-MiCert, Sepolia serves as the primary testing blockchain for validating smart contract functionality, testing credential verification workflows, and ensuring system reliability before mainnet deployment.
+
+Sepolia's consensus mechanism mirrors Ethereum mainnet behavior while providing free test ETH for development purposes. This enables comprehensive testing of term commitment storage, proof verification, and revocation mechanisms without incurring mainnet costs.
+
+The testnet's stability and long-term support make it ideal for iterative development and testing of IU-MiCert's blockchain components. Its compatibility with standard Ethereum tooling ensures seamless transition to mainnet deployment when the system reaches production readiness.
+
+\subsection{Metamask}
+
+\begin{center}
+\includegraphics[width=0.3\textwidth]{figures/metamask-logo.png}
+\end{center}
+
+Metamask is a browser extension and wallet facilitating secure interaction with Ethereum and EVM-compatible blockchains. It enables users to manage their private keys, sign transactions, and engage with decentralized applications. In IU-MiCert, Metamask facilitates user authentication, interaction with smart contracts for credential verification, and transaction approval for blockchain operations.
+
+In contrast to other wallets, Metamask's user-friendly interface, widespread adoption, and compatibility with Ethers.js make it the preferred choice for educational credential systems. Metamask integrates with the IU-MiCert frontend and Ethers.js, providing a seamless user experience for blockchain interactions.
+
+It ensures that verifiers can securely and conveniently engage with IU-MiCert's credential verification processes, while institutions can safely publish term commitments to the blockchain. Metamask's support for multiple networks enables easy switching between Sepolia testnet and mainnet deployments.
+
+\section{System Integration}
+
+These technologies form a cohesive system where each component serves a specific purpose in the micro-credential management workflow. The frontend (React.js, Next.js, TypeScript) provides a seamless user experience for credential verification and selective disclosure, the CLI tools (Go, ethereum/go-verkle) handle efficient cryptographic operations and Verkle tree management, and the blockchain tools (Ethers.js, Solidity, Sepolia, Metamask) ensure secure and transparent interactions.
+
+The integration enables a complete workflow where institutions use the Go CLI to generate Verkle trees and journey receipts, students receive receipts for selective disclosure, and verifiers use the web interface to validate credentials against blockchain-stored commitments. This architecture makes IU-MiCert a robust and reliable system for decentralized micro-credential management with advanced privacy features.

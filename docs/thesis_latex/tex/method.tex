@@ -1,0 +1,394 @@
+\chapter{METHODOLOGY}
+\label{ch:methodology}
+
+This chapter outlines a systematic approach to addressing the research gaps identified earlier through requirement analysis. By mapping out the core challenges in existing credential management systems, this chapter introduces specific use cases and a detailed system overview to define the problem space. The methodology bridges the mathematical definitions of Verkle trees, translating them into well-defined system functions and algorithms. Based on this analysis, the IU-MiCert protocol is formalized through algorithmic representations, demonstrating how Verkle tree structures enable transparent micro-credential management that captures complete learning journeys while preventing credential forgery.
+
+\section{Requirement Analysis}
+
+The requirement analysis elucidates the fundamental roles, operations, and processes in the micro-credential issuance, verification, and provenance tracking lifecycle. This encompasses identifying the primary stakeholders, their respective responsibilities, and the system's behavior to ensure transparent learning journey representation while preventing credential forgery.
+
+\subsection{Use Case Description}
+
+The IU-MiCert system addresses the challenge of representing education as a verifiable journey rather than isolated achievements. The system involves three primary entities managing micro-credential ecosystems:
+
+\begin{itemize}
+    \item \textbf{Educational Institutions ($\mathcal{I}$):} Academic institutions that issue granular micro-credentials representing individual courses and learning achievements. They aim to provide verifiable proof of the complete learning pathway leading to broader qualifications.
+    
+    \item \textbf{Students ($\mathcal{S}$):} Learners who accumulate micro-credentials across multiple contexts, building comprehensive learning portfolios that demonstrate educational journeys.
+    
+    \item \textbf{Verifiers ($\mathcal{V}$):} Employers, other institutions, or credentialing bodies who need to verify specific competencies and validate the authenticity of learning progressions to detect forgery attempts.
+\end{itemize}
+
+For simplicity and appropriate scope, students $\mathcal{S}$ are excluded from the detailed analysis as their role currently does not require direct system interaction and their use cases closely mirror those of verifiers $\mathcal{V}$.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Actor} & \textbf{Use Case Name} & \textbf{Use Case Description} \\
+\hline
+\multirow{2}{*}{Institution $\mathcal{I}$} 
+& Manage Credentials & The institution $\mathcal{I}$ should be able to issue granular micro-credentials to students $\mathcal{S}$ in a secure and verifiable manner. \\
+\cline{2-3}
+& Revoke Invalid Credentials & The institution $\mathcal{I}$ should be able to revoke invalid credentials and invalidate compromised or fraudulent micro-credentials while maintaining system integrity. \\
+\hline
+\multirow{3}{*}{Verifier $\mathcal{V}$}
+& Verify Credentials & The verifier $\mathcal{V}$ should be able to verify the authenticity of credentials presented by students $\mathcal{S}$. \\
+\cline{2-3}
+& Check Credential Provenance & The verifier $\mathcal{V}$ should be able to examine the chronological acquisition of micro-credentials to validate learning progression. \\
+\cline{2-3}
+& Check Revocation Status & The verifier $\mathcal{V}$ should be able to check for revocation of credentials to ensure current validity. \\
+\hline
+\end{tabular}
+\caption{Description of the use cases and their actors}
+\label{tab:microcred_use_cases}
+\end{table}
+
+\subsection{Use Case Diagram}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/use_case_diagram.png}
+\caption{Use case diagram for IU-MiCert}
+\label{fig:use_case_diagram}
+\end{figure}
+
+The use case diagram in Figure~\ref{fig:use_case_diagram} provides a comprehensive overview of the system's functional requirements by highlighting supported tasks and the roles of interacting users. It serves as a collaborative communication tool that clarifies user interactions and helps define system boundaries, ensuring the system remains aligned with user expectations throughout the development process.
+
+\subsection{System Overview}
+
+The proposed IU-MiCert protocol comprises three integrated sub-systems designed to optimize micro-credential issuance and verification with learning journey transparency. Figure~\ref{fig:system_overview} illustrates the system architecture involving educational institutions (issuers $\mathcal{I}$), students ($\mathcal{S}$), and verifiers ($\mathcal{V}$).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figures/system_overview.png}
+    \caption{IU-MiCert system overview showing data flow}
+    \label{fig:system_overview}
+\end{figure}
+
+The process begins with institutions using the \textbf{IU-MiCert Issuer CLI} to process LMS and SMS data, building Verkle tree commitments that capture hierarchical learning progressions and creating cryptographic proofs for individual micro-credentials with temporal relationships. The \textbf{Blockchain Infrastructure} stores Verkle tree root commitments through smart contracts, ensuring credential integrity while enabling non-interactive verification between issuers and verifiers.
+
+\textbf{External System} components handle proof distribution to students and maintain backup storage for system reliability. Students and verifiers interact through the \textbf{Client Application}, which enables receipt management, credential verification through PKI and blockchain validation, and timeline visualization of learning journeys.
+
+This architecture addresses the challenge of representing education as verifiable journeys rather than isolated achievements. By combining Verkle tree efficiency with blockchain security, IU-MiCert creates a transparent ecosystem where learning progression becomes cryptographically verifiable and forgery is mathematically detectable.
+
+\section{IU-MiCert Verkle Tree Construction}
+
+This section presents the technical foundation and systematic methodology for implementing Verkle trees in micro-credential systems. The approach leverages a complete implementation of the Verkle tree specification, which includes polynomial commitments and efficient proof generation mechanisms.
+
+\subsection{Foundation Algorithms}
+
+% Defining the core operations for Verkle tree construction
+The core operations for the Verkle tree construction are defined as follows:
+
+\begin{itemize}
+    \item \textbf{VT $\leftarrow$ New():} Creates a new Verkle tree root node for credential storage and management.
+    
+    \item \textbf{err $\leftarrow$ Insert(key, value, resolver):} A polynomial-time algorithm to insert credential data into the Verkle tree structure, where \textit{key} represents the credential identifier and \textit{value} contains the encoded credential data.
+    
+    \item \textbf{value, err $\leftarrow$ Get(key, resolver):} A logarithmic-time algorithm to retrieve credential data from the tree using the credential identifier.
+    
+    \item \textbf{proof $\leftarrow$ MakeVerkleMultiProof(preroot, postroot, keys, resolver):} A polynomial-time algorithm that generates inclusion proofs for multiple credentials simultaneously, leveraging the tree's multiproof capabilities.
+    
+    \item \textbf{valid $\leftarrow$ VerifyVerkleProof(proof, commitments, indices, values, config):} A constant-time algorithm for verifying Verkle proofs, ensuring credential authenticity and inclusion in the tree structure.
+    
+    \item \textbf{commitment $\leftarrow$ Commit():} Computes and caches the cryptographic commitment for any node in the tree, enabling efficient proof generation.
+\end{itemize}
+
+\subsection{Verkle Tree Construction Methodology}
+
+% Introducing the core innovation of per-term Verkle trees
+\textbf{Core Innovation:} The IU-MiCert system constructs per-term Verkle trees, where each academic term maintains its own independent Verkle tree containing all student micro-credentials for that period. After term completion, the Verkle root commitment is stored on-chain. Students can generate individual term proofs and aggregate these into academic journey receipts for comprehensive verification on the client side.
+
+\subsubsection{Per-Term Verkle Tree Setup}
+
+% Setting up the Verkle tree for each academic term
+The setup stage utilizes the configuration system, which handles the underlying cryptographic parameters. Each academic term creates its own Verkle tree:
+\begin{algorithm}[H]
+\caption{Per-Term Setup: $(VT_{\text{term}}, \text{Resolver}) \leftarrow \text{TermVerkleSetup}(\text{term}, \text{credentials})$}
+\begin{algorithmic}[1]
+\REQUIRE $config \leftarrow$ GetConfig() for cryptographic parameters
+\REQUIRE Academic term identifier $term$
+\REQUIRE Set of micro-credentials $credentials$ for the term
+\REQUIRE $h : \{0, 1\}^* \rightarrow [32]$ hash function for key generation
+\ENSURE Verkle tree $VT_{term}$, node resolver $Resolver$
+\STATE $VT_{term} \leftarrow$ New()
+\STATE $resolver \leftarrow$ CreateNodeResolver()
+\STATE
+\FOR{each $student_i$ in term enrollment}
+    \FOR{each $credential_j$ completed by $student_i$}
+        \STATE $key \leftarrow h(student_i.id || credential_j.course\_id)$
+        \STATE $value \leftarrow$ EncodeCredential($credential_j$)
+        \STATE $err \leftarrow VT_{term}.$Insert$(key, value, resolver)$
+        \IF{$err \neq nil$}
+            \RETURN error
+        \ENDIF
+    \ENDFOR
+\ENDFOR
+\STATE
+\STATE $commitment_{term} \leftarrow VT_{term}.$Commit$()$
+\RETURN $(VT_{term}, resolver)$
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Credential Data Preparation and Encoding}
+
+% Encoding micro-credentials into a compatible format
+Each micro-credential is encoded into a compatible format using a 32-byte value structure:
+
+\begin{algorithm}[H]
+\caption{Credential Encoding}
+\begin{algorithmic}[1]
+\REQUIRE Micro-credential $c = (student\_id, course\_id, completion\_timestamp, grade)$
+\REQUIRE Academic term identifier $term\_id$
+\ENSURE Encoded key-value pair for insertion
+\STATE $key \leftarrow$ Hash$(student\_id || course\_id)$
+\STATE
+\STATE $encoded\_student \leftarrow$ Hash$(student\_id)$[0:8]
+\STATE $encoded\_course \leftarrow$ Hash$(course\_id)$[0:8]
+\STATE $encoded\_timestamp \leftarrow$ EncodeTimestamp$(completion\_timestamp)$[0:8]
+\STATE $encoded\_grade \leftarrow$ EncodeGrade$(grade)$[0:8]
+\STATE $value \leftarrow encoded\_student || encoded\_course || encoded\_timestamp || encoded\_grade$
+\RETURN $(key, value)$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Proof Generation and Verification}
+
+\subsubsection{Single Term Proof Generation}
+% Generating proofs for a single term
+The proof generation leverages native multiproof capabilities for individual term verification:
+
+\begin{algorithm}[H]
+\caption{Single Term Proof Generation: \\ 
+$proof \leftarrow \text{TermProve}(VT_{\text{term}}, \text{student\_id}, \text{resolver})$}
+\begin{algorithmic}[1]
+\REQUIRE Term Verkle tree $VT_{term}$ with credential data
+\REQUIRE Student identifier $student\_id$
+\REQUIRE Node resolver $resolver$
+\ENSURE Term proof $proof$
+\STATE $keys \leftarrow$ GetStudentCredentialKeys$(student\_id, term)$
+\STATE $preroot \leftarrow VT_{term}$
+\STATE $postroot \leftarrow VT_{term}$
+\STATE $proof, commitments, indices, values, err \leftarrow$ \\
+\quad MakeVerkleMultiProof$(preroot, postroot, keys, resolver)$
+\IF{$err \neq nil$}
+    \RETURN error
+\ENDIF
+\STATE $term\_proof \leftarrow TermProof\{$
+\STATE \quad $verkle\_proof: proof,$
+\STATE \quad $commitments: commitments,$
+\STATE \quad $indices: indices,$
+\STATE \quad $values: values,$
+\STATE \quad $term\_id: term,$
+\STATE \quad $student\_id: student\_id$
+\STATE $\}$
+\RETURN $term\_proof$
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Academic Journey Receipt Generation}
+
+% Core implementation approach description
+\textbf{Core Implementation Approach:} The issuer generates academic journey receipts by aggregating individual term proofs for each student. These receipts contain all necessary information for comprehensive verification while maintaining the efficiency of single-term proofs. Students receive these receipts and can customize them on the client side for selective disclosure of specific credentials or terms.
+
+\begin{algorithm}[H]
+\caption{Academic Journey Receipt Generation: \\
+$receipt \leftarrow \text{GenerateJourneyReceipt}(\text{student\_id}, \text{Terms}, \text{VerkleTreeSet})$}
+\begin{algorithmic}[1]
+\REQUIRE Student identifier $student\_id$
+\REQUIRE Set of terms $Terms = \{term_1, term_2, \ldots, term_n\}$
+\REQUIRE Per-term Verkle trees $VerkleTreeSet = \{VT_{term_1}, VT_{term_2}, \ldots, VT_{term_n}\}$
+\ENSURE Academic journey receipt $journey\_receipt$
+\STATE $term\_proofs \leftarrow []$
+\STATE $term\_commitments \leftarrow []$
+\STATE
+\FOR{each $term_i$ in $Terms$}
+    \STATE $keys_i \leftarrow$ GetStudentCredentialKeys$(student\_id, term_i)$
+    \STATE $proof_i, commitments_i, indices_i, values_i, err \leftarrow$ \\
+    \quad MakeVerkleMultiProof$(VT_{term_i}, VT_{term_i}, keys_i, resolver_i)$
+    \IF{$err \neq nil$}
+        \RETURN error
+    \ENDIF
+    \STATE
+    \STATE $term\_proof_i \leftarrow TermProof\{$
+    \STATE \quad $verkle\_proof: proof_i,$
+    \STATE \quad $commitments: commitments_i,$
+    \STATE \quad $indices: indices_i,$
+    \STATE \quad $values: values_i,$
+    \STATE \quad $term\_id: term_i,$
+    \STATE \quad $student\_id: student\_id$
+    \STATE $\}$
+    \STATE
+    \STATE $term\_proofs$.append$(term\_proof_i)$
+    \STATE $term\_commitments$.append$(VT_{term_i}.\text{Commit}())$
+\ENDFOR
+\STATE
+\STATE $journey\_receipt \leftarrow JourneyReceipt\{$
+\STATE \quad $student\_id: student\_id,$
+\STATE \quad $term\_proofs: term\_proofs,$
+\STATE \quad $term\_commitments: term\_commitments,$
+\STATE \quad $terms: Terms,$
+\STATE \quad $generation\_timestamp: \text{currentTimestamp}()$
+\STATE $\}$
+\STATE
+\RETURN $journey\_receipt$
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Client-Side Selective Disclosure and Verification}
+
+% Academic journey receipt customization and verification
+The academic journey receipt enables selective disclosure and comprehensive verification on the client side. Students can customize the receipt to include only specific terms or credentials before verification, while maintaining cryptographic integrity through individual term proof validation.
+\begin{algorithm}[H]
+\caption{Academic Journey Receipt Verification: \\
+$result \leftarrow \text{VerifyJourneyReceipt}(\text{journey\_receipt}, \text{on\_chain\_term\_roots})$}
+\begin{algorithmic}[1]
+\REQUIRE Academic journey receipt $journey\_receipt$ (original or filtered)
+\REQUIRE On-chain term root commitments $on\_chain\_term\_roots$
+\ENSURE Verification result $\{verification\_result, verified\_credentials\}$
+\STATE $(student\_id, term\_proofs, term\_commitments, terms) \leftarrow journey\_receipt$
+\STATE $all\_valid \leftarrow$ true
+\STATE $verified\_credentials \leftarrow []$
+\STATE $config \leftarrow$ GetConfig()
+\STATE
+\FOR{$i = 0$ to $length(terms) - 1$}
+    \STATE $term\_valid \leftarrow$ VerifyVerkleProof$(term\_proofs[i].verkle\_proof,$
+    \STATE \quad $term\_proofs[i].commitments, term\_proofs[i].indices,$
+    \STATE \quad $term\_proofs[i].values, config)$
+    \STATE
+    \STATE $root\_valid \leftarrow (term\_commitments[i] = on\_chain\_term\_roots[terms[i]])$
+    \STATE $temporal\_valid \leftarrow$ VerifyTermConsistency$(term\_proofs[i].values, terms[i])$
+    \STATE
+    \STATE $term\_result \leftarrow term\_valid \land root\_valid \land temporal\_valid$
+    \STATE $all\_valid \leftarrow all\_valid \land term\_result$
+    \STATE
+    \IF{$term\_result$}
+        \STATE $credentials_i \leftarrow$ ExtractCredentials$(term\_proofs[i])$
+        \STATE $verified\_credentials$.extend$(credentials_i)$
+    \ENDIF
+\ENDFOR
+\STATE
+\STATE $progression\_valid \leftarrow$ ValidateAcademicProgression$(verified\_credentials)$
+\STATE $final\_valid \leftarrow all\_valid \land progression\_valid$
+\STATE
+\STATE $verification\_result \leftarrow \{$
+\STATE \quad $is\_valid: final\_valid,$
+\STATE \quad $verified\_terms: length(terms),$
+\STATE \quad $total\_credentials: length(verified\_credentials),$
+\STATE \quad $verification\_timestamp: \text{currentTimestamp}()$
+\STATE $\}$
+\STATE
+\RETURN $\{verification\_result, verified\_credentials\}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Smart Contract Integration}
+
+% Note about pseudocode implementation
+The smart contract integration is outlined in pseudocode for future implementation in the full thesis, the smart contract focuses on storing term root commitments and providing verification functions for individual term proofs:
+
+\begin{algorithm}[H]
+\caption{Term Root Storage Contract (Pseudocode)}
+\begin{algorithmic}[1]
+\STATE $termRoots \leftarrow$ mapping(termId $\rightarrow$ bytes32) // Term Verkle roots
+\STATE $authorizedIssuers \leftarrow$ mapping(address $\rightarrow$ bool) // Authorized issuers
+\STATE $revocations \leftarrow$ mapping(bytes32 $\rightarrow$ RevocationInfo) // Revocations
+\STATE
+\STATE $VerkleProof \leftarrow \{otherStems[], depthExtensionPresent, commitmentsByPath[], d, ipaProof\}$
+\STATE $IPAProof \leftarrow \{cl[8], cr[8], finalEvaluation\}$
+\STATE $RevocationInfo \leftarrow \{isRevoked, reason, timestamp\}$
+\STATE
+\STATE $EVENT$ TermRootStored(bytes32 termId, bytes32 rootCommitment)
+\STATE $EVENT$ CredentialRevoked(bytes32 credentialHash, string reason)
+\STATE $EVENT$ TermVerified(bytes32 termId, address verifier, bool result)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Term Root Storage Function (Pseudocode)}
+\begin{algorithmic}[1]
+\REQUIRE $termId$, $rootCommitment$, $sender$
+\ENSURE Term root stored on-chain
+\STATE $REQUIRE$ $(authorizedIssuers[sender] = true)$
+\STATE $REQUIRE$ $(termRoots[termId] = 0x0)$ // Prevent overwrites
+\STATE $termRoots[termId] \leftarrow rootCommitment$
+\STATE $EMIT$ TermRootStored$(termId, rootCommitment)$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Single Term Verification Function (Pseudocode)}
+\begin{algorithmic}[1]
+\REQUIRE $termId$, $proof$, $commitments$, $indices$, $values$
+\ENSURE Verification result $valid$
+\STATE $storedRoot \leftarrow termRoots[termId]$
+\STATE $REQUIRE$ $(storedRoot \neq 0x0)$ // Term root must exist
+\STATE
+\STATE $proofValid \leftarrow$ verkleVerify$(proof, commitments, indices, values, storedRoot)$
+\STATE $formatValid \leftarrow$ validateCredentialFormat$(values)$
+\STATE $temporalValid \leftarrow$ validateTemporalConsistency$(values, termId)$
+\STATE
+\STATE $result \leftarrow proofValid \land formatValid \land temporalValid$
+\STATE $EMIT$ TermVerified$(termId, sender, result)$
+\STATE
+\RETURN $result$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Implementation Complexity and Performance}
+
+\subsubsection{Computational Complexity Analysis}
+
+% Analyzing the computational complexity of the implementation
+The optimized implementation provides the following complexity bounds. 
+\\ For individual operations:
+\begin{itemize}
+    \item \textbf{Tree Construction:} $O(n)$ for $n$ credentials using batch insertion
+    \item \textbf{Single Term Proof Generation:} $O(k \log n)$ for $k$ credentials in a tree of size $n$
+    \item \textbf{Term Proof Verification:} $O(k + \log n)$ for $k$ credentials using multiproof
+    \item \textbf{Storage Requirements:} $O(n)$ with efficient node representation
+\end{itemize}
+
+For academic journey receipt operations:
+\begin{itemize}
+    \item \textbf{Receipt Generation:} $O(t \times k \log n)$ where $t$ is number of terms, $k$ is average credentials per term
+    \item \textbf{Receipt Verification:} $O(t \times (k + \log n))$ for $t$ terms with $k$ credentials each
+    \item \textbf{Receipt Size:} $O(t \times (\log n + k))$ where each proof is logarithmic plus credential data
+    \item \textbf{Memory Usage:} $O(t \times \log n)$ for storing proof structures
+\end{itemize}
+
+\subsubsection{Security Guarantees}
+
+% Outlining the security properties of the implementation
+The implementation ensures the following security properties:
+
+\begin{itemize}
+    \item \textbf{Binding Property:} Credentials cannot be modified after commitment due to the Verkle tree's cryptographic binding.
+    \item \textbf{Hiding Property:} Individual credential privacy is preserved through polynomial commitments.
+    \item \textbf{Succinctness:} Proof sizes are logarithmic in the tree size, enabling efficient verification.
+    \item \textbf{Batch Verification:} Multiple credentials within a term can be verified with a single proof.
+    \item \textbf{Journey Integrity:} Academic progression is validated across all terms in the receipt.
+\end{itemize}
+
+% Defining fraud detection capabilities
+The fraud detection operates at both individual term and journey levels:
+
+\begin{align}
+\text{FraudDetection}(\text{Receipt}) = \begin{cases}
+\text{TEMPORAL\_VIOLATION}
+\\ \textit{(if } \exists \textit{ credential with invalid timestamp)} \\
+\text{DUPLICATE\_CREDENTIAL} 
+\\ \textit{(if } \exists \textit{ repeated course completion across terms)} \\
+\text{INVALID\_ENCODING} 
+\\ \textit{(if credential encoding malformed)} \\
+\text{PROOF\_INVALID} 
+\\ \textit{(if any Verkle proof verification fails)} \\
+\text{ROOT\_MISMATCH} 
+\\ \textit{(if term commitment } \neq \textit{ on-chain root)} \\
+\text{PROGRESSION\_INVALID} 
+\\ \textit{(if academic progression rules violated)} \\
+\text{VALID} 
+\\ \textit{(otherwise)}
+\end{cases}
+\end{align}

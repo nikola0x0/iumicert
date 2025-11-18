@@ -1,0 +1,107 @@
+\chapter{INTRODUCTION}
+\label{ch:introduction}
+
+\section{Motivation}
+The educational landscape is transforming significantly as institutions move away from traditional degree-oriented models towards more flexible, modular learning pathways that extend beyond degree programs into that very life-long learning. The shifting landscape of our job markets recognizes a more idiosyncratic skill and competency value, as opposed to standard, more generalized assessments based on degree qualifications. Vietnam's national digital transformation strategy recognizes this shift, highlighting blockchain technology as a critical enabler for modernizing credential systems that can adapt to these emerging educational paradigms.
+
+Traditional academic credentialing systems have severe constraints on describing and verifying the increasingly granular modes of learning. Traditional academic credentialing systems capture an entire degree or certificate with substantial verification, but they simply lack the capability to describe the rich mix of skills, projects, courses and competencies that represent a learner's actual educational journey. This gap creates a distinct divide between how learning occurs - incrementally, in diverse contexts, in multiple forms, and continuously throughout life - and how that learning receives formal recognition and verification.
+
+The impact of this disconnect is significant. For students, their many learning accomplishments are distributed across different platforms and institutions disrupting a cohesive record of their learning progression and development of skills. For employers, the binary confirmation of degree completion doesn't provide insights into a candidate's specific knowledge and skills, creating unnecessary hurdles as employers seek to hire based on skills rather than labels. For educational institutions, the administrative burden of tracking and confirming credentials across institutional borders stifles student mobility and lifelong learning.
+
+The recent blockchain implementations are addressing some of the issues around credential verification by increasing security and decreasing red tape. However, the majority of current solutions still treat whole credentials at the aggregate level instead of individual learning accomplishments. By treating degrees as an endpoint instead of a step along the continuing learning journey, we are stuck in a traditional model that serves neither modern employment nor education.
+
+There are also technical limitations in relation to existing blockchain credentialing solutions that affect their viability and scale. As credentialing systems increase in scale because of increased detail in records, it becomes more complex in terms of storage and verification. Even though Merkle tree structures are secure, they can be inefficient when there are more micro-credentials to track. Even more impactful, the lack of standardized frameworks for tracking granular learning outcomes across learning institutions, there are issues with interoperability and opportunities for political forces to use timeline manipulation and fabrication to increase the potential for credential fraud.
+
+The concept of academic provenance—the chronological record of a learner's educational achievements—emerges as a critical missing element in current systems. Without a transparent and verifiable timeline of credential acquisition, stakeholders cannot fully understand or trust the developmental progression that led to a learner's current competencies. In this context, the vulnerability of lack of historical verification could be the means by which credentialing fraud (e.g. backdating credential allotted to documenting achievement, and/or falsified educational paths with timelines of achievement) happens.
+
+These interconnected challenges motivate the development of IU-MiCert, a blockchain system designed to enhance existing credential management through verifiable academic micro-credential provenance. By leveraging Verkle tree technology as an improvement over traditional Merkle trees, IU-MiCert provides more efficient storage and verification of detailed learning records while maintaining strong anti-forgery mechanisms through temporal verification. This approach serves as an upgrade to existing blockchain credential systems, adding granular tracking capabilities while preserving compatibility with traditional diploma verification.
+
+Through IU-MiCert, we seek to enhance current credential verification systems by providing detailed academic provenance that makes credential forgery significantly more difficult, supporting the paradigm shift toward lifelong learning and skills-based assessment that characterizes modern educational landscapes.
+
+\section{Problem Statement}
+Current blockchain credential systems, while effective for whole degree verification, lack the capability to efficiently manage and verify the increasingly granular nature of modern education. This limitation creates opportunities for credential forgery and makes it difficult to establish authentic learning timelines. By implementing Verkle tree structures as an improvement over traditional Merkle trees, IU-MiCert addresses critical inefficiencies in academic credential management while significantly enhancing anti-forgery mechanisms through detailed provenance tracking.
+
+Traditional credential systems and existing blockchain implementations focus primarily on validating complete degrees or certificates, creating a verification gap for the individual courses, projects, and skill-building experiences that comprise modern education. Without mechanisms to cryptographically verify the temporal sequence and authentic acquisition of micro-credentials, malicious actors can exploit this gap through timeline manipulation, backdating of achievements, and fabrication of learning progressions that are difficult to detect.
+
+IU-MiCert implements an enhanced approach to credential verification that supplements existing systems with detailed micro-credential tracking. The system adds a comprehensive level of record-keeping for micro-credentials, which has provenance as an inextricable meaning of provenance. This system enables a comprehensive audit trail of learning achievements, with verifiable timestamps as part of a record of the overall educational ecosystem. This method crowds out fabricated credentials by exposing the timeline within the education records to see inconsistencies. This established provenance information provides additional layers of difficulty in proving forged credentials as well as affording stakeholders increased credibility in educational achievements. 
+
+The use of Verkle trees over traditional Merkle trees provides improved efficiency in storing and verifying large numbers of micro-credentials, making this enhanced level of detail practically feasible for educational institutions to implement alongside their existing credential management systems, with a suitable costs.
+
+\section{Scope}
+The scope of this thesis is defined with the following key assumptions and infrastructure considerations to ensure the feasibility and applicability of the IU-MiCert system:
+
+\vspace{0.3cm}
+
+\textbf{1. Architectural Focus:} 
+\begin{itemize}
+Implementation of a Verkle tree-based architecture that provides improved efficiency over Merkle trees for storing and verifying micro-credentials as a supplement to existing credential management systems.
+\end{itemize}
+
+\textbf{2. Data Integrity and Authenticity:} 
+\begin{itemize}
+The credential data provided by the issuing institution is assumed to be accurate, complete, and from a verified source. This ensures that the system focuses on managing, issuing, and verifying credentials without addressing upstream validation processes.
+\end{itemize}
+
+\textbf{3. Infrastructure Assumptions:} 
+\begin{itemize}
+This thesis leverages existing infrastructure and cryptographic technologies, including:
+\end{itemize}
+\begin{itemize}
+    \item A tamper-proof blockchain for storing commitment records, enabling decentralized trust without reliance on a single authority.
+    \item Public Key Infrastructure (PKI) for managing and distributing public/private key pairs.
+    \item Established cryptographic libraries for implementing the Verkle tree structure.
+    \item Learning Management Systems and Student Information Systems that provide necessary data integration capabilities for seamless credential processing.
+\end{itemize}
+
+\textbf{4. Implementation Deliverables:}
+\begin{itemize}
+    \item A comprehensive system for deploying Verkle Trees of micro-credentials with term-based deployment cycles.
+    \item Institutional commitment mechanisms that minimize on-chain storage requirements while maintaining detailed provenance.
+    \item Intuitive user interfaces designed for students, employers, and educational institutions.
+    \item Verification protocols that provide efficient proof generation and blockchain-powered validation regardless of system scale.
+\end{itemize}
+
+\textbf{5. User Environment:} 
+\begin{itemize}
+End-users and organizations adopting the system must have minimal technical requirements, such as internet access and standard computing devices, to interact with the interfaces provided.
+\end{itemize}
+
+\textbf{6. Performance Considerations:} 
+\begin{itemize}
+The infrastructure is designed to accommodate educational institution deployments, efficiently handling expected transaction volumes without significant performance degradation during peak verification periods.
+\end{itemize}
+By establishing these parameters, the thesis aims to design, implement, and demonstrate IU-MiCert as an enhancement to existing credential verification systems that provides detailed academic provenance while maintaining practical deployment feasibility.
+
+\section{Objectives}
+This thesis proposes designing, implementing, and evaluating IU-MiCert, a blockchain system that enhances existing credential management through verifiable academic micro-credential provenance. The project addresses the limitations of current systems that focus on complete degree verification while lacking detailed tracking capabilities that could prevent credential forgery. To summarize, the primary objectives of this thesis are as follows:
+
+\vspace{0.3cm}
+
+\textbf{1. Technical Contribution:}
+\begin{itemize}
+    \item Implement a Verkle tree-based architecture that improves upon traditional Merkle tree efficiency for managing large numbers of micro-credentials.
+    \item Apply cryptographic mechanisms for establishing verifiable academic provenance with temporal verification capabilities.
+    \item Design verification protocols that enhance anti-forgery protection through detailed timeline tracking.
+\end{itemize}
+
+\textbf{2. System Development:}
+\begin{itemize}
+    \item Design and implement smart contracts for micro-credential issuance and verification using Verkle tree structures with term-based deployment.
+    \item Develop institutional commitment mechanisms that provide detailed provenance while minimizing on-chain storage requirements.
+    \item Create comprehensive interfaces for students to manage receipts, employers to verify receipts, and an educational institutions system to issue and manage detailed learning records.
+    \item Construct a full-stack solution that integrates with existing credential management systems to provide enhanced verification capabilities.
+\end{itemize}
+
+\textbf{3. Security and Performance Assessment:}
+\begin{itemize}
+    \item Conduct comprehensive evaluation of IU-MiCert's anti-forgery mechanisms, testing the system's ability to detect timeline manipulation and credential fabrication.
+    \item Perform performance benchmarks comparing Verkle tree efficiency against traditional Merkle tree implementations for micro-credential management.
+    \item Validate the system's practical feasibility for educational institution deployment alongside existing credential systems.
+\end{itemize}
+
+\textbf{4. Real-World Enhancement:}
+\begin{itemize}
+    \item Ensure that IU-MiCert's design can be practically integrated with existing blockchain credential systems as an enhancement rather than replacement.
+    \item Develop integration guidelines for incorporating detailed micro-credential tracking into current learning management systems.
+    \item Demonstrate IU-MiCert's effectiveness in improving credential authenticity verification while maintaining compatibility with traditional diploma verification processes.
+\end{itemize}
