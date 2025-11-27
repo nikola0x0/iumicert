@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiService } from "@/lib/api";
 
 export function VerifyJourneyTab() {
@@ -144,8 +144,8 @@ export function VerifyJourneyTab() {
     }
   };
 
-  // Get courses grouped by term from term receipts
-  const getTermCourses = () => {
+  // Get courses grouped by term from term receipts - memoized to prevent setState during render
+  const termCourses = useMemo(() => {
     const grouped: Record<string, any[]> = {};
 
     termReceipts.forEach((receipt: any) => {
@@ -162,9 +162,7 @@ export function VerifyJourneyTab() {
     });
 
     return grouped;
-  };
-
-  const termCourses = getTermCourses();
+  }, [termReceipts]);
 
   return (
     <div className="space-y-6">

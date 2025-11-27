@@ -1,0 +1,336 @@
+\chapter{RELATED WORK}
+\label{ch:related-work}
+
+% TODO: Expand related work to 14 pages as per REPORT.md outline
+% TODO: Include the following sections as outlined in REPORT.md:
+% 1. Blockchain-based Credential Systems (partially covered)
+% 2. Merkle Tree Approaches (partially covered)
+% 3. Vector Commitment Schemes
+% 4. Verkle Trees in Academia
+% 5. Zero-Knowledge Proofs & Privacy
+% 6. Research Gaps & Positioning
+
+This chapter examines contemporary advancements in credential management systems, specifically focusing on decentralized and cryptographic methodologies that enhance security and operational efficiency. The review systematically identifies and analyzes the research gaps that these technological advancements have yet to address. The chapter establishes definitions of fundamental mathematical concepts that underpin current systems, providing essential context for understanding both the capabilities and limitations of existing credential management approaches. These foundational elements are critical for establishing the theoretical framework that supports the development of the IU-MiCert protocol and positioning it within the broader landscape of academic credential verification systems.
+
+\section{Current Advancements}
+This section reviews the evolutionary progression of decentralized credential management systems, tracing the technological advancement from foundational blockchain implementations to sophisticated cryptographic commitment schemes that enable scalable and privacy-preserving credential verification.
+
+\subsection{Foundational Blockchain Implementations}
+
+The earliest blockchain-based credential systems established the fundamental principles of decentralized verification while revealing critical limitations in scalability and granularity. The MIT Media Lab's BlockCerts \cite{blockcerts_mit} established foundational approaches by storing credential hashes on Bitcoin blockchain, enabling decentralized verification without central authority dependence. This pioneering system demonstrated the viability of blockchain-based credential integrity but treated credentials as monolithic entities, lacking support for the micro-credential granularity that modern educational paradigms require.
+
+Building upon these foundations, Ethereum-based systems introduced smart contract automation for credential management. Nguyen et al.'s Certificate Verifying Support System (CVSS) \cite{nguyen2018cvss} advances blockchain-based credential management through smart contract automation and Know-Your-Customer principles. While CVSS demonstrates practical implementation in educational settings, it faces substantial scalability limitations due to requiring individual smart contracts per student, creating prohibitive costs for large-scale deployment.
+
+Educational-specific blockchain platforms further refined these approaches for institutional environments. Turkanović et al.'s EduCTX platform \cite{turkanovic_eductx} enables credit transfer through consortium blockchain architecture, supporting educational mobility through credit accumulation validation. Similarly, Hyperledger Fabric-based implementations \cite{khan_hyperledger} have gained traction due to permissioned network characteristics suitable for institutional environments, with frameworks demonstrating smart contract-based credential validation with IPFS storage integration.
+
+\subsection{Merkle Tree Approaches}
+
+The integration of Merkle tree structures marked a significant advancement in cryptographic verification for credential systems, enabling efficient membership proofs and tamper detection. Le et al.'s IU-TransCert system \cite{le_iutranscert} demonstrates practical implementation of Auditable Merkle Tree structures for academic certificate issuance, confirmation, and auditing, providing features for credential revocation and selective information dissemination. Rasool et al.'s Docschain \cite{rasool_docschain} further advances Merkle tree applications by enabling blockchain-based verification of physical transcripts through IoT camera integration, though computational expenses arise from OCR processing requirements.
+
+However, traditional Merkle tree implementations in educational contexts, while foundational, presented notable drawbacks. A primary concern became the substantial proof sizes required for verification. As the number of credentials grew, so did the accompanying proofs, which consist of all sibling hashes along the path to the root. This logarithmic scaling (O(logN)) still led to considerable data overhead, impacting efficiency. Furthermore, the necessity of disclosing a complete path for verification raised privacy issues regarding the relationships between credentials. Coupled with this, the computational demands and storage implications of tree rebalancing due to credential additions or revocations also scaled unfavorably with institutional expansion, hindering dynamic credential management.
+
+Multi-signature authentication mechanisms built upon Merkle tree foundations attempted to address trust distribution in credential issuance processes. Wolfgang et al. \cite{wolfgang} demonstrate improved security through distributed authority control, though their approach lacks integration with temporal verification systems necessary for establishing authentic learning progression timelines.
+
+% TODO: Add remaining sections to meet 14-page requirement as per REPORT.md:
+% - Vector Commitment Schemes
+% - Verkle Trees in Academia
+% - Zero-Knowledge Proofs & Privacy
+% - Research Gaps & Positioning
+
+% TODO: Specifically address the use of Ethereum's go-verkle library in the implementation
+% TODO: Compare with alternative approaches like zk-SNARKs for privacy preservation
+% TODO: Discuss efficiency differences between Merkle and Verkle trees in academic credential contexts
+
+\subsection{Vector Commitment Approaches}
+
+Vector commitment schemes emerged as a sophisticated solution to the scalability and privacy limitations inherent in traditional tree-based approaches. These advanced cryptographic primitives enable constant-sized commitments to vectors of arbitrary length, providing efficient membership proofs without revealing vector structure or requiring path disclosure.
+
+Nguyen and Tran's IU-VecCert \cite{nguyen2024iuvec} protocol represents significant progress in addressing scalability challenges through non-interactive vector commitment schemes that enable efficient credential issuance and verification. The IU-VecCert approach provides constant-sized proofs for credential verification regardless of the total number of issued credentials, representing a substantial improvement over traditional commitment schemes that suffer from linear proof size growth.
+
+Advanced cryptographic accumulators built upon vector commitment principles have demonstrated potential for managing large-scale credential databases while maintaining efficient verification properties. Research has proposed dynamic bilinear-map accumulators that enable constant-sized proofs and efficient revocation mechanisms, showing promise for scalable credential management while requiring integration with hierarchical structures necessary for representing complex relationships between individual micro-credentials and composite qualifications.
+
+\subsection{Verkle Tree Integration}
+
+Verkle tree structures represent the current state-of-the-art advancement in cryptographic commitment schemes for educational applications, combining the hierarchical organization benefits of traditional Merkle trees with the constant-sized proof advantages of vector commitments. These structures enable efficient membership proofs with constant-sized verification regardless of tree size, addressing fundamental scalability limitations while maintaining the organizational benefits of tree-based structures.
+
+The integration of Verkle trees with polynomial commitment schemes enables sophisticated selective disclosure mechanisms that preserve privacy while supporting granular credential verification. Unlike traditional Merkle trees that require complete path disclosure, Verkle trees enable selective revelation of credential subsets without exposing the broader credential structure or relationships.
+
+However, existing educational blockchain systems have not yet leveraged Verkle trees for establishing verifiable academic provenance or supporting granular micro-credential management. Current implementations focus primarily on the technical cryptographic properties rather than developing comprehensive frameworks for tracking temporal relationships between micro-credentials and their aggregation into broader qualifications.
+
+\subsection{Contemporary Cryptographic Integration}
+
+Zero-knowledge proofs are increasingly complementing advanced commitment schemes to boost privacy. For instance, Delgado-von-Eitzen et al. \cite{delgado_gdpr} suggest GDPR-compliant frameworks for selective academic record disclosure, preserving privacy while ensuring verification integrity through sophisticated cryptography. While alternative hash-based verification systems reduce storage by comparing document hashes with blockchain references, they crucially fail to capture temporal relationships between credentials. This omission hinders the detection of fraudulent sequences and the establishment of legitimate educational progression. The convergence of these cryptographic methods offers pathways to comprehensive credential management systems addressing scalability, privacy, and provenance in modern education. However, a significant gap remains in unifying these technologies into frameworks that support granular micro-credential tracking with verifiable temporal provenance.
+
+\section{Research Gaps}
+Based on the comprehensive literature review, several critical research gaps emerge that hinder the practical deployment of scalable credential verification frameworks.
+A primary gap exists in the continued reliance on traditional Merkle tree structures. Despite implementations like IU-TransCert \cite{le_iutranscert} and BlockCerts \cite{blockcerts_mit}, Merkle trees suffer from logarithmic proof sizes that create substantial storage overhead. Systems like CVSS \cite{nguyen2018cvss} exemplify this limitation where "using one smart contract per student results in significant financial and environmental costs per diploma."
+Current systems also exhibit inadequate privacy preservation mechanisms. While frameworks attempt GDPR compliance \cite{delgado_gdpr}, they lack cryptographic sophistication for efficient privacy-preserving verification, typically requiring complete credential exposure during verification processes.
+A significant gap exists in the underutilization of advanced cryptographic commitment schemes, particularly Verkle trees. Current systems like EduCTX \cite{turkanovic_eductx} and recent implementations like IU-VecCert \cite{nguyen2024iuvec} demonstrate progress but fail to address fundamental scalability limitations through advanced tree structures that provide constant-size proofs.
+Additionally, existing solutions lack integrated support for complex educational hierarchies. Systems treat credentials as isolated entities, failing to capture relationships between micro-credentials, course components, and composite academic qualifications. This limitation prevents comprehensive verification of complete academic journeys, where individual micro-credentials should collectively prove mastery of broader educational objectives and degree requirements.
+The IU-MiCert system addresses these gaps by leveraging Verkle tree architectures to achieve constant-size proof generation while implementing smart aggregation of proofs that enables provable academic journey reconstruction through interconnected micro-credential verification, bridging theoretical cryptographic advances with practical educational blockchain deployment.
+
+
+\section{Theoretical Background}
+This section establishes the foundational concepts necessary for understanding the proposed IU-MiCert protocol, covering educational micro-credential systems, blockchain technology, and the advanced cryptographic primitives that enable scalable credential verification.
+
+\subsection{Micro-Credentials in Educational Systems}
+\label{subsec:microcredentials}
+
+Micro-credentials represent a fundamental shift in educational credentialing, providing granular recognition of specific skills and competencies. As defined by Chukowry et al. \cite{chukowry2021future}, a micro-credential is "a program that helps students to build skills outside the classroom by providing courses that cover specified skills," typically spanning 10 weeks to one year in duration.
+
+Unlike traditional degree programs, micro-credentials offer several key characteristics:
+\begin{itemize}
+   \item \textbf{Granularity}: Recognition of specific competencies rather than broad academic achievements
+   \item \textbf{Modularity}: Can be combined to form larger qualification frameworks
+   \item \textbf{Immediacy}: Shorter duration enables rapid skill acquisition and verification
+   \item \textbf{Industry Alignment}: Direct correlation with market-demanded skills
+\end{itemize}
+
+
+The hierarchical nature of educational systems creates natural relationships between micro-credentials, where individual achievements contribute to broader learning outcomes. This hierarchical structure forms the foundation for the tree-based organization employed in IU-MiCert.
+
+\subsection{Blockchain Technology}
+\label{subsec:blockchain_technology}
+
+Blockchain technology emerged with Bitcoin as the foundational innovation that enabled decentralized digital currency without trusted intermediaries \cite{nakamoto2008bitcoin}. Nakamoto's seminal work introduced the concept of a "distributed ledger that maintains a continuously growing list of records, called blocks, which are linked and secured using cryptography," establishing the technical foundation for all subsequent blockchain applications.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/blockchain_architecture.png}
+    \caption{Architecture of Blockchain}
+    \label{fig:blockchain_architecture}
+\end{figure}
+
+Bitcoin demonstrated several revolutionary properties that remain fundamental to blockchain systems:
+
+\textbf{Immutability:} Once data is committed to the blockchain through sufficient confirmations, it becomes computationally infeasible to alter historical records. This property ensures that issued credentials maintain permanent integrity without requiring ongoing trust in issuing institutions.
+
+\textbf{Transparency:} All transactions and state changes are publicly verifiable, enabling independent verification of credential issuance and validation processes. This transparency supports accountability while maintaining pseudonymity through cryptographic addressing.
+
+\textbf{Decentralization:} No single entity controls the network state, eliminating single points of failure and reducing censorship risks. For educational systems, this enables credential verification even if original issuing institutions become unavailable.
+
+\textbf{Consensus Mechanisms:} Bitcoin's Proof-of-Work consensus protocol demonstrated how distributed networks could achieve agreement without central coordination, establishing the foundation for various consensus mechanisms that offer different trade-offs between security, scalability, and energy efficiency.
+
+\subsubsection{Blockchain Evolution: From Bitcoin to Smart Contracts}
+
+The limitations of Bitcoin's transaction-focused model motivated significant technological advancement in blockchain capabilities. As noted by Mukherjee and Pradhan \cite{mukherjee2021blockchain}, "the wasteful mining and poor scalability of the first generation Blockchain prompted Buterin to extend the concept of Blockchain beyond currency. This led to the advent of second generation of Blockchain i.e. Ethereum which is based on new concepts of smart contracts along with Proof of Work consensus mechanisms."
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/blockchain_evolution.png}
+    \caption{Working of smart contract}
+    \label{fig:blockchain_evolution}
+\end{figure}
+
+This evolutionary progression represents a fundamental shift from simple value transfer to programmable logic execution, enabling complex credential systems that would be impossible to implement on Bitcoin's limited scripting platform. The transition from Blockchain 1.0 to 2.0 specifically addresses the computational and functional requirements necessary for sophisticated educational credential management.
+
+\subsection{Ethereum Platform and Smart Contract Innovation}
+\label{subsec:ethereum_platform}
+
+Ethereum represents a paradigm shift from Bitcoin's transaction-focused model to a general-purpose decentralized computing platform \cite{wood2014ethereum}. Introduced by Vitalik Buterin and formally specified by Gavin Wood, Ethereum extends blockchain functionality by providing a Turing-complete virtual machine that enables programmable smart contracts.
+
+This programmability innovation makes Ethereum particularly suitable for systems requiring complex verification logic, multi-party workflows, and sophisticated state management that would be impossible to implement on Bitcoin's limited scripting platform.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/ethereum_architecture.png}
+    \caption{Ethereum architecture}
+    \label{fig:ethereum_architecture}
+\end{figure}
+
+\subsubsection{Smart Contract Architecture}
+
+Smart contracts represent the key innovation of Blockchain 2.0, fundamentally transforming blockchain from a simple transaction ledger to a programmable computing platform. According to Mukherjee and Pradhan \cite{mukherjee2021blockchain}, smart contracts are "autonomous self-managing computer programs that execute automatically on the basis of predefined clauses between two parties. These contracts are impossible to be hacked or tampered with. So Smart Contracts largely reduce the cost of verification, execution, and fraud prevention and enable transparent contract definition."
+
+Smart contracts provide several critical capabilities that extend far beyond Bitcoin's transaction model:
+
+\textbf{Automated Execution:} The research highlights that "the first step is the formulation of the contract between two parties. It involves the terms, rules, and conditions of the agreement that have to be accepted by the two counterparts and translated into a code. No changes can be made to the contract without the consent of the involved parties."
+
+\textbf{Deterministic Processing:} As described in the paper, "as soon as the events mentioned in the contract occur, the code automatically executes. A practical example of such events can be the expiration of an insurance policy or the delivery of goods. Once the code execution is over, the contract will automatically transfer the value to the pertinent receiver."
+
+\textbf{Immutable Logic:} The authors note that these contracts "are impossible to be hacked or tampered with," ensuring that credential validation logic executes consistently without manual intervention, supporting complex verification rules with multiple criteria, cross-references, and temporal constraints.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{figures/smart_contract_lifecycle.png}
+    \caption{Smart contract lifecycle}
+    \label{fig:smart_contract_lifecycle}
+\end{figure}
+
+\subsubsection{Transaction Costs: The Gas Fee Model}
+
+In the world of blockchain, every operation, from a simple transfer of cryptocurrency to complex smart contract executions, incurs a \textbf{transaction cost}. This cost is universally referred to as a \textbf{gas fee}. While popularized by Ethereum, the concept of a gas fee has become a fundamental economic incentive model adopted by nearly all subsequent blockchain platforms.
+
+Unlike Bitcoin, which primarily bases its transaction fees on the data size of a transaction, Ethereum revolutionized this model by introducing a charge for \textbf{computational complexity}. This means that the more demanding an operation is on the network's resources (e.g., CPU time, memory, storage), the higher the gas fee will be. This economic reality creates a powerful incentive for developers to write \textbf{efficient and optimized code}.
+
+For systems like educational credential management on a blockchain, gas optimization is paramount due to several key factors:
+
+\begin{itemize}
+    \item \textbf{Scalability:} Institutions issuing large volumes of credentials need cost-effective operations that scale efficiently. High gas fees per credential can quickly become prohibitive as the number of issued credentials grows.
+    \item \textbf{Frequent Verification:} Beyond issuance, the ongoing process of verifying credentials by employers or other institutions incurs its own set of gas costs. These costs compound with every verification, making sustained usage expensive if not optimized.
+    \item \textbf{Storage Efficiency:} Storing data directly on a blockchain is notoriously expensive. For example, on Ethereum, storing 32 bytes of data can cost approximately 20,000 gas. This high cost drives the need for sophisticated data structures and commitment schemes that minimize on-chain storage, rather than directly storing large amounts of data.
+\end{itemize}
+
+This economic pressure is a major reason for the adoption of advanced cryptographic techniques like \textbf{Verkle trees}. Verkle trees allow for constant-size commitments, meaning that the cost of verifying a credential remains $O(1)$ (constant time) regardless of how large the credential database becomes. This is a significant advancement over earlier blockchain models and naive storage approaches, where verification costs could increase with the amount of data. In essence, the gas fee model pushes the boundaries of cryptographic and algorithmic innovation in blockchain design.
+
+\subsection{Verkle Trees}
+\label{subsec:verkle_trees}
+
+Verkle trees represent a revolutionary advancement in cryptographic data structures that address the bandwidth limitations of traditional Merkle trees while maintaining computational efficiency \cite{kuszmaul2018verkle}. "Verkle Trees are constructed similarly to Merkle Trees, but using Vector Commitments rather than cryptographic hash functions."
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/verkle_tree_structure.png}
+    \caption{Verkle tree construction with branching factor k=3}
+    \label{fig:verkle_tree_structure}
+\end{figure}
+
+\subsubsection{Fundamental Design Principle}
+
+The core innovation of Verkle trees lies in their hybrid approach that combines the structural efficiency of Merkle trees with the constant-size proof properties of vector commitments. As illustrated in Figure~\ref{fig:verkle_tree_structure}, "In a Merkle Tree, a parent node is the hash of its children. In a Verkle Tree, a parent node is the Vector Commitment of its children".
+
+This design enables a tunable trade-off between computational complexity and bandwidth efficiency through the branching factor $k$. A Verkle Tree with branching factor $k$ achieves $O(kn)$ construction time and $O(\log_k n)$ membership proof size.
+
+The mathematical foundation relies on polynomial commitments over finite fields. For a Verkle tree with branching factor $k$, each internal node commits to a polynomial $f(x) = \sum_{i=0}^{k-1} c_i x^i$ where $c_i$ represents the commitment to the $i$-th child. The commitment to this polynomial is computed as:
+
+\begin{equation}
+\text{Commit}(f) = g^{f(\alpha)} = \prod_{i=0}^{k-1} (g^{\alpha^i})^{c_i}
+\label{eq:verkle_commitment}
+\end{equation}
+
+where $\alpha$ is a secret trapdoor from the trusted setup phase.
+
+\subsubsection{Performance Characteristics}
+
+The performance advantages of Verkle trees become evident when comparing proof sizes across different data structures:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Scheme} & \textbf{Construction} & \textbf{Update} & \textbf{Proof Size} \\
+\hline
+Merkle Tree & $O(n)$ & $O(\log_2 n)$ & $O(\log_2 n)$ \\
+\hline
+k-ary Merkle Tree & $O(n)$ & $O(k \log_k n)$ & $O(k \log_k n)$ \\
+\hline
+Vector Commitment & $O(n^2)$ & $O(n)$ & $O(1)$ \\
+\hline
+k-ary Verkle Tree & $O(kn)$ & $O(k \log_k n)$ & $O(\log_k n)$ \\
+\hline
+\end{tabular}
+\caption{Computational complexity comparison of cryptographic commitment schemes}
+\label{tab:verkle_performance}
+\end{table}
+
+The bandwidth reduction achieved by Verkle trees is substantial and independent of tree depth. "The bandwidth reduction is independent of the depth of the tree; it depends only on the branching factor". With a branching factor of $k = 1024$, Verkle trees achieve a 10-fold reduction in proof size compared to binary Merkle trees, making them particularly suitable for blockchain applications where transaction size directly impacts costs.
+
+The proof size for a Verkle tree with $n$ elements and branching factor $k$ is:
+\begin{equation}
+\text{Proof Size} = O(\log_k n) \cdot |G|
+\label{eq:verkle_proof_size}
+\end{equation}
+
+where $|G|$ represents the size of a group element (typically 32 bytes for elliptic curve groups).
+
+\subsubsection{Practical Implementation Results}
+
+Empirical results from Kuszmaul's implementation demonstrate the practical viability of Verkle trees for large-scale applications. The implementation using the RELIC cryptographic library shows that with a branching factor of $k = 1024$, which provides a factor of 10 reduction in bandwidth, it takes 110.1 milliseconds on average per leaf to construct a Verkle Tree with $2^{14}$ leaves. A branching factor of $k = 32$, which provides a bandwidth reduction factor of 5, yields a construction time of 8.4 milliseconds on average per leaf \cite{kuszmaul2018verkle}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/verkle_performance.png}
+    \caption{Verkle tree construction time versus branching factor comparison}
+    \label{fig:verkle_performance}
+\end{figure}
+
+These results, visualized in Figure~\ref{fig:verkle_performance}, demonstrate that the choice of branching factor $k$ creates a fundamental trade-off between construction time and proof size. For credential systems requiring frequent updates, lower branching factors minimize computational overhead, while systems prioritizing verification efficiency benefit from higher branching factors.
+
+\subsubsection{Security Properties}
+
+\noindent\textbf{Position Binding:} The commitment scheme ensures that it is computationally infeasible to open it to different values at the same position once a commitment is made. For credential systems, this property guarantees that issued credentials cannot be modified.
+
+\vspace{0.1cm}
+
+\noindent\textbf{Collision Resistance:} The collision resistance property extends naturally to Verkle trees. While Merkle trees rely on hash function collision resistance, Verkle trees depend on the computational assumptions underlying their vector commitment schemes, typically the discrete logarithm problem in bilinear groups.
+
+\vspace{0.1cm}
+
+\noindent\textbf{Zero-Knowledge Properties:} Verkle trees can be extended with zero-knowledge proofs to enable selective disclosure of credentials without revealing the complete academic record structure. This capability is essential for privacy-preserving credential verification.
+
+% The security parameter selection follows standard recommendations for pairing-based cryptography. For 128-bit security, the implementation uses BLS12-381 elliptic curves with 381-bit prime fields, providing equivalent security to 3072-bit RSA keys while maintaining efficient pairing operations.
+
+% \subsection{Polynomial Commitments}
+\label{subsec:polynomial_commitments}
+
+Polynomial commitments form the cryptographic primitive underlying Verkle trees. A polynomial commitment scheme consists of four algorithms: $(\text{Setup}, \text{Commit}, \text{Open}, \text{Verify})$.
+
+\subsubsection{Kate-Zaverucha-Goldberg (KZG) Commitments}
+
+The KZG commitment scheme \cite{kate2010constant} enables commitment to polynomials with constant-size commitments and proofs. Given a polynomial $f(x) \in \mathbb{F}_p[x]$ of degree at most $d$, the scheme operates as follows:
+
+\textbf{Setup Phase:} A trusted setup generates public parameters:
+\begin{equation}
+   \text{PP} = \{g, g^{\alpha}, g^{\alpha^2}, \ldots, g^{\alpha^d}\}
+\end{equation}
+
+where $\alpha$ is a secret value that must be destroyed after setup.
+
+\textbf{Commitment Phase:} To commit to polynomial $f(x) = \sum_{i=0}^d a_i x^i$:
+\begin{equation}
+   C = g^{f(\alpha)} = g^{a_0} \cdot (g^{\alpha})^{a_1} \cdot (g^{\alpha^2})^{a_2} \cdots (g^{\alpha^d})^{a_d}
+\end{equation}
+
+\textbf{Opening Phase:} To prove $f(s) = v$ for some point $s$, compute:
+\begin{equation}
+   \pi = g^{\psi(\alpha)} \text{ where } \psi(x) = \frac{f(x) - v}{x - s}
+\end{equation}
+
+\textbf{Verification Phase:} Verify using bilinear pairing:
+\begin{equation}
+   e(C \cdot g^{-v}, g) = e(\pi, g^{\alpha} \cdot g^{-s})
+\end{equation}
+
+\subsubsection{Trusted Setup Considerations}
+
+The KZG commitment scheme, and by extension Verkle trees, requires a trusted setup ceremony that represents a fundamental departure from trustless hash-based systems. This setup phase has several critical implications:
+
+\textbf{Security Dependencies:} The security of the entire system depends on the proper execution of the setup ceremony. If the secret parameter $\alpha$ is compromised or not properly destroyed, adversaries could generate false proofs and compromise system integrity. This represents the primary trust assumption distinguishing polynomial commitment schemes from hash-based alternatives.
+
+\textbf{Parameter Generation:} The trusted setup must generate a structured reference string (SRS) that supports polynomials up to degree $d$. The choice of maximum degree $d$ determines both the functionality and efficiency of the resulting system, requiring careful consideration of expected use cases and security margins.
+
+\textbf{Multi-Party Computation (MPC) Protocols:} Modern implementations employ MPC protocols where multiple independent parties participate in parameter generation. The ceremony remains secure as long as at least one participant acts honestly and destroys their portion of the secret material. This approach, successfully demonstrated in systems like Zcash's Powers of Tau ceremony~\cite{nikolaenko2024powers}, significantly reduces the trust requirements compared to single-party setup.
+
+\textbf{Ceremony Verification:} Proper trusted setup ceremonies include verification procedures that allow participants and observers to cryptographically verify that the ceremony was conducted correctly, without revealing the secret parameters. This transparency helps build confidence in the setup's integrity.
+
+\textbf{Educational System Implications:} For educational credential systems, the trusted setup presents both challenges and opportunities. While it introduces an additional trust assumption, it enables the advanced privacy and efficiency features that distinguish polynomial commitment-based systems from traditional approaches. Educational institutions must carefully evaluate whether the benefits of constant-size proofs and selective disclosure capabilities justify the trusted setup requirements for their specific deployment scenarios.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Scheme} & \textbf{Trusted Setup} & \textbf{Proof Size} & \textbf{Verification} & \textbf{Privacy} \\
+\hline
+KZG & Required & $O(1)$ & Fast & High \\
+Pedersen+IPA & None & $O(\log n)$ & Moderate & Medium \\
+FRI & None & $O(\log^2 n)$ & Slow & Low \\
+\hline
+\end{tabular}
+\caption{Comparison of polynomial commitment schemes}
+\label{tab:polynomial_commitment_comparison}
+\end{table}
+
+% The comparison in Table~\ref{tab:polynomial_commitment_comparison} illustrates the fundamental trade-off between trusted setup requirements and system efficiency. KZG commitments provide optimal proof sizes and verification times at the cost of requiring trusted setup, while alternatives like Pedersen commitments with Inner Product Arguments (IPA) or FRI-based schemes avoid trusted setup but sacrifice efficiency.
+
+
+% % \subsection{Fiat-Shamir Heuristic}
+% % \label{subsec:fiat_shamir}
+
+% % The Fiat-Shamir heuristic \cite{fiat1986prove} transforms interactive proof systems into non-interactive ones by replacing verifier challenges with hash-generated values. This enables IU-MiCert to provide non-interactive proofs suitable for blockchain deployment.
+
+% % For a commitment $C$ and evaluation point $s$, the challenge is computed as:
+% % \begin{equation}
+% %    c = \mathcal{H}(C, s, \text{context})
+% % \end{equation}
+
+% % where $\mathcal{H}$ is a cryptographic hash function and context includes relevant protocol information.

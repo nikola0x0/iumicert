@@ -1,0 +1,297 @@
+name: Deploy Issuer to GCP
+
+on:
+  push:
+    branches:
+      - main
+      - issuer_v2
+    paths:
+      - 'packages/issuer/**'
+      - 'packages/crypto/**'
+      - '.github/workflows/deploy-issuer.yml'
+  workflow_dispatch:  # Allow manual triggers
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/issuer
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./packages/issuer/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to GCP VM
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: 'latest'
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy to VM
+        env:
+          VM_NAME: ${{ secrets.GCP_VM_NAME }}
+          VM_ZONE: ${{ secrets.GCP_VM_ZONE }}
+          ISSUER_PRIVATE_KEY: ${{ secrets.ISSUER_PRIVATE_KEY }}
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          IUMICERT_CONTRACT_ADDRESS: ${{ secrets.IUMICERT_CONTRACT_ADDRESS }}
+          STUDENT_PORTAL_URL: ${{ secrets.STUDENT_PORTAL_URL }}
+          ISSUER_PORTAL_URL: ${{ secrets.ISSUER_PORTAL_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create deployment script
+          cat > deploy-remote.sh << 'EOF'
+          #!/bin/bash
+          set -e
+
+          echo "🚀 Starting deployment..."
+
+          # Navigate to project directory
+          cd ~/iumicert/packages/issuer || {
+            echo "❌ Project directory not found. Running initial setup..."
+            mkdir -p ~/iumicert
+            cd ~/iumicert
+            git clone https://github.com/${{ github.repository }}.git .
+            cd packages/issuer
+          }
+
+          # Pull latest changes
+          echo "📥 Pulling latest changes..."
+          git fetch origin
+          git reset --hard origin/${{ github.ref_name }}
+
+          # Login to GitHub Container Registry
+          echo "🔐 Logging into GitHub Container Registry..."
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+          # Create/update .env file
+          echo "⚙️  Updating environment configuration..."
+          cat > .env << ENVEOF
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          ISSUER_PRIVATE_KEY=${ISSUER_PRIVATE_KEY}
+          IUMICERT_CONTRACT_ADDRESS=${IUMICERT_CONTRACT_ADDRESS}
+          NETWORK=sepolia
+          SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL}
+          DEFAULT_GAS_LIMIT=500000
+          MAX_GAS_PRICE=20000000000
+          DEBUG=false
+          LOG_LEVEL=info
+          STUDENT_PORTAL_URL=${STUDENT_PORTAL_URL}
+          ISSUER_PORTAL_URL=${ISSUER_PORTAL_URL}
+          ENVEOF
+
+          # Update docker-compose to use pre-built image
+          echo "🐳 Updating docker-compose configuration..."
+          cat > docker-compose.prod.yml << COMPOSEEOF
+          version: '3.8'
+
+          services:
+            postgres:
+              image: postgres:15-alpine
+              container_name: iumicert-postgres
+              environment:
+                POSTGRES_DB: iumicert
+                POSTGRES_USER: iumicert
+                POSTGRES_PASSWORD: \${POSTGRES_PASSWORD}
+                POSTGRES_HOST_AUTH_METHOD: trust
+              ports:
+                - "5432:5432"
+              volumes:
+                - postgres_data:/var/lib/postgresql/data
+                - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U iumicert -d iumicert"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+              restart: unless-stopped
+              networks:
+                - iumicert-network
+
+            issuer-backend:
+              image: ghcr.io/${{ github.repository }}/issuer:${{ github.ref_name }}
+              container_name: iumicert-issuer
+              environment:
+                DB_HOST: postgres
+                DB_PORT: 5432
+                DB_USER: iumicert
+                DB_PASSWORD: \${POSTGRES_PASSWORD}
+                DB_NAME: iumicert
+                ISSUER_PRIVATE_KEY: \${ISSUER_PRIVATE_KEY}
+                IUMICERT_CONTRACT_ADDRESS: \${IUMICERT_CONTRACT_ADDRESS}
+                NETWORK: \${NETWORK}
+                SEPOLIA_RPC_URL: \${SEPOLIA_RPC_URL}
+                DEFAULT_GAS_LIMIT: \${DEFAULT_GAS_LIMIT}
+                MAX_GAS_PRICE: \${MAX_GAS_PRICE}
+                PORT: 8080
+                DEBUG: \${DEBUG}
+                LOG_LEVEL: \${LOG_LEVEL}
+                STUDENT_PORTAL_URL: \${STUDENT_PORTAL_URL}
+                ISSUER_PORTAL_URL: \${ISSUER_PORTAL_URL}
+              ports:
+                - "8080:8080"
+              volumes:
+                - ./data:/app/data
+                - ./publish_ready:/app/publish_ready
+                - ./logs:/app/logs
+                - ./config:/app/config
+              depends_on:
+                postgres:
+                  condition: service_healthy
+              healthcheck:
+                test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+                interval: 30s
+                timeout: 10s
+                start_period: 40s
+                retries: 3
+              restart: unless-stopped
+              networks:
+                - iumicert-network
+
+            # Optional: Adminer for database management UI (lightweight)
+            adminer:
+              image: adminer:latest
+              container_name: iumicert-adminer
+              ports:
+                - "8081:8080"
+              depends_on:
+                - postgres
+              networks:
+                - iumicert-network
+              restart: unless-stopped
+              profiles:
+                - admin
+              environment:
+                ADMINER_DEFAULT_SERVER: postgres
+
+          volumes:
+            postgres_data:
+              driver: local
+
+          networks:
+            iumicert-network:
+              driver: bridge
+          COMPOSEEOF
+
+          # Pull latest image and deploy
+          echo "📦 Pulling latest Docker image..."
+          docker compose -f docker-compose.prod.yml pull
+
+          echo "🔄 Restarting services..."
+          docker compose -f docker-compose.prod.yml down
+          docker compose -f docker-compose.prod.yml up -d
+
+          # Wait for services to be ready
+          echo "⏳ Waiting for services to be ready..."
+          sleep 15
+
+          # Check health
+          echo "🏥 Checking service health..."
+          if curl -f http://localhost:8080/api/health > /dev/null 2>&1; then
+            echo "✅ Deployment successful! API is healthy."
+          else
+            echo "⚠️  API health check failed. Checking logs..."
+            docker compose -f docker-compose.prod.yml logs --tail=50 issuer-backend
+            exit 1
+          fi
+
+          # Show status
+          echo "📊 Container status:"
+          docker compose -f docker-compose.prod.yml ps
+
+          echo "🎉 Deployment complete!"
+          EOF
+
+          chmod +x deploy-remote.sh
+
+          # Copy script to VM and execute
+          gcloud compute scp deploy-remote.sh ${VM_NAME}:~/deploy.sh \
+            --zone=${VM_ZONE} \
+            --tunnel-through-iap
+
+          # Execute deployment on VM
+          gcloud compute ssh ${VM_NAME} \
+            --zone=${VM_ZONE} \
+            --tunnel-through-iap \
+            --command="GITHUB_TOKEN=${GITHUB_TOKEN} POSTGRES_PASSWORD='${POSTGRES_PASSWORD}' ISSUER_PRIVATE_KEY='${ISSUER_PRIVATE_KEY}' SEPOLIA_RPC_URL='${SEPOLIA_RPC_URL}' IUMICERT_CONTRACT_ADDRESS='${IUMICERT_CONTRACT_ADDRESS}' STUDENT_PORTAL_URL='${STUDENT_PORTAL_URL}' ISSUER_PORTAL_URL='${ISSUER_PORTAL_URL}' bash ~/deploy.sh"
+
+      - name: Verify Deployment
+        env:
+          VM_NAME: ${{ secrets.GCP_VM_NAME }}
+          VM_ZONE: ${{ secrets.GCP_VM_ZONE }}
+        run: |
+          echo "🔍 Verifying deployment..."
+
+          # Get VM external IP
+          VM_IP=$(gcloud compute instances describe ${VM_NAME} \
+            --zone=${VM_ZONE} \
+            --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+
+          echo "VM External IP: ${VM_IP}"
+
+          # Test API endpoint (if VM has external IP and firewall allows)
+          if [ -n "$VM_IP" ]; then
+            echo "Testing API at http://${VM_IP}:8080/api/health"
+            # Note: This will fail if firewall doesn't allow external access
+            # curl -f "http://${VM_IP}:8080/api/health" || echo "⚠️  External access not configured"
+          fi
+
+          echo "✅ Deployment verification complete"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed! Check the logs above for details."

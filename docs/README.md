@@ -2,115 +2,62 @@
 
 ## Overview
 
-This directory contains technical documentation for the IU-MiCert academic credential system. The system uses Verkle trees and blockchain technology to create verifiable, privacy-preserving digital credentials.
+Technical documentation for the IU-MiCert academic credential system using Verkle trees and blockchain technology for verifiable, privacy-preserving micro-credentials with complete academic provenance.
 
 ---
 
-## 📚 Current Documentation
+## 📚 Core Documentation
 
-### Core Technical Documents
-
-#### 1. **IPA_VERIFICATION_IMPLEMENTATION.md** ⭐ **PRIMARY TECHNICAL DOC**
+### 1. **implementation-guide.md** ⭐ **PRIMARY TECHNICAL DOC**
 **Status**: ✅ Current (October 2025)
 
-Complete technical explanation of how IU-MiCert implements Inner Product Argument (IPA) verification for Verkle tree membership proofs.
+Practical implementation guide for IPA (Inner Product Argument) verification in IU-MiCert.
 
 **Topics Covered**:
-- How we use go-verkle and go-ipa together
-- Proof generation process
-- Full cryptographic verification implementation
+- How we use go-verkle and go-ipa libraries together
+- Step-by-step proof generation process
+- Complete cryptographic verification implementation
 - Security guarantees and attack prevention
-- Performance characteristics
-- Code examples and structure
+- Code examples with file structure
+- Integration into the verification flow
 
-**Read this first** if you want to understand the cryptographic implementation.
-
----
-
-#### 2. **VERKLE_MEMBERSHIP_PROOFS.md**
-**Status**: ✅ Updated (October 2025)
-
-Historical document explaining the challenges of implementing membership proofs with go-verkle, which was originally designed for state transitions.
-
-**Topics Covered**:
-- Background on Verkle trees in Ethereum
-- Difference between state transition proofs and membership proofs
-- Challenges we faced
-- Historical context of our solution
-
-**Read this** for understanding why IPA verification was challenging.
+**Read this first** for understanding the cryptographic implementation.
 
 ---
 
-#### 3. **VERKLE_TREE_IPA_VERIFICATION.md**
-**Status**: ⚠️ Theoretical Background
+### 2. **mathematical-foundation.md**
+**Status**: ✅ Current
 
 Mathematical and theoretical foundation of Verkle trees and IPA verification.
 
 **Topics Covered**:
-- Mathematical foundation of Verkle trees
-- Polynomial commitment schemes
-- IPA cryptographic components
+- Mathematical foundation: Verkle trees vs Merkle trees
+- Polynomial commitment schemes (KZG-based)
+- Inner Product Arguments (IPA) cryptographic components
 - Theoretical security analysis
+- Performance characteristics
+- Zero-knowledge properties
 
-**Read this** for deep mathematical understanding.
-
----
-
-### Development & Planning Documents
-
-#### 4. **BACKEND_COMPLETION_PLAN.md**
-**Status**: ✅ Reference
-
-Implementation roadmap and completion status of backend features.
-
-**Topics Covered**:
-- Current system state analysis
-- API endpoint implementation status
-- Feature completion checklist
-- Integration readiness
-
-**Read this** to understand what's been completed in the backend.
-
----
-
-#### 5. **API_INTEGRATION.md**
-**Status**: ✅ Reference
-
-API documentation for integrating with the IU-MiCert backend.
-
-**Topics Covered**:
-- REST API endpoint specifications
-- Request/response formats
-- Authentication and CORS
-- Example API calls
-
-**Read this** when integrating frontend or external systems.
-
----
-
-#### 6. **THESIS_DEFENSE_SCRIPT.md**
-**Status**: ✅ Reference
-
-Presentation script and talking points for thesis defense.
-
-**Topics Covered**:
-- System demonstration flow
-- Key technical highlights
-- Research contributions
-- Q&A preparation
-
-**Read this** when preparing for thesis defense presentation.
+**Read this** for deep mathematical and theoretical understanding.
 
 ---
 
 ## 🗄️ Archived Documents
 
-These documents are kept for historical reference but are superseded by newer documentation:
+The `archive/` directory contains historical and outdated documentation:
 
-- **IPA_VERIFICATION_OPTIONS.md.old** - Research on verification approaches (superseded by IPA_VERIFICATION_IMPLEMENTATION.md)
-- **LIBRARY_ANALYSIS.md.old** - Library evaluation research (decision made, using go-verkle + go-ipa)
-- **IMPLEMENTATION_PLAN_COMPLETE.md.old** - Hypothetical complete system plan (not our scope)
+### Technical Archives
+- **membership-proofs-challenges.md** - Historical document explaining why implementing membership proofs with go-verkle was challenging (now solved, see implementation-guide.md for current solution)
+
+### Deployment Archives (Outdated)
+- API_INTEGRATION.md - Superseded by issuer README
+- BACKEND_COMPLETION_PLAN.md - Implementation completed
+- CHANGES-APPLIED.md - Deployment changes
+- ENV-FILES-SUMMARY.md - Environment setup
+- PRE-DEPLOYMENT-CHECKLIST.md - Deployment guide
+- VERCEL-URLS.md - URL configuration
+
+All archived documents are kept for historical reference but should not be used for current development.
 
 ---
 
@@ -118,22 +65,22 @@ These documents are kept for historical reference but are superseded by newer do
 
 ### For Understanding the System
 
-1. **High-level overview**: Start with `../CLAUDE.md` (project root)
-2. **Cryptographic details**: Read `IPA_VERIFICATION_IMPLEMENTATION.md`
-3. **Historical context**: Read `VERKLE_MEMBERSHIP_PROOFS.md`
-4. **API integration**: Read `API_INTEGRATION.md`
-
-### For Thesis Defense
-
-1. Review `THESIS_DEFENSE_SCRIPT.md`
-2. Understand technical details from `IPA_VERIFICATION_IMPLEMENTATION.md`
-3. Prepare Q&A based on `VERKLE_TREE_IPA_VERIFICATION.md`
+1. **High-level overview**: Start with `../README.md` (project root)
+2. **Implementation details**: Read `implementation-guide.md`
+3. **Mathematical theory**: Read `mathematical-foundation.md`
+4. **Historical context**: Check `archive/membership-proofs-challenges.md` (optional)
 
 ### For Development
 
-1. Review `BACKEND_COMPLETION_PLAN.md` for system status
-2. Check `API_INTEGRATION.md` for endpoint details
-3. Refer to `IPA_VERIFICATION_IMPLEMENTATION.md` for cryptographic implementation
+1. Review `../packages/issuer/README.md` for complete system documentation
+2. Refer to `implementation-guide.md` for cryptographic implementation
+3. Check `../CLAUDE.md` for AI assistant instructions
+
+### For Research/Academic Understanding
+
+1. Start with `mathematical-foundation.md` for theory
+2. Read `implementation-guide.md` for practical application
+3. Review main `../README.md` for research contributions
 
 ---
 
@@ -143,19 +90,21 @@ These documents are kept for historical reference but are superseded by newer do
 - Implemented cryptographic binding between VerkleProof and StateDiff
 - Prevents tampering attacks on receipts
 - Uses go-verkle's internal proof verification API
-- See: `IPA_VERIFICATION_IMPLEMENTATION.md`
+- See: `implementation-guide.md`
 
-### ✅ Production-Ready Backend
-- 16 CLI commands fully implemented
+### ✅ Academic Provenance System
+- Term-by-term verification of academic progress
+- Tamper-proof timeline of achievements (prevents backdating)
+- Selective disclosure capabilities
+- Each course as independent micro-credential
+- See: `../README.md` for research overview
+
+### ✅ Production-Ready Implementation
+- 15+ CLI commands fully implemented
 - REST API with CORS support
 - Blockchain integration with Ethereum Sepolia
-- See: `BACKEND_COMPLETION_PLAN.md`
-
-### ✅ Complete Academic Dataset
-- 5 students with realistic academic progression
-- 7 terms (2023-2025)
-- 20+ courses per student
-- All receipts verified with IPA proofs
+- Web interfaces deployed (issuer + student/verifier portals)
+- See: `../packages/issuer/README.md`
 
 ---
 
@@ -163,26 +112,25 @@ These documents are kept for historical reference but are superseded by newer do
 
 ### When to Update
 
-- **IPA_VERIFICATION_IMPLEMENTATION.md**: When cryptographic implementation changes
-- **API_INTEGRATION.md**: When API endpoints change
-- **BACKEND_COMPLETION_PLAN.md**: When major features are added/completed
-- **This README**: When new documents are added or archived
+- **implementation-guide.md**: When cryptographic implementation changes
+- **mathematical-foundation.md**: Rarely (theoretical foundation is stable)
+- **This README**: When documents are added, renamed, or archived
 
 ### Document Status Legend
 
 - ✅ **Current**: Up-to-date and accurate
-- ⚠️ **Reference**: Accurate but may not reflect latest changes
-- 🗄️ **Archived**: Historical reference only, superseded
+- 🗄️ **Archived**: Historical reference only, superseded by newer docs
 
 ---
 
 ## 🔗 Related Documentation
 
-- **Main Project README**: `../README.md`
-- **Project Instructions**: `../CLAUDE.md`
-- **API Server Code**: `../cmd/api_server.go`
-- **Verification Code**: `../crypto/verkle/membership_verifier.go`
-- **Task Master Docs**: `../.taskmaster/CLAUDE.md`
+- **Main Project README**: `../README.md` - Thesis overview and research contributions
+- **AI Instructions**: `../CLAUDE.md` - Quick reference for AI assistants
+- **Issuer System**: `../packages/issuer/README.md` - Complete implementation guide
+- **Client Portal**: `../packages/client/README.md` - Verification portal guide
+- **Verification Code**: `../packages/issuer/crypto/verkle/membership_verifier.go`
+- **API Server Code**: `../packages/issuer/cmd/api_server.go`
 
 ---
 
@@ -190,13 +138,12 @@ These documents are kept for historical reference but are superseded by newer do
 
 When adding new documentation:
 
-1. Add entry to this README with proper status
-2. Use clear, descriptive titles
-3. Include "Status" and "Last Updated" sections
-4. Archive outdated docs with `.old` extension
+1. Use clear, descriptive names (avoid acronyms in filenames)
+2. Add entry to this README with status and purpose
+3. Include "Topics Covered" section in the document
+4. Archive outdated docs to `archive/` directory with descriptive names
 5. Update cross-references in related documents
 
 ---
 
-**Last Updated**: October 6, 2025
-**Documentation Maintainer**: IU-MiCert Development Team
+**Documentation Structure**: 2 core technical docs + archived historical references

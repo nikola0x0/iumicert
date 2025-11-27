@@ -26,22 +26,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-0">
-          {/* Header */}
-          <div className="flex-shrink-0 p-6 pb-0">
-            <div className="glass-effect rounded-xl p-6 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl font-bold text-white font-space-grotesk mb-1">
-                    IU-MiCert Dashboard
-                  </h1>
-                  <p className="text-purple-200 text-sm font-inter">
-                    Verify credentials and manage academic certificates
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Content Area */}
           <div className="flex-1 px-6 pb-6 min-h-0">
             <div className="h-full">{children}</div>

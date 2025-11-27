@@ -34,3 +34,4 @@ const FileUploaderWrapper: React.FC<FileUploaderWrapperProps> = (props) => {
 };
 
 export default FileUploaderWrapper;
+export { FileUploaderWrapper };

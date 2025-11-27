@@ -1,174 +1,133 @@
-# IU-MiCert Issuer System - Project Overview for Claude
+# IU-MiCert Project - AI Assistant Instructions
 
-## 🎯 Project Purpose
-Academic credential management system for universities using Verkle trees with blockchain integration and zero-knowledge proofs. Enables privacy-preserving verification of student achievements.
+## 🎯 Project Overview
 
-## 🏗️ Architecture Overview
+Academic credential management system using Verkle trees, blockchain integration, and zero-knowledge proofs for privacy-preserving verification of student achievements.
 
-### Core Technology Stack
-- **Backend**: Go 1.21+ with Cobra CLI framework
-- **Cryptography**: Ethereum's go-verkle library for 32-byte proofs
-- **Blockchain**: Ethereum Sepolia testnet for root commitments
-- **Frontend**: Next.js web interface (in `web/iumicert-issuer/`)
-- **Smart Contracts**: IUMiCertRegistry (0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60)
+**Key Concept**: Each course is treated as a micro-credential. The system enables term-by-term verification and maintains a complete, tamper-proof academic provenance timeline that cannot be backdated or manipulated.
 
-### Key Components
+## 🏗️ System Architecture
+
+### Technology Stack
+
+- **Backend**: Go 1.21+ (packages/issuer/)
+- **Cryptography**: Ethereum's go-verkle library
+- **Blockchain**: Ethereum Sepolia testnet
+- **Frontend**: Next.js (issuer dashboard + student/verifier portal)
+- **Smart Contracts**: Solidity (IUMiCertRegistry, ReceiptRevocationRegistry)
+
+### Core Components
+
 1. **Verkle Trees**: One tree per academic term containing all student course completions
-2. **CLI Application**: `micert` binary with comprehensive commands
+2. **CLI Application**: `micert` binary with 15+ commands (see issuer README)
 3. **REST API**: Server on port 8080 with CORS support
-4. **Data Pipeline**: LMS → Verkle format → Trees → Receipts → Blockchain
+4. **Data Pipeline**: LMS data → Verkle format → Trees → Receipts → Blockchain
 
-## 📁 Critical Directories
+## 📁 Project Structure
+
 ```
-packages/issuer/
-├── cmd/                    # CLI commands (main.go, api_server.go, etc.)
-├── data/                   # Academic data storage
-│   ├── student_journeys/   # Generated test data
-│   └── verkle_terms/       # Converted Verkle format
-├── publish_ready/          # Blockchain-ready outputs
-│   ├── receipts/          # Student receipts with proofs
-│   ├── roots/             # Term root commitments
-│   └── transactions/      # Blockchain records
-├── crypto/verkle/         # Verkle tree implementation
-│   └── term_aggregation.go # Core Verkle operations
-└── blockchain_integration/ # Ethereum integration
+packages/
+├── issuer/          # Go backend + CLI + API + admin dashboard
+│   ├── cmd/         # CLI commands & API server
+│   ├── crypto/      # Verkle tree implementation
+│   ├── data/        # Test data generation
+│   └── web/         # Issuer dashboard (Next.js)
+├── client/          # Student/Verifier portal (Next.js)
+└── contracts/       # Smart contracts (Solidity + Foundry)
+docs/                # Technical documentation
 ```
 
-## 🚀 Quick Commands
+## 🚀 Quick Reference
 
-### Setup & Generation
+### Common Commands
+
 ```bash
 # Complete reset and regenerate
 ./reset.sh && ./generate.sh
 
-# Start development server
+# Start API server
 ./dev.sh
 
-# Manual process
-./micert generate-data        # Create test data
-./micert batch-process        # Process all terms
-./micert generate-all-receipts # Create receipts
+# Individual operations
+./micert generate-data
+./micert batch-process
+./micert generate-all-receipts
+./micert publish-roots  # Requires ISSUER_PRIVATE_KEY
 ```
 
-### Blockchain Operations
-```bash
-# Requires ISSUER_PRIVATE_KEY env var
-export ISSUER_PRIVATE_KEY="your_sepolia_private_key"
-./micert publish-roots        # Publish to blockchain
-```
+### Key Directories in packages/issuer/
 
-### Verification
-```bash
-./micert verify-local <receipt.json>  # Local verification
-./micert display-receipt <receipt.json> # Human-readable display
-```
+- `data/student_journeys/` - Generated test data
+- `data/verkle_terms/` - Converted Verkle format
+- `publish_ready/receipts/` - Student receipts with proofs
+- `publish_ready/roots/` - Term root commitments
+- `publish_ready/transactions/` - Blockchain records
 
 ## 🔑 Key Concepts
 
+### Academic Provenance
+
+- Each **course** = independent verifiable micro-credential
+- Each **term** = one Verkle tree with all course completions
+- **Timeline integrity**: Cannot backdate or manipulate achievement order
+- **Selective disclosure**: Students can share specific courses without revealing full transcript
+
 ### Verkle Trees
-- **Single tree per term**: Each academic term (e.g., Semester_1_2023) becomes one Verkle tree
-- **32-byte proofs**: Compact cryptographic proofs for each course completion
-- **Selective disclosure**: Students can prove specific courses without revealing full transcript
 
-### Academic Data Flow
-1. **Generate**: Create realistic student journeys (5 students, 6 terms)
-2. **Convert**: Transform to Verkle-compatible format
-3. **Process**: Build Verkle trees with cryptographic commitments
-4. **Receipt**: Generate verifiable credentials with proofs
-5. **Publish**: Anchor term roots to Ethereum blockchain
+- **32-byte proofs**: Compact cryptographic proofs per course
+- **Term-based**: One tree per academic term (e.g., Semester_1_2023)
+- **Blockchain anchoring**: Term roots published to Ethereum for independent verification
 
-### Privacy Features
-- Zero-knowledge proofs for credential verification
-- Selective course/term disclosure
-- No need to contact institution for verification
-- Tamper-proof cryptographic integrity
+## 📊 Test Data Model
 
-## 🛠️ Development Tips
+- **Students**: ITITIU00001-ITITIU00005 (Vietnamese names, IU course codes)
+- **Terms**: 6 semesters (Semester_1_2023 through Summer_2024)
+- **Courses**: Real IU Vietnam codes (IT013IU, IT153IU, PE008IU, etc.)
 
-### Environment Setup
-```bash
-# Copy and configure
-cp .env.example .env
-# Add Sepolia private key to .env
-```
+## 🌐 Deployed System
 
-### Testing Workflow
-1. `./reset.sh` - Clean all data
-2. `./generate.sh` - Create complete dataset
-3. `./dev.sh` - Start API server
-4. Test specific operations with `./micert <command>`
+**Smart Contracts (Sepolia):**
 
-### Common Issues
-- **No private key**: Set `ISSUER_PRIVATE_KEY` environment variable
-- **Gas issues**: Adjust gas limits in `.env` or use `--gas-limit` flag
-- **Data missing**: Run `./generate.sh` to create test data
+- IUMiCertRegistry: `0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60`
+- ReceiptRevocationRegistry: `0x8814ae511d54Dc10C088143d86110B9036B3aa92`
 
-## 📊 Data Model
+**Web Applications:**
 
-### Students
-- IDs: ITITIU00001-ITITIU00005 (expandable)
-- Vietnamese names and IU course codes
-- 6 terms of progression (2023-2024 academic year)
+- Student/Verifier Portal: https://iu-micert.vercel.app
+- Issuer Dashboard: https://iumicert-issuer.vercel.app
 
-### Terms
-- Semester_1_2023, Semester_2_2023, Summer_2023
-- Semester_1_2024, Semester_2_2024, Summer_2024
+## 📚 Documentation
 
-### Courses
-- Real IU Vietnam codes: IT013IU, IT153IU, PE008IU, MA001IU, etc.
-- Natural prerequisite chains and academic progression
+- **Issuer System Details**: `packages/issuer/README.md` (comprehensive guide)
+- **Technical Docs**: `docs/` directory
+  - IPA_VERIFICATION_IMPLEMENTATION.md - Cryptographic implementation
+  - VERKLE_MEMBERSHIP_PROOFS.md - Historical context
+  - THESIS_DEFENSE_SCRIPT.md - Presentation guide
+- **Client Portal**: `packages/client/iumicert-client/README.md`
+- **Smart Contracts**: `packages/contracts/README.md`
 
-## 🌐 API Endpoints
+## ⚙️ Configuration
 
-Key endpoints (all prefixed with `/api/`):
-- `GET /terms` - List all terms
-- `POST /receipts` - Generate receipt
-- `POST /receipts/verify` - Verify receipt
-- `POST /blockchain/publish` - Publish to blockchain
-- `GET /students/{id}/journey` - Student academic history
+- **Environment**: `.env` files in each package (see `.env.example` templates)
+- **Private Keys**: Required for blockchain publishing (ISSUER_PRIVATE_KEY)
+- **API Server**: Runs on localhost:8080 by default
+- **CORS**: Configured for both local development and Vercel deployments
 
-## 📝 Important Files
+## 🎯 Current State
 
-- `cmd/main.go` - CLI entry point with all commands
-- `crypto/verkle/term_aggregation.go` - Core Verkle implementation
-- `blockchain_integration/integration.go` - Ethereum publishing
-- `cmd/api_server.go` - REST API implementation
-- `config/micert.json` - System configuration
+- ✅ All CLI commands implemented and tested
+- ✅ Verkle tree architecture: single tree per term (simplified design)
+- ✅ Smart contracts deployed on Sepolia testnet
+- ✅ Web interfaces deployed (issuer + student/verifier portals)
+- ✅ Full IPA verification with cryptographic binding
+- 🔄 **Future enhancements**: Receipt revocation functionality
 
-## 🔐 Security Notes
+## 💡 Important Notes for AI Assistants
 
-- Private keys should NEVER be committed
-- Use environment variables for sensitive data
-- Verkle proofs are cryptographically secure (32-byte)
-- Blockchain anchoring provides immutability
-
-## 🎯 Current Status
-
-- Branch: `issuer_v2` 
-- Architecture: Single Verkle tree per term (simplified from earlier multi-tree design)
-- All CLI commands fully implemented and tested
-- Deployed contracts on Sepolia testnet
-- Web interface available in `web/iumicert-issuer/`
-
-## 🚨 Quick Troubleshooting
-
-```bash
-# Check system status
-./micert version
-
-# View help for any command
-./micert <command> --help
-
-# Check if data exists
-ls data/student_journeys/students/
-
-# Verify API is running
-curl http://localhost:8080/api/health
-```
+1. **Read issuer README first** for detailed operations: `packages/issuer/README.md`
+2. **This is a thesis project** - focus on research contributions (provenance, temporal integrity)
+3. **Test data is realistic** - uses actual IU Vietnam course codes and Vietnamese names
+4. **Revocation is planned but not critical** - system is functional without it
+5. **Documentation cleanup** - archive old deployment-specific docs, keep technical references
 
 ---
-**Last Updated**: Project uses single Verkle tree architecture with full CLI implementation.
-
-## Task Master AI Instructions
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md

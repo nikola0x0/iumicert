@@ -14,11 +14,11 @@ const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }) => {
   // Routes that should use dashboard layout (no header/footer)
   const dashboardRoutes = [
     "/revoke",
-    "/search", 
+    "/search",
     "/analytics",
     "/settings",
     "/verifier",
-    "/styleguide",
+    "/selective",
   ];
   const isDashboardRoute = dashboardRoutes.includes(pathname);
 

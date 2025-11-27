@@ -10,6 +10,8 @@ import {
   XCircle,
   AlertCircle,
   Database,
+  Download,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +40,8 @@ export default function DemoDataPage() {
   const [addTermStatus, setAddTermStatus] = useState<OperationStatus>({
     status: "idle",
   });
+  const [receipts, setReceipts] = useState<any[]>([]);
+  const [loadingReceipts, setLoadingReceipts] = useState(false);
 
   // Add New Term state
   const [termId, setTermId] = useState("Semester_1_2026");
@@ -152,6 +156,25 @@ export default function DemoDataPage() {
     );
   };
 
+  const loadReceipts = async () => {
+    setLoadingReceipts(true);
+    try {
+      const response = await fetch("http://localhost:8080/api/issuer/receipts");
+      const data = await response.json();
+      if (data.success) {
+        setReceipts(data.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to load receipts:", error);
+    } finally {
+      setLoadingReceipts(false);
+    }
+  };
+
+  const downloadReceipt = (studentId: string) => {
+    window.location.href = `http://localhost:8080/api/issuer/students/${studentId}/receipts/download`;
+  };
+
   const handleAddTerm = () => {
     if (!termId.trim()) {
       alert("Please enter a term ID");
@@ -253,7 +276,9 @@ export default function DemoDataPage() {
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-4">
             <Database className="w-4 h-4 text-white" />
-            <span className="text-xs font-semibold text-white/90">DATA MANAGEMENT</span>
+            <span className="text-xs font-semibold text-white/90">
+              DATA MANAGEMENT
+            </span>
           </div>
           <h1 className="text-5xl font-extrabold text-white mb-3 tracking-tight">
             Demo Data Management
@@ -266,7 +291,6 @@ export default function DemoDataPage() {
 
       {/* Full Data Generation Section */}
       <Card className="relative overflow-hidden rounded-3xl shadow-2xl border-2 border-blue-200 hover:border-blue-300 transition-all duration-300 bg-white group">
-
         <CardHeader className="relative">
           <div className="flex items-start gap-4">
             <div className="relative">
@@ -284,8 +308,9 @@ export default function DemoDataPage() {
                 </CardTitle>
               </div>
               <CardDescription className="text-base text-gray-600 leading-relaxed">
-                Generate comprehensive test datasets with customizable parameters. Creates student journeys,
-                converts to Verkle format, builds cryptographic trees, and generates verification receipts.
+                Generate comprehensive test datasets with customizable
+                parameters. Creates student journeys, converts to Verkle format,
+                builds cryptographic trees, and generates verification receipts.
               </CardDescription>
             </div>
           </div>
@@ -294,7 +319,9 @@ export default function DemoDataPage() {
           {/* Number of Students Input - Enhanced */}
           <div className="relative">
             <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-3">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">1</span>
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">
+                1
+              </span>
               Number of Students
               <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
                 Required
@@ -324,9 +351,14 @@ export default function DemoDataPage() {
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">2</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">
+                  2
+                </span>
                 Select Academic Terms
-                <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
+                <Badge
+                  variant="destructive"
+                  className="text-[10px] px-2 py-0.5"
+                >
                   Required
                 </Badge>
               </label>
@@ -350,14 +382,26 @@ export default function DemoDataPage() {
                     className="relative flex items-center space-x-3 cursor-pointer p-4 rounded-xl transition-all duration-200 group bg-white border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg hover:-translate-y-0.5"
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <div className={`flex items-center justify-center w-5 h-5 rounded-md border-2 transition-all ${
-                      selectedTerms.includes(term)
-                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500'
-                        : 'border-gray-300 group-hover:border-blue-400'
-                    }`}>
+                    <div
+                      className={`flex items-center justify-center w-5 h-5 rounded-md border-2 transition-all ${
+                        selectedTerms.includes(term)
+                          ? "bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-500"
+                          : "border-gray-300 group-hover:border-blue-400"
+                      }`}
+                    >
                       {selectedTerms.includes(term) && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        <svg
+                          className="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       )}
                     </div>
@@ -367,12 +411,14 @@ export default function DemoDataPage() {
                       onChange={() => toggleTerm(term)}
                       className="sr-only"
                     />
-                    <span className={`text-sm font-semibold transition-colors ${
-                      selectedTerms.includes(term)
-                        ? 'text-blue-700'
-                        : 'text-slate-700 group-hover:text-blue-600'
-                    }`}>
-                      {term.replace(/_/g, ' ')}
+                    <span
+                      className={`text-sm font-semibold transition-colors ${
+                        selectedTerms.includes(term)
+                          ? "text-blue-700"
+                          : "text-slate-700 group-hover:text-blue-600"
+                      }`}
+                    >
+                      {term.replace(/_/g, " ")}
                     </span>
                   </label>
                 ))}
@@ -380,11 +426,13 @@ export default function DemoDataPage() {
             </div>
 
             <div className="mt-3 ml-8 text-sm">
-              <div className={`inline-flex px-3 py-1.5 rounded-full font-semibold ${
-                selectedTerms.length === 0
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-green-100 text-green-700'
-              }`}>
+              <div
+                className={`inline-flex px-3 py-1.5 rounded-full font-semibold ${
+                  selectedTerms.length === 0
+                    ? "bg-red-100 text-red-700"
+                    : "bg-green-100 text-green-700"
+                }`}
+              >
                 {selectedTerms.length} / {availableTerms.length} terms selected
               </div>
             </div>
@@ -395,7 +443,8 @@ export default function DemoDataPage() {
             <Button
               onClick={handleGenerateFull}
               disabled={
-                generateStatus.status === "running" || selectedTerms.length === 0
+                generateStatus.status === "running" ||
+                selectedTerms.length === 0
               }
               className="w-full text-white rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-2xl shadow-blue-500/50 hover:shadow-blue-600/60 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
               size="lg"
@@ -411,7 +460,8 @@ export default function DemoDataPage() {
                   <>
                     <Zap className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                     <span className="text-lg font-bold">
-                      Generate {numStudentsForFull} Students × {selectedTerms.length} Terms
+                      Generate {numStudentsForFull} Students ×{" "}
+                      {selectedTerms.length} Terms
                     </span>
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                       →
@@ -482,6 +532,115 @@ export default function DemoDataPage() {
         </CardContent>
       </Card>
 
+      {/* Student Receipts Download Section */}
+      <Card className="relative overflow-hidden rounded-3xl shadow-2xl border-2 border-green-200 hover:border-green-300 transition-all duration-300 bg-white group">
+        <CardHeader className="relative">
+          <div className="flex items-start gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 flex items-center justify-center shadow-xl shadow-green-500/40 transform group-hover:rotate-6 transition-transform duration-300">
+                <Download className="w-8 h-8 text-white" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center shadow-md">
+                <FileText className="w-3 h-3 text-white" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <CardTitle className="text-3xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Student Receipts
+                </CardTitle>
+                <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
+                  For Student Portal
+                </Badge>
+              </div>
+              <CardDescription className="text-base text-gray-600 leading-relaxed">
+                Download student journey receipts to use in the student portal
+                for verification demonstrations. These receipts contain the
+                latest generated data and cryptographic proofs.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Button
+            onClick={loadReceipts}
+            disabled={loadingReceipts}
+            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-2xl shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all"
+            size="lg"
+          >
+            {loadingReceipts ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Loading Receipts...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-5 w-5" />
+                Load Available Receipts
+              </>
+            )}
+          </Button>
+
+          {receipts.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-700">
+                  Available Receipts ({receipts.length})
+                </h3>
+                <Badge variant="outline" className="text-xs">
+                  Latest Version
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                {receipts.map((receipt) => (
+                  <div
+                    key={receipt.filename}
+                    className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-green-50/30 border-2 border-gray-200 hover:border-green-400 rounded-xl transition-all hover:shadow-md group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md">
+                        <FileText className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {receipt.student_id}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {receipt.filename}
+                        </p>
+                        {receipt.timestamp && (
+                          <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                            {receipt.blockchain_published ? (
+                              <>
+                                <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                Published: {new Date(receipt.timestamp).toLocaleString()}
+                              </>
+                            ) : (
+                              <>
+                                <span className="inline-block w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
+                                Generated: {new Date(receipt.timestamp).toLocaleDateString()}
+                              </>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => downloadReceipt(receipt.student_id)}
+                      size="sm"
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+                    >
+                      <Download className="mr-1 h-4 w-4" />
+                      Download
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Info Section */}
       <Alert className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 rounded-xl shadow-sm">
         <div className="flex items-center">
@@ -506,12 +665,21 @@ export default function DemoDataPage() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <CardTitle className="text-2xl text-red-700">System Reset</CardTitle>
-                <Badge variant="destructive" className="text-[10px] px-2 py-0.5">DESTRUCTIVE</Badge>
+                <CardTitle className="text-2xl text-red-700">
+                  System Reset
+                </CardTitle>
+                <Badge
+                  variant="destructive"
+                  className="text-[10px] px-2 py-0.5"
+                >
+                  DESTRUCTIVE
+                </Badge>
               </div>
               <CardDescription className="text-base text-gray-600">
-                This action will permanently delete <strong className="text-red-600">all generated data</strong>, including terms,
-                receipts, and Verkle trees. This operation cannot be undone.
+                This action will permanently delete{" "}
+                <strong className="text-red-600">all generated data</strong>,
+                including terms, receipts, and Verkle trees. This operation
+                cannot be undone.
               </CardDescription>
             </div>
           </div>

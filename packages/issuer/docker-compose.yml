@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: iumicert
       POSTGRES_USER: iumicert
-      POSTGRES_PASSWORD: iumicert_secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iumicert_secret}
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
@@ -23,21 +23,73 @@ services:
     networks:
       - iumicert-network
 
-  # Optional: pgAdmin for database management UI
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: iumicert-pgadmin
+  issuer-backend:
+    build:
+      context: ../../
+      dockerfile: packages/issuer/Dockerfile
+    container_name: iumicert-issuer
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: iumicert
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-iumicert_secret}
+      DB_NAME: iumicert
+
+      # Blockchain Configuration
+      ISSUER_PRIVATE_KEY: ${ISSUER_PRIVATE_KEY}
+      IUMICERT_CONTRACT_ADDRESS: ${IUMICERT_CONTRACT_ADDRESS:-0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60}
+      NETWORK: ${NETWORK:-sepolia}
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-https://sepolia.infura.io/v3/YOUR_INFURA_KEY}
+
+      # Gas Configuration
+      DEFAULT_GAS_LIMIT: ${DEFAULT_GAS_LIMIT:-500000}
+      MAX_GAS_PRICE: ${MAX_GAS_PRICE:-20000000000}
+
+      # Application Configuration
+      PORT: 8080
+      DEBUG: ${DEBUG:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # Frontend Configuration (for CORS)
+      FRONTEND_URL: ${FRONTEND_URL:-}
+      STUDENT_PORTAL_URL: ${STUDENT_PORTAL_URL:-}
+      ISSUER_PORTAL_URL: ${ISSUER_PORTAL_URL:-}
     ports:
-      - "5050:80"
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./publish_ready:/app/publish_ready
+      - ./logs:/app/logs
+      - ./config:/app/config
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - iumicert-network
+
+  # Optional: Adminer for database management UI (lightweight alternative)
+  adminer:
+    image: adminer:latest
+    container_name: iumicert-adminer
+    ports:
+      - "8081:8080"
     depends_on:
       - postgres
     networks:
       - iumicert-network
     restart: unless-stopped
+    profiles:
+      - admin
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
 
 volumes:
   postgres_data:

@@ -1,0 +1,105 @@
+# Development docker-compose with hot-reload
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: iumicert-postgres
+    environment:
+      POSTGRES_DB: iumicert
+      POSTGRES_USER: iumicert
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iumicert_secret}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iumicert -d iumicert"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - iumicert-network
+
+  issuer-backend:
+    image: golang:1.24.4-alpine
+    container_name: iumicert-issuer-dev
+    working_dir: /app
+    command: sh -c "apk add --no-cache git make gcc musl-dev && cd /app && go run cmd/*.go serve --port 8080 --cors"
+    environment:
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: iumicert
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-iumicert_secret}
+      DB_NAME: iumicert
+
+      # Blockchain Configuration
+      ISSUER_PRIVATE_KEY: ${ISSUER_PRIVATE_KEY}
+      IUMICERT_CONTRACT_ADDRESS: ${IUMICERT_CONTRACT_ADDRESS:-0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60}
+      NETWORK: ${NETWORK:-sepolia}
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL:-https://sepolia.infura.io/v3/YOUR_INFURA_KEY}
+
+      # Gas Configuration
+      DEFAULT_GAS_LIMIT: ${DEFAULT_GAS_LIMIT:-500000}
+      MAX_GAS_PRICE: ${MAX_GAS_PRICE:-20000000000}
+
+      # Application Configuration
+      PORT: 8080
+      DEBUG: ${DEBUG:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+
+      # Frontend Configuration (for CORS)
+      FRONTEND_URL: ${FRONTEND_URL:-}
+      STUDENT_PORTAL_URL: ${STUDENT_PORTAL_URL:-http://localhost:3000}
+      ISSUER_PORTAL_URL: ${ISSUER_PORTAL_URL:-http://localhost:3001}
+
+      # Go configuration
+      CGO_ENABLED: 1
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount source code for live reload
+      - .:/app
+      # Mount crypto package
+      - ../crypto:/crypto
+      # Persist Go cache for faster rebuilds
+      - go-cache:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - iumicert-network
+
+  # Optional: Adminer for database management UI (lightweight)
+  adminer:
+    image: adminer:latest
+    container_name: iumicert-adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+    networks:
+      - iumicert-network
+    restart: unless-stopped
+    profiles:
+      - admin
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+volumes:
+  postgres_data:
+    driver: local
+  go-cache:
+    driver: local
+  go-build-cache:
+    driver: local
+
+networks:
+  iumicert-network:
+    driver: bridge

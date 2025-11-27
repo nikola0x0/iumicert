@@ -2,9 +2,16 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import AnimatedBackground from "./components/AnimatedBackground";
-import { gsap } from "gsap";
-import { TextPlugin } from "gsap/TextPlugin";
+import dynamic from "next/dynamic";
+
+// Lazy load GSAP only when needed
+const gsap = typeof window !== "undefined" ? require("gsap").gsap : null;
+const TextPlugin = typeof window !== "undefined" ? require("gsap/TextPlugin").TextPlugin : null;
+
+// Lazy load AnimatedBackground
+const AnimatedBackground = dynamic(() => import("./components/AnimatedBackground"), {
+  ssr: false,
+});
 import {
   ChevronUp,
   ChevronDown,
@@ -17,8 +24,10 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-// Register GSAP plugins
-gsap.registerPlugin(TextPlugin);
+// Register GSAP plugins only on client
+if (typeof window !== "undefined" && gsap && TextPlugin) {
+  gsap.registerPlugin(TextPlugin);
+}
 
 interface GridFeature {
   icon: React.ComponentType<{ className?: string }>;
