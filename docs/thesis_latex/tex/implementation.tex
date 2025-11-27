@@ -1,6 +1,9 @@
 \chapter{IMPLEMENTATION}
 \label{ch:implementation}
 
+% TODO: Complete implementation chapter - current content is placeholder
+% TODO: Expand based on actual implementation details from the system
+
 This chapter presents the current implementation state of the IU-MiCert system, detailing the development progress across the frontend, CLI tools, and blockchain components. The implementation follows the methodology outlined in Chapter~\ref{ch:methodology} and utilizes the technology stack described in Chapter~\ref{ch:prototyping}. The system is designed to support multiple receipt types including single-term verification and comprehensive academic journey receipts with selective disclosure capabilities.
 
 \section{System Architecture Overview}
@@ -15,6 +18,23 @@ The IU-MiCert system architecture consists of three primary components working i
 \end{enumerate}
 
 The modular design ensures scalability and maintainability while supporting the core functionalities of credential issuance, selective disclosure, and verification as outlined in the system requirements.
+
+% TODO: Add section on actual CLI commands implemented:
+% - init: Initialize new credential repository
+% - generate-data: Generate comprehensive academic dataset for testing
+% - add-term: Add new academic term with course completions
+% - batch-process: Process all available terms from generated student data
+% - generate-receipt: Generate academic journey receipt for student
+% - generate-all-receipts: Generate receipts for all students in batch
+% - generate-addon-term: Generate a single additional term for demo/testing
+% - verify-local: Verify receipt locally without blockchain
+% - test-verify: Full cryptographic verification
+% - display-receipt: Display receipt in human-readable format
+% - verification-guide: Show step-by-step verification guide for third parties
+% - publish-roots: Publish term root commitments to blockchain
+% - serve: Start the IU-MiCert API server for web interface
+% - migrate: Run database migrations
+% - db-import: Import generated data into database
 
 \begin{figure}[htbp]
     \centering
@@ -206,14 +226,6 @@ The CLI development follows a phased approach:
 
 The implementation leverages proven cryptographic libraries and follows established security practices from the previous diploma issuance system.
 
-% TODO: Add CLI command structure diagram
-% \begin{figure}[htbp]
-%     \centering
-%     \includegraphics[width=0.8\textwidth]{figures/cli_structure.png}
-%     \caption{Planned CLI Command Structure}
-%     \label{fig:cli_structure}
-% \end{figure}
-
 \section{Blockchain Implementation Approach}
 \label{sec:blockchain_implementation}
 
@@ -293,13 +305,6 @@ The blockchain implementation prioritizes:
 
 The implementation will begin with the direct verification approach to establish baseline functionality, followed by enhancement to batch verification for improved performance.
 
-% TODO: Add blockchain interaction flow diagram
-% \begin{figure}[htbp]
-%     \centering
-%     \includegraphics[width=0.8\textwidth]{figures/blockchain_flow.png}
-%     \caption{Blockchain Verification Workflow}
-%     \label{fig:blockchain_flow}
-% \end{figure}
 
 \section{Integration and Testing Strategy}
 \label{sec:integration_testing}

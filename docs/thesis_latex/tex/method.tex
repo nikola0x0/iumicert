@@ -1,6 +1,11 @@
 \chapter{METHODOLOGY}
 \label{ch:methodology}
 
+% TODO: Expand methodology to 16 pages as per REPORT.md outline
+% TODO: Include the following sections as outlined in REPORT.md:
+% 1. Requirement Analysis (partially covered)
+% 2. System Architecture & Design (partially covered)
+
 This chapter outlines a systematic approach to addressing the research gaps identified earlier through requirement analysis. By mapping out the core challenges in existing credential management systems, this chapter introduces specific use cases and a detailed system overview to define the problem space. The methodology bridges the mathematical definitions of Verkle trees, translating them into well-defined system functions and algorithms. Based on this analysis, the IU-MiCert protocol is formalized through algorithmic representations, demonstrating how Verkle tree structures enable transparent micro-credential management that captures complete learning journeys while preventing credential forgery.
 
 \section{Requirement Analysis}
@@ -13,13 +18,43 @@ The IU-MiCert system addresses the challenge of representing education as a veri
 
 \begin{itemize}
     \item \textbf{Educational Institutions ($\mathcal{I}$):} Academic institutions that issue granular micro-credentials representing individual courses and learning achievements. They aim to provide verifiable proof of the complete learning pathway leading to broader qualifications.
-    
+
     \item \textbf{Students ($\mathcal{S}$):} Learners who accumulate micro-credentials across multiple contexts, building comprehensive learning portfolios that demonstrate educational journeys.
-    
+
     \item \textbf{Verifiers ($\mathcal{V}$):} Employers, other institutions, or credentialing bodies who need to verify specific competencies and validate the authenticity of learning progressions to detect forgery attempts.
 \end{itemize}
 
 For simplicity and appropriate scope, students $\mathcal{S}$ are excluded from the detailed analysis as their role currently does not require direct system interaction and their use cases closely mirror those of verifiers $\mathcal{V}$.
+
+% TODO: Add remaining sections to meet 16-page requirement as per REPORT.md:
+% - System Architecture & Design
+
+\section{System Architecture and Design}
+
+The IU-MiCert system implements a multi-component architecture designed to support both issuance and verification of academic micro-credentials with verifiable provenance:
+
+\subsection{Core Components}
+
+\begin{enumerate}
+    \item \textbf{Verkle Tree Manager}: Efficient storage/verification of micro-credentials using Ethereum's \texttt{go-verkle} library
+    \item \textbf{Data Pipeline}: Academic data generation, conversion, and processing workflow
+    \item \textbf{Blockchain Integration}: Smart contracts deployed on Ethereum for publishing term roots
+    \item \textbf{Web Interfaces}: Next.js-based dashboards for issuer operations and verification
+    \item \textbf{CLI Tools}: 15+ commands for complete workflow management (init, data generation, proof generation, verification, publishing)
+\end{enumerate}
+
+\subsection{Verkle Tree Implementation}
+
+The system utilizes a \textbf{single Verkle tree per academic term}, where each tree contains all course completions for that term. Key features include:
+
+\begin{itemize}
+    \item Course data hashed to 32-byte values stored as tree leaves
+    \item Deterministic key construction: \texttt{studentID:termID:courseID}
+    \item 32-byte IPA (Inner Product Argument) proofs per course
+    \item Enables selective disclosure: prove specific courses without revealing all
+\end{itemize}
+
+% TODO: Add detailed algorithmic representations and formalizations
 
 \begin{table}[H]
 \centering

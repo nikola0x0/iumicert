@@ -1,6 +1,15 @@
 \chapter{RELATED WORK}
 \label{ch:related-work}
 
+% TODO: Expand related work to 14 pages as per REPORT.md outline
+% TODO: Include the following sections as outlined in REPORT.md:
+% 1. Blockchain-based Credential Systems (partially covered)
+% 2. Merkle Tree Approaches (partially covered)
+% 3. Vector Commitment Schemes
+% 4. Verkle Trees in Academia
+% 5. Zero-Knowledge Proofs & Privacy
+% 6. Research Gaps & Positioning
+
 This chapter examines contemporary advancements in credential management systems, specifically focusing on decentralized and cryptographic methodologies that enhance security and operational efficiency. The review systematically identifies and analyzes the research gaps that these technological advancements have yet to address. The chapter establishes definitions of fundamental mathematical concepts that underpin current systems, providing essential context for understanding both the capabilities and limitations of existing credential management approaches. These foundational elements are critical for establishing the theoretical framework that supports the development of the IU-MiCert protocol and positioning it within the broader landscape of academic credential verification systems.
 
 \section{Current Advancements}
@@ -21,6 +30,16 @@ The integration of Merkle tree structures marked a significant advancement in cr
 However, traditional Merkle tree implementations in educational contexts, while foundational, presented notable drawbacks. A primary concern became the substantial proof sizes required for verification. As the number of credentials grew, so did the accompanying proofs, which consist of all sibling hashes along the path to the root. This logarithmic scaling (O(logN)) still led to considerable data overhead, impacting efficiency. Furthermore, the necessity of disclosing a complete path for verification raised privacy issues regarding the relationships between credentials. Coupled with this, the computational demands and storage implications of tree rebalancing due to credential additions or revocations also scaled unfavorably with institutional expansion, hindering dynamic credential management.
 
 Multi-signature authentication mechanisms built upon Merkle tree foundations attempted to address trust distribution in credential issuance processes. Wolfgang et al. \cite{wolfgang} demonstrate improved security through distributed authority control, though their approach lacks integration with temporal verification systems necessary for establishing authentic learning progression timelines.
+
+% TODO: Add remaining sections to meet 14-page requirement as per REPORT.md:
+% - Vector Commitment Schemes
+% - Verkle Trees in Academia
+% - Zero-Knowledge Proofs & Privacy
+% - Research Gaps & Positioning
+
+% TODO: Specifically address the use of Ethereum's go-verkle library in the implementation
+% TODO: Compare with alternative approaches like zk-SNARKs for privacy preservation
+% TODO: Discuss efficiency differences between Merkle and Verkle trees in academic credential contexts
 
 \subsection{Vector Commitment Approaches}
 
@@ -242,64 +261,64 @@ These results, visualized in Figure~\ref{fig:verkle_performance}, demonstrate th
 % The security parameter selection follows standard recommendations for pairing-based cryptography. For 128-bit security, the implementation uses BLS12-381 elliptic curves with 381-bit prime fields, providing equivalent security to 3072-bit RSA keys while maintaining efficient pairing operations.
 
 % \subsection{Polynomial Commitments}
-% \label{subsec:polynomial_commitments}
+\label{subsec:polynomial_commitments}
 
-% Polynomial commitments form the cryptographic primitive underlying Verkle trees. A polynomial commitment scheme consists of four algorithms: $(\text{Setup}, \text{Commit}, \text{Open}, \text{Verify})$.
+Polynomial commitments form the cryptographic primitive underlying Verkle trees. A polynomial commitment scheme consists of four algorithms: $(\text{Setup}, \text{Commit}, \text{Open}, \text{Verify})$.
 
-% \subsubsection{Kate-Zaverucha-Goldberg (KZG) Commitments}
+\subsubsection{Kate-Zaverucha-Goldberg (KZG) Commitments}
 
-% The KZG commitment scheme \cite{kate2010constant} enables commitment to polynomials with constant-size commitments and proofs. Given a polynomial $f(x) \in \mathbb{F}_p[x]$ of degree at most $d$, the scheme operates as follows:
+The KZG commitment scheme \cite{kate2010constant} enables commitment to polynomials with constant-size commitments and proofs. Given a polynomial $f(x) \in \mathbb{F}_p[x]$ of degree at most $d$, the scheme operates as follows:
 
-% \textbf{Setup Phase:} A trusted setup generates public parameters:
-% \begin{equation}
-%    \text{PP} = \{g, g^{\alpha}, g^{\alpha^2}, \ldots, g^{\alpha^d}\}
-% \end{equation}
+\textbf{Setup Phase:} A trusted setup generates public parameters:
+\begin{equation}
+   \text{PP} = \{g, g^{\alpha}, g^{\alpha^2}, \ldots, g^{\alpha^d}\}
+\end{equation}
 
-% where $\alpha$ is a secret value that must be destroyed after setup.
+where $\alpha$ is a secret value that must be destroyed after setup.
 
-% \textbf{Commitment Phase:} To commit to polynomial $f(x) = \sum_{i=0}^d a_i x^i$:
-% \begin{equation}
-%    C = g^{f(\alpha)} = g^{a_0} \cdot (g^{\alpha})^{a_1} \cdot (g^{\alpha^2})^{a_2} \cdots (g^{\alpha^d})^{a_d}
-% \end{equation}
+\textbf{Commitment Phase:} To commit to polynomial $f(x) = \sum_{i=0}^d a_i x^i$:
+\begin{equation}
+   C = g^{f(\alpha)} = g^{a_0} \cdot (g^{\alpha})^{a_1} \cdot (g^{\alpha^2})^{a_2} \cdots (g^{\alpha^d})^{a_d}
+\end{equation}
 
-% \textbf{Opening Phase:} To prove $f(s) = v$ for some point $s$, compute:
-% \begin{equation}
-%    \pi = g^{\psi(\alpha)} \text{ where } \psi(x) = \frac{f(x) - v}{x - s}
-% \end{equation}
+\textbf{Opening Phase:} To prove $f(s) = v$ for some point $s$, compute:
+\begin{equation}
+   \pi = g^{\psi(\alpha)} \text{ where } \psi(x) = \frac{f(x) - v}{x - s}
+\end{equation}
 
-% \textbf{Verification Phase:} Verify using bilinear pairing:
-% \begin{equation}
-%    e(C \cdot g^{-v}, g) = e(\pi, g^{\alpha} \cdot g^{-s})
-% \end{equation}
+\textbf{Verification Phase:} Verify using bilinear pairing:
+\begin{equation}
+   e(C \cdot g^{-v}, g) = e(\pi, g^{\alpha} \cdot g^{-s})
+\end{equation}
 
-% \subsubsection{Trusted Setup Considerations}
+\subsubsection{Trusted Setup Considerations}
 
-% The KZG commitment scheme, and by extension Verkle trees, requires a trusted setup ceremony that represents a fundamental departure from trustless hash-based systems. This setup phase has several critical implications:
+The KZG commitment scheme, and by extension Verkle trees, requires a trusted setup ceremony that represents a fundamental departure from trustless hash-based systems. This setup phase has several critical implications:
 
-% \textbf{Security Dependencies:} The security of the entire system depends on the proper execution of the setup ceremony. If the secret parameter $\alpha$ is compromised or not properly destroyed, adversaries could generate false proofs and compromise system integrity. This represents the primary trust assumption distinguishing polynomial commitment schemes from hash-based alternatives.
+\textbf{Security Dependencies:} The security of the entire system depends on the proper execution of the setup ceremony. If the secret parameter $\alpha$ is compromised or not properly destroyed, adversaries could generate false proofs and compromise system integrity. This represents the primary trust assumption distinguishing polynomial commitment schemes from hash-based alternatives.
 
-% \textbf{Parameter Generation:} The trusted setup must generate a structured reference string (SRS) that supports polynomials up to degree $d$. The choice of maximum degree $d$ determines both the functionality and efficiency of the resulting system, requiring careful consideration of expected use cases and security margins.
+\textbf{Parameter Generation:} The trusted setup must generate a structured reference string (SRS) that supports polynomials up to degree $d$. The choice of maximum degree $d$ determines both the functionality and efficiency of the resulting system, requiring careful consideration of expected use cases and security margins.
 
-% \textbf{Multi-Party Computation (MPC) Protocols:} Modern implementations employ MPC protocols where multiple independent parties participate in parameter generation. The ceremony remains secure as long as at least one participant acts honestly and destroys their portion of the secret material. This approach, successfully demonstrated in systems like Zcash's Powers of Tau ceremony~\cite{nikolaenko2024powers}, significantly reduces the trust requirements compared to single-party setup.
+\textbf{Multi-Party Computation (MPC) Protocols:} Modern implementations employ MPC protocols where multiple independent parties participate in parameter generation. The ceremony remains secure as long as at least one participant acts honestly and destroys their portion of the secret material. This approach, successfully demonstrated in systems like Zcash's Powers of Tau ceremony~\cite{nikolaenko2024powers}, significantly reduces the trust requirements compared to single-party setup.
 
-% \textbf{Ceremony Verification:} Proper trusted setup ceremonies include verification procedures that allow participants and observers to cryptographically verify that the ceremony was conducted correctly, without revealing the secret parameters. This transparency helps build confidence in the setup's integrity.
+\textbf{Ceremony Verification:} Proper trusted setup ceremonies include verification procedures that allow participants and observers to cryptographically verify that the ceremony was conducted correctly, without revealing the secret parameters. This transparency helps build confidence in the setup's integrity.
 
-% \textbf{Educational System Implications:} For educational credential systems, the trusted setup presents both challenges and opportunities. While it introduces an additional trust assumption, it enables the advanced privacy and efficiency features that distinguish polynomial commitment-based systems from traditional approaches. Educational institutions must carefully evaluate whether the benefits of constant-size proofs and selective disclosure capabilities justify the trusted setup requirements for their specific deployment scenarios.
+\textbf{Educational System Implications:} For educational credential systems, the trusted setup presents both challenges and opportunities. While it introduces an additional trust assumption, it enables the advanced privacy and efficiency features that distinguish polynomial commitment-based systems from traditional approaches. Educational institutions must carefully evaluate whether the benefits of constant-size proofs and selective disclosure capabilities justify the trusted setup requirements for their specific deployment scenarios.
 
-% \begin{table}[H]
-% \centering
-% \begin{tabular}{|l|c|c|c|c|}
-% \hline
-% \textbf{Scheme} & \textbf{Trusted Setup} & \textbf{Proof Size} & \textbf{Verification} & \textbf{Privacy} \\
-% \hline
-% KZG & Required & $O(1)$ & Fast & High \\
-% Pedersen+IPA & None & $O(\log n)$ & Moderate & Medium \\
-% FRI & None & $O(\log^2 n)$ & Slow & Low \\
-% \hline
-% \end{tabular}
-% \caption{Comparison of polynomial commitment schemes}
-% \label{tab:polynomial_commitment_comparison}
-% \end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Scheme} & \textbf{Trusted Setup} & \textbf{Proof Size} & \textbf{Verification} & \textbf{Privacy} \\
+\hline
+KZG & Required & $O(1)$ & Fast & High \\
+Pedersen+IPA & None & $O(\log n)$ & Moderate & Medium \\
+FRI & None & $O(\log^2 n)$ & Slow & Low \\
+\hline
+\end{tabular}
+\caption{Comparison of polynomial commitment schemes}
+\label{tab:polynomial_commitment_comparison}
+\end{table}
 
 % The comparison in Table~\ref{tab:polynomial_commitment_comparison} illustrates the fundamental trade-off between trusted setup requirements and system efficiency. KZG commitments provide optimal proof sizes and verification times at the cost of requiring trusted setup, while alternatives like Pedersen commitments with Inner Product Arguments (IPA) or FRI-based schemes avoid trusted setup but sacrifice efficiency.
 
