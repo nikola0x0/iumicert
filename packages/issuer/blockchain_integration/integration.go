@@ -135,13 +135,29 @@ func (bi *BlockchainIntegration) VerifyReceiptAnchor(ctx context.Context, blockc
 	return result.IsValid, result.TermId, result.PublishedAt, nil
 }
 
-// GetTermRootInfo gets information about a published term root
-func (bi *BlockchainIntegration) GetTermRootInfo(ctx context.Context, verkleRootHex string) (*TermRootInfo, error) {
+// GetLatestRootForTerm gets the latest version info for a term
+func (bi *BlockchainIntegration) GetLatestRootForTerm(ctx context.Context, termID string) (*LatestRootInfo, error) {
+	callOpts := bi.client.GetCallOpts(ctx)
+	result, err := bi.registryContract.GetLatestRoot(callOpts, termID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest root: %w", err)
+	}
+
+	return &LatestRootInfo{
+		RootHash:      result.RootHash,
+		Version:       result.Version,
+		TotalStudents: result.TotalStudents,
+		PublishedAt:   result.PublishedAt,
+	}, nil
+}
+
+// CheckRootStatus checks the validity status of a verkle root
+func (bi *BlockchainIntegration) CheckRootStatus(ctx context.Context, verkleRootHex string) (*RootStatus, error) {
 	// Parse verkle root
 	if !strings.HasPrefix(verkleRootHex, "0x") {
 		verkleRootHex = "0x" + verkleRootHex
 	}
-	
+
 	verkleRootBytes := common.FromHex(verkleRootHex)
 	if len(verkleRootBytes) != 32 {
 		return nil, fmt.Errorf("verkle root must be 32 bytes, got %d", len(verkleRootBytes))
@@ -150,18 +166,18 @@ func (bi *BlockchainIntegration) GetTermRootInfo(ctx context.Context, verkleRoot
 	var verkleRoot [32]byte
 	copy(verkleRoot[:], verkleRootBytes)
 
-	// Call getTermRootInfo function
 	callOpts := bi.client.GetCallOpts(ctx)
-	result, err := bi.registryContract.GetTermRootInfo(callOpts, verkleRoot)
+	result, err := bi.registryContract.CheckRootStatus(callOpts, verkleRoot)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get term root info: %w", err)
+		return nil, fmt.Errorf("failed to check root status: %w", err)
 	}
 
-	return &TermRootInfo{
-		TermID:        result.TermId,
-		TotalStudents: result.TotalStudents,
-		PublishedAt:   result.PublishedAt,
-		Exists:        result.Exists,
+	return &RootStatus{
+		Status:     result.Status,
+		TermID:     result.TermId,
+		Version:    result.Version,
+		LatestRoot: result.LatestRoot,
+		Message:    result.Message,
 	}, nil
 }
 
@@ -192,12 +208,21 @@ func (bi *BlockchainIntegration) Close() {
 	}
 }
 
-// TermRootInfo contains information about a published term root
-type TermRootInfo struct {
-	TermID        string   `json:"term_id"`
+// LatestRootInfo contains information about the latest version of a term root
+type LatestRootInfo struct {
+	RootHash      [32]byte `json:"root_hash"`
+	Version       *big.Int `json:"version"`
 	TotalStudents *big.Int `json:"total_students"`
 	PublishedAt   *big.Int `json:"published_at"`
-	Exists        bool     `json:"exists"`
+}
+
+// RootStatus contains status information for a verkle root
+type RootStatus struct {
+	Status     uint8    `json:"status"`      // 0=Invalid, 1=Current, 2=Outdated, 3=Superseded
+	TermID     string   `json:"term_id"`
+	Version    *big.Int `json:"version"`
+	LatestRoot [32]byte `json:"latest_root"`
+	Message    string   `json:"message"`
 }
 
 // PublishTermRootFromFile publishes a term root from a JSON file
@@ -284,20 +309,70 @@ func (bi *BlockchainIntegration) saveTransactionRecord(result *PublishResult, ro
 	return nil
 }
 
-// DeployContract deploys the IUMiCertRegistry contract (for testing/development)
-func DeployContract(ctx context.Context, client *BlockchainClient, ownerAddress common.Address) (common.Address, *types.Transaction, error) {
-	auth, err := client.GetTransactOpts(ctx)
-	if err != nil {
-		return common.Address{}, nil, fmt.Errorf("failed to get transaction options: %w", err)
+// SupersedeTerm publishes a new version of a term root (for revocation)
+func (bi *BlockchainIntegration) SupersedeTerm(ctx context.Context, termID string, newVerkleRootHex string, totalStudents *big.Int, reason string) (*PublishResult, error) {
+	// Parse new verkle root
+	if !strings.HasPrefix(newVerkleRootHex, "0x") {
+		newVerkleRootHex = "0x" + newVerkleRootHex
 	}
 
-	// Deploy the contract
-	address, tx, _, err := DeployIUMiCertRegistry(auth, client.GetClient(), ownerAddress)
-	if err != nil {
-		return common.Address{}, nil, fmt.Errorf("failed to deploy contract: %w", err)
+	verkleRootBytes := common.FromHex(newVerkleRootHex)
+	if len(verkleRootBytes) != 32 {
+		return nil, fmt.Errorf("verkle root must be 32 bytes, got %d", len(verkleRootBytes))
 	}
 
-	return address, tx, nil
+	var newVerkleRoot [32]byte
+	copy(newVerkleRoot[:], verkleRootBytes)
+
+	// Get transaction options
+	auth, err := bi.client.GetTransactOpts(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get transaction options: %w", err)
+	}
+
+	// Call supersedeTerm function
+	tx, err := bi.registryContract.SupersedeTerm(auth, termID, newVerkleRoot, totalStudents, reason)
+	if err != nil {
+		return nil, fmt.Errorf("failed to supersede term: %w", err)
+	}
+
+	// Wait for transaction to be mined
+	receipt, err := bind.WaitMined(ctx, bi.client.GetClient(), tx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to wait for transaction mining: %w", err)
+	}
+
+	// Check if transaction was successful
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		return nil, fmt.Errorf("transaction failed with status %d", receipt.Status)
+	}
+
+	result := &PublishResult{
+		TransactionHash: tx.Hash().Hex(),
+		BlockNumber:     receipt.BlockNumber.Uint64(),
+		GasUsed:         receipt.GasUsed,
+		Status:          "success",
+		PublishedAt:     time.Now(),
+	}
+
+	return result, nil
+}
+
+// GetTermHistory gets complete version history for a term
+func (bi *BlockchainIntegration) GetTermHistory(ctx context.Context, termID string) ([]uint, [][32]byte, error) {
+	callOpts := bi.client.GetCallOpts(ctx)
+	result, err := bi.registryContract.GetTermHistory(callOpts, termID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get term history: %w", err)
+	}
+
+	// Convert *big.Int versions to uint
+	versions := make([]uint, len(result.Versions))
+	for i, v := range result.Versions {
+		versions[i] = uint(v.Uint64())
+	}
+
+	return versions, result.Roots, nil
 }
 
 // LoadPrivateKeyFromEnv loads private key from environment variable

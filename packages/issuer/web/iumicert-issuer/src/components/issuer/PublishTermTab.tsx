@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function PublishTermTab() {
+  const [mounted, setMounted] = useState(false);
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [terms, setTerms] = useState<any[]>([]);
@@ -25,7 +26,12 @@ export function PublishTermTab() {
   } | null>(null);
 
   useEffect(() => {
-    loadTerms();
+    setMounted(true);
+    // Only load terms after component is fully mounted on client
+    const timer = setTimeout(() => {
+      loadTerms();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const loadTerms = async () => {
@@ -36,6 +42,14 @@ export function PublishTermTab() {
       console.error("Failed to load terms:", error);
     }
   };
+
+  if (!mounted) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   const handlePublish = async () => {
     if (!selectedTerm) return;

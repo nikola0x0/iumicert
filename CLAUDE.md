@@ -88,8 +88,12 @@ docs/                # Technical documentation
 
 **Smart Contracts (Sepolia):**
 
-- IUMiCertRegistry: `0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60`
-- ReceiptRevocationRegistry: `0x8814ae511d54Dc10C088143d86110B9036B3aa92`
+- **IUMiCertRegistry**: `0x2452F0063c600BcFc232cC9daFc48B7372472f79` ✅ **ACTIVE** (v2 with versioning)
+  - Enhanced with term root versioning for revocation support
+  - Deployed: 2025-11-27
+  - Etherscan: https://sepolia.etherscan.io/address/0x2452f0063c600bcfc232cc9dafc48b7372472f79
+- ~~IUMiCertRegistry (v1)~~: `0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60` (Legacy)
+- ~~ReceiptRevocationRegistry~~: `0x8814ae511d54Dc10C088143d86110B9036B3aa92` (Deprecated - superseded by versioning approach)
 
 **Web Applications:**
 

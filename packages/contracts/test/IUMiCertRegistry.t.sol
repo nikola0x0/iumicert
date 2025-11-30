@@ -1,122 +1,247 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {Test} from "forge-std/Test.sol";
-import {IUMiCertRegistry} from "../src/IUMiCertRegistry.sol";
+import "forge-std/Test.sol";
+import "../src/IUMiCertRegistry.sol";
 
 contract IUMiCertRegistryTest is Test {
     IUMiCertRegistry public registry;
     address public owner;
-    address public student;
-    
-    // Test data from actual IU-MiCert system
-    bytes32 public constant VERKLE_ROOT_S1_2023 = 0x2b5a353f110276a123fa7fcf6a5a951e5944a0a30cef2df878534f7437007bc9;
-    bytes32 public constant VERKLE_ROOT_S2_2023 = 0x57aca62e24eaac0892acaf7f1fcaff3b78a43602934f13a8d79af9c5a2692eb4;
-    
-    string public constant TERM_S1_2023 = "Semester_1_2023";
-    string public constant TERM_S2_2023 = "Semester_2_2023";
+    address public attacker;
+
+    bytes32 public root1 = keccak256("root_semester_1_2023_v1");
+    bytes32 public root2 = keccak256("root_semester_1_2023_v2");
+    bytes32 public root3 = keccak256("root_semester_2_2023_v1");
 
     function setUp() public {
-        owner = makeAddr("owner");
-        student = makeAddr("student");
-        
-        vm.prank(owner);
+        owner = address(this);
+        attacker = address(0x1234);
         registry = new IUMiCertRegistry(owner);
     }
 
-    function testInitialState() public {
-        assertEq(registry.owner(), owner);
-        assertEq(registry.getPublishedRootsCount(), 0);
-        
-        (,,,bool exists) = registry.getTermRootInfo(VERKLE_ROOT_S1_2023);
-        assertFalse(exists);
-    }
-
     function testPublishTermRoot() public {
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5);
-        
-        (string memory termId, uint256 totalStudents, uint256 publishedAt, bool exists) = 
-            registry.getTermRootInfo(VERKLE_ROOT_S1_2023);
-        
-        assertTrue(exists);
-        assertEq(termId, TERM_S1_2023);
-        assertEq(totalStudents, 5);
-        assertGt(publishedAt, 0);
-        assertEq(registry.getPublishedRootsCount(), 1);
-    }
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
 
-    function testPublishTermRootEmitsEvent() public {
-        vm.expectEmit(true, true, false, false);
-        emit IUMiCertRegistry.TermRootPublished(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5, block.timestamp);
-        
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5);
-    }
+        (bytes32 latestRoot, uint256 version, uint256 totalStudents, uint256 publishedAt) =
+            registry.getLatestRoot("Semester_1_2023");
 
-    function testVerifyReceiptAnchor() public {
-        // Publish a term root
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5);
-        
-        // Verify the receipt anchor (this is what students do)
-        (bool isValid, string memory termId, uint256 publishedAt) = 
-            registry.verifyReceiptAnchor(VERKLE_ROOT_S1_2023);
-        
-        assertTrue(isValid);
-        assertEq(termId, TERM_S1_2023);
-        assertGt(publishedAt, 0);
-    }
-
-    function testVerifyInvalidReceiptAnchor() public {
-        bytes32 invalidRoot = keccak256("invalid");
-        
-        (bool isValid, string memory termId, uint256 publishedAt) = 
-            registry.verifyReceiptAnchor(invalidRoot);
-        
-        assertFalse(isValid);
-        assertEq(termId, "");
-        assertEq(publishedAt, 0);
-    }
-
-    function testCannotPublishSameRootTwice() public {
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5);
-        
-        vm.expectRevert("Root already published");
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5);
-    }
-
-    function testOnlyOwnerCanPublish() public {
-        vm.expectRevert();
-        vm.prank(student);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5);
+        assertEq(latestRoot, root1);
+        assertEq(version, 1);
+        assertEq(totalStudents, 100);
+        assertTrue(publishedAt > 0);
     }
 
     function testPublishMultipleTerms() public {
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 5);
-        
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S2_2023, TERM_S2_2023, 5);
-        
-        assertEq(registry.getPublishedRootsCount(), 2);
-        assertEq(registry.getPublishedRoot(0), VERKLE_ROOT_S1_2023);
-        assertEq(registry.getPublishedRoot(1), VERKLE_ROOT_S2_2023);
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+        registry.publishTermRoot(root3, "Semester_2_2023", 120);
+
+        (bytes32 latestRoot1, uint256 version1,,) = registry.getLatestRoot("Semester_1_2023");
+        (bytes32 latestRoot2, uint256 version2,,) = registry.getLatestRoot("Semester_2_2023");
+
+        assertEq(latestRoot1, root1);
+        assertEq(version1, 1);
+        assertEq(latestRoot2, root3);
+        assertEq(version2, 1);
     }
 
-    function testInvalidInputs() public {
-        vm.expectRevert("Invalid Verkle root");
-        vm.prank(owner);
-        registry.publishTermRoot(bytes32(0), TERM_S1_2023, 5);
-        
-        vm.expectRevert("Term ID required");
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, "", 5);
-        
-        vm.expectRevert("Invalid student count");
-        vm.prank(owner);
-        registry.publishTermRoot(VERKLE_ROOT_S1_2023, TERM_S1_2023, 0);
+    function testSupersedeTerm() public {
+        // Publish initial version
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+
+        // Supersede with new version (simulating revocation)
+        registry.supersedeTerm(
+            "Semester_1_2023",
+            root2,
+            99,
+            "Revoked: Student ID 00001 - fraudulent credential"
+        );
+
+        // Check latest version
+        (bytes32 latestRoot, uint256 version, uint256 totalStudents,) =
+            registry.getLatestRoot("Semester_1_2023");
+
+        assertEq(latestRoot, root2);
+        assertEq(version, 2);
+        assertEq(totalStudents, 99);
+
+        // Check old version is marked as superseded
+        (
+            bytes32 oldRootHash,
+            ,
+            ,
+            bool isSuperseded,
+            bytes32 supersededBy,
+            string memory reason
+        ) = registry.getVersionInfo("Semester_1_2023", 1);
+
+        assertEq(oldRootHash, root1);
+        assertTrue(isSuperseded);
+        assertEq(supersededBy, root2);
+        assertEq(reason, "Revoked: Student ID 00001 - fraudulent credential");
+    }
+
+    function testCheckRootStatus_Current() public {
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+
+        (
+            uint8 status,
+            string memory termId,
+            uint256 version,
+            bytes32 latestRoot,
+            string memory message
+        ) = registry.checkRootStatus(root1);
+
+        assertEq(status, 1); // Valid & Current
+        assertEq(termId, "Semester_1_2023");
+        assertEq(version, 1);
+        assertEq(latestRoot, root1);
+        assertEq(message, "Valid - Current version");
+    }
+
+    function testCheckRootStatus_Superseded() public {
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+        registry.supersedeTerm("Semester_1_2023", root2, 99, "Credential revocation");
+
+        (
+            uint8 status,
+            string memory termId,
+            uint256 version,
+            bytes32 latestRoot,
+            string memory message
+        ) = registry.checkRootStatus(root1);
+
+        assertEq(status, 3); // Superseded
+        assertEq(termId, "Semester_1_2023");
+        assertEq(version, 1);
+        assertEq(latestRoot, root2);
+        assertTrue(bytes(message).length > 0);
+    }
+
+    function testCheckRootStatus_Invalid() public {
+        bytes32 nonExistentRoot = keccak256("nonexistent");
+
+        (
+            uint8 status,
+            string memory termId,
+            uint256 version,
+            bytes32 latestRoot,
+            string memory message
+        ) = registry.checkRootStatus(nonExistentRoot);
+
+        assertEq(status, 0); // Invalid
+        assertEq(termId, "");
+        assertEq(version, 0);
+        assertEq(latestRoot, bytes32(0));
+        assertEq(message, "Root not found in registry");
+    }
+
+    function testGetTermHistory() public {
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+        registry.supersedeTerm("Semester_1_2023", root2, 99, "First revocation");
+
+        (uint256[] memory versions, bytes32[] memory roots) =
+            registry.getTermHistory("Semester_1_2023");
+
+        assertEq(versions.length, 2);
+        assertEq(roots.length, 2);
+        assertEq(versions[0], 1);
+        assertEq(versions[1], 2);
+        assertEq(roots[0], root1);
+        assertEq(roots[1], root2);
+    }
+
+    function testVerifyReceiptAnchor_Valid() public {
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+
+        (bool isValid, string memory termId, uint256 publishedAt) =
+            registry.verifyReceiptAnchor(root1);
+
+        assertTrue(isValid);
+        assertEq(termId, "Semester_1_2023");
+        assertTrue(publishedAt > 0);
+    }
+
+    function testVerifyReceiptAnchor_Superseded() public {
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+        registry.supersedeTerm("Semester_1_2023", root2, 99, "Revocation");
+
+        (bool isValid, string memory termId, uint256 publishedAt) =
+            registry.verifyReceiptAnchor(root1);
+
+        assertFalse(isValid); // Not valid because superseded
+        assertEq(termId, "Semester_1_2023");
+        assertTrue(publishedAt > 0);
+    }
+
+    function test_RevertWhen_PublishDuplicateRoot() public {
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+
+        vm.expectRevert("Root already published");
+        registry.publishTermRoot(root1, "Semester_2_2023", 120);
+    }
+
+    function test_RevertWhen_SupersedeNonExistentTerm() public {
+        vm.expectRevert("Term not found");
+        registry.supersedeTerm("NonExistentTerm", root1, 100, "Test");
+    }
+
+    function test_RevertWhen_UnauthorizedPublish() public {
+        vm.prank(attacker);
+        vm.expectRevert();
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+    }
+
+    function test_RevertWhen_UnauthorizedSupersede() public {
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+
+        vm.prank(attacker);
+        vm.expectRevert();
+        registry.supersedeTerm("Semester_1_2023", root2, 99, "Unauthorized");
+    }
+
+    function testMultipleVersions() public {
+        // Publish version 1
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+
+        // Supersede to version 2
+        bytes32 root2a = keccak256("root_v2");
+        registry.supersedeTerm("Semester_1_2023", root2a, 99, "First revocation");
+
+        // Supersede to version 3
+        bytes32 root3a = keccak256("root_v3");
+        registry.supersedeTerm("Semester_1_2023", root3a, 98, "Second revocation");
+
+        // Check latest
+        (bytes32 latestRoot, uint256 version,,) = registry.getLatestRoot("Semester_1_2023");
+        assertEq(latestRoot, root3a);
+        assertEq(version, 3);
+
+        // Check all versions exist
+        (uint256[] memory versions, bytes32[] memory roots) =
+            registry.getTermHistory("Semester_1_2023");
+
+        assertEq(versions.length, 3);
+        assertEq(roots[0], root1);
+        assertEq(roots[1], root2a);
+        assertEq(roots[2], root3a);
+    }
+
+    function testEventsEmitted() public {
+        // Test TermRootPublished event
+        vm.expectEmit(true, true, false, true);
+        emit IUMiCertRegistry.TermRootPublished("Semester_1_2023", root1, 1, 100, block.timestamp);
+        registry.publishTermRoot(root1, "Semester_1_2023", 100);
+
+        // Test TermRootSuperseded event
+        vm.expectEmit(true, true, true, false);
+        emit IUMiCertRegistry.TermRootSuperseded(
+            "Semester_1_2023",
+            1,
+            root1,
+            2,
+            root2,
+            "Test revocation"
+        );
+        registry.supersedeTerm("Semester_1_2023", root2, 99, "Test revocation");
     }
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,8 +15,10 @@ import (
 	"iumicert/crypto/verkle"
 	blockchain "iumicert/issuer/blockchain_integration"
 	"iumicert/issuer/config"
+	"iumicert/issuer/database"
 
 	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 )
 
 var rootCmd = &cobra.Command{
@@ -128,6 +131,77 @@ Enables on-chain verification of academic journey receipts.`,
 	},
 }
 
+var supersedeTermCmd = &cobra.Command{
+	Use:   "supersede-term [term-id]",
+	Short: "Process approved revocations and publish new term version",
+	Long: `Rebuild Verkle tree with approved revocations removed and publish new version to blockchain.
+This command:
+1. Loads the existing term tree
+2. Removes revoked credentials
+3. Rebuilds and re-commits the tree
+4. Publishes new version via SupersedeTerm()
+5. Updates database records`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		termID := args[0]
+
+		network, _ := cmd.Flags().GetString("network")
+		privateKey, _ := cmd.Flags().GetString("private-key")
+		gasLimit, _ := cmd.Flags().GetUint64("gas-limit")
+
+		// Load configuration
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to load configuration: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Override config with command line arguments if provided
+		if network != "" {
+			cfg.Network = network
+		}
+		if privateKey != "" {
+			cfg.IssuerPrivateKey = privateKey
+		}
+		if gasLimit > 0 {
+			cfg.DefaultGasLimit = gasLimit
+		}
+
+		// Connect to database
+		db, err := database.Connect()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Database connection failed: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Get approved revocations for this term
+		var approvedRevocations []database.RevocationRequest
+		err = db.Where("term_id = ? AND status = ?", termID, "approved").Find(&approvedRevocations).Error
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to get approved revocations: %v\n", err)
+			os.Exit(1)
+		}
+
+		if len(approvedRevocations) == 0 {
+			fmt.Printf("✅ No approved revocations found for term %s\n", termID)
+			return
+		}
+
+		fmt.Printf("📋 Found %d approved revocations for term %s\n", len(approvedRevocations), termID)
+		for _, rev := range approvedRevocations {
+			fmt.Printf("  - %s / %s: %s\n", rev.StudentID, rev.CourseID, rev.Reason)
+		}
+
+		// Execute supersession
+		if err := supersedeTermWithRevocations(termID, approvedRevocations, cfg, db); err != nil {
+			fmt.Fprintf(os.Stderr, "❌ Failed to supersede term: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("✅ Successfully superseded term %s\n", termID)
+	},
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Show version information",
@@ -169,13 +243,18 @@ func init() {
 	publishRootsCmd.Flags().String("network", "sepolia", "blockchain network")
 	publishRootsCmd.Flags().String("private-key", "", "private key for signing")
 	publishRootsCmd.Flags().Uint64("gas-limit", 0, "gas limit for transaction")
-	
+
+	supersedeTermCmd.Flags().String("network", "sepolia", "blockchain network")
+	supersedeTermCmd.Flags().String("private-key", "", "private key for signing")
+	supersedeTermCmd.Flags().Uint64("gas-limit", 0, "gas limit for transaction")
+
 	// Add subcommands
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(addTermCmd)
 	rootCmd.AddCommand(generateReceiptCmd)
 	rootCmd.AddCommand(verifyLocalCmd)
 	rootCmd.AddCommand(publishRootsCmd)
+	rootCmd.AddCommand(supersedeTermCmd)
 	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(testVerifyCmd)
@@ -652,6 +731,13 @@ func verifyReceiptLocally(receiptFile string) error {
 
 func publishTermRoots(termID, network, privateKey string, gasLimit uint64) error {
 	fmt.Printf("⛓️  Publishing roots for term: %s\n", termID)
+
+	// STEP 1: Check for approved revocations across ALL existing terms
+	fmt.Println("🔍 Checking for approved revocations to process...")
+	if err := processApprovedRevocations(network, privateKey, gasLimit); err != nil {
+		fmt.Printf("⚠️  Warning: Failed to process revocations: %v\n", err)
+		fmt.Println("⚠️  Continuing with term publication...")
+	}
 	
 	// Check if we already have a successful transaction for this term
 	if files, err := filepath.Glob("publish_ready/transactions/tx_*.json"); err == nil && len(files) > 0 {
@@ -954,3 +1040,292 @@ func convertToCourseCompletion(courseMap map[string]interface{}) (verkle.CourseC
 	return course, nil
 }
 
+
+// processApprovedRevocations checks for and processes approved revocations before publishing new term
+// supersedeTermWithRevocations rebuilds a term tree with credentials removed and publishes new version
+func supersedeTermWithRevocations(termID string, revocations []database.RevocationRequest, cfg *config.Config, db *gorm.DB) error {
+	fmt.Printf("🔄 Rebuilding Verkle tree for term %s with %d revocations\n", termID, len(revocations))
+
+	// STEP 1: Load existing term tree
+	verkleTreeFile := filepath.Join("data/verkle_trees", fmt.Sprintf("%s_verkle_tree.json", termID))
+	treeData, err := os.ReadFile(verkleTreeFile)
+	if err != nil {
+		return fmt.Errorf("failed to load term tree: %w", err)
+	}
+
+	var termTree verkle.TermVerkleTree
+	if err := json.Unmarshal(treeData, &termTree); err != nil {
+		return fmt.Errorf("failed to parse term tree: %w", err)
+	}
+
+	originalCount := len(termTree.CourseEntries)
+	originalRoot := termTree.VerkleRoot
+	fmt.Printf("📊 Original tree: %d course entries, root: %x\n", originalCount, originalRoot[:8])
+
+	// STEP 2: Remove revoked credentials from CourseEntries
+	revokedCount := 0
+	for _, rev := range revocations {
+		studentDID := fmt.Sprintf("did:example:%s", rev.StudentID)
+		courseKey := fmt.Sprintf("%s:%s:%s", studentDID, termID, rev.CourseID)
+
+		if _, exists := termTree.CourseEntries[courseKey]; exists {
+			delete(termTree.CourseEntries, courseKey)
+			delete(termTree.CourseProofs, courseKey) // Also remove proof
+			revokedCount++
+			fmt.Printf("  ✓ Removed: %s\n", courseKey)
+		} else {
+			fmt.Printf("  ⚠️  Not found: %s (may have been already removed)\n", courseKey)
+		}
+	}
+
+	if revokedCount == 0 {
+		return fmt.Errorf("no credentials were actually removed from the tree")
+	}
+
+	fmt.Printf("🗑️  Removed %d credentials from tree\n", revokedCount)
+
+	// STEP 3: Rebuild Verkle tree with remaining credentials
+	if err := termTree.RebuildVerkleTree(); err != nil {
+		return fmt.Errorf("failed to rebuild verkle tree: %w", err)
+	}
+
+	// STEP 4: Publish new tree version
+	if err := termTree.PublishTerm(); err != nil {
+		return fmt.Errorf("failed to publish updated term: %w", err)
+	}
+
+	newRoot := termTree.VerkleRoot
+	newCount := len(termTree.CourseEntries)
+	fmt.Printf("✅ New tree: %d course entries, root: %x\n", newCount, newRoot[:8])
+
+	// STEP 5: Get latest version from database to determine new version number
+	latestVersion, err := database.GetLatestTermVersion(db, termID)
+	if err != nil {
+		return fmt.Errorf("failed to get latest term version: %w", err)
+	}
+
+	var currentVersion uint = 0
+	if latestVersion != nil {
+		currentVersion = latestVersion.Version
+	}
+	newVersion := currentVersion + 1
+
+	// STEP 6: Connect to blockchain and check if term already exists
+	integration, err := blockchain.NewBlockchainIntegration(
+		cfg.Network,
+		cfg.GetPrivateKey(),
+		cfg.GetContractAddress(),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create blockchain integration: %w", err)
+	}
+	defer integration.Close()
+
+	ctx := context.Background()
+	newRootHex := fmt.Sprintf("0x%x", newRoot)
+	totalStudents := big.NewInt(int64(countUniqueStudents(termTree.CourseEntries, termID)))
+	reason := fmt.Sprintf("Revoked %d credentials due to institutional correction", revokedCount)
+
+	// Check if term already exists on blockchain
+	existingRoot, err := integration.GetLatestRootForTerm(ctx, termID)
+
+	var result *blockchain.PublishResult
+	if err != nil || existingRoot == nil || existingRoot.Version.Cmp(big.NewInt(0)) == 0 {
+		// Term NOT yet on blockchain - publish as v1 with credential already removed
+		fmt.Printf("⛓️  Term %s not yet on blockchain. Publishing as v1 (with %d credentials removed)...\n", termID, revokedCount)
+		result, err = integration.PublishTermRoot(ctx, newRootHex, termID, totalStudents)
+		if err != nil {
+			return fmt.Errorf("blockchain publish failed: %w", err)
+		}
+		newVersion = 1 // Override to 1 since this is fresh publish
+	} else {
+		// Term ALREADY on blockchain - supersede with new version
+		fmt.Printf("⛓️  Term %s exists on blockchain (v%d). Publishing v%d via SupersedeTerm...\n",
+			termID, existingRoot.Version.Int64(), newVersion)
+		result, err = integration.SupersedeTerm(ctx, termID, newRootHex, totalStudents, reason)
+		if err != nil {
+			return fmt.Errorf("blockchain supersession failed: %w", err)
+		}
+	}
+
+	fmt.Printf("✅ Blockchain transaction: %s\n", result.TransactionHash)
+	fmt.Printf("  - Block: %d\n", result.BlockNumber)
+	fmt.Printf("  - Gas used: %d\n", result.GasUsed)
+
+	// STEP 7: Save updated tree files
+	termTreeData, err := termTree.SerializeToJSON()
+	if err != nil {
+		return fmt.Errorf("failed to serialize updated tree: %w", err)
+	}
+
+	if err := os.WriteFile(verkleTreeFile, termTreeData, 0644); err != nil {
+		return fmt.Errorf("failed to save updated tree: %w", err)
+	}
+
+	// Save new root file with version suffix
+	rootsDir := "publish_ready/roots"
+	rootData := map[string]interface{}{
+		"term_id":              termID,
+		"version":              newVersion,
+		"verkle_root":          newRootHex,
+		"timestamp":            time.Now().Format(time.RFC3339),
+		"total_students":       totalStudents.Int64(),
+		"ready_for_blockchain": true,
+		"supersedes_root":      fmt.Sprintf("0x%x", originalRoot),
+		"supersession_reason":  reason,
+		"credentials_revoked":  revokedCount,
+	}
+
+	rootFile, err := json.MarshalIndent(rootData, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal root data: %w", err)
+	}
+
+	rootFileName := fmt.Sprintf("root_%s_v%d.json", termID, newVersion)
+	if err := os.WriteFile(filepath.Join(rootsDir, rootFileName), rootFile, 0644); err != nil {
+		return fmt.Errorf("failed to save root file: %w", err)
+	}
+
+	fmt.Printf("💾 Saved updated tree and root files\n")
+
+	// STEP 8: Store version in database
+	termVersion := &database.TermRootVersion{
+		TermID:              termID,
+		Version:             uint(newVersion),
+		RootHash:            newRootHex,
+		TotalStudents:       uint(totalStudents.Int64()),
+		PublishedAt:         time.Now(),
+		IsSuperseded:        false,
+		SupersededBy:        "",
+		SupersessionReason:  "",
+		TxHash:              result.TransactionHash,
+		BlockNumber:         result.BlockNumber,
+		CredentialsRevoked:  uint(revokedCount),
+		ChangeDescription:   reason,
+	}
+
+	if err := database.CreateTermRootVersion(db, termVersion); err != nil {
+		return fmt.Errorf("failed to save term version to database: %w", err)
+	}
+
+	// Mark old version as superseded if it exists
+	if latestVersion != nil {
+		if err := database.MarkTermVersionSuperseded(db, termID, currentVersion, newRootHex, reason); err != nil {
+			fmt.Printf("⚠️  Warning: Failed to mark old version as superseded: %v\n", err)
+		}
+	}
+
+	// STEP 9: Mark revocations as processed
+	var requestIDs []string
+	for _, rev := range revocations {
+		requestIDs = append(requestIDs, rev.RequestID)
+	}
+	err = database.MarkRevocationProcessed(db, requestIDs, result.TransactionHash, uint(newVersion))
+	if err != nil {
+		fmt.Printf("⚠️  Warning: Failed to mark revocations as processed: %v\n", err)
+	}
+
+	// STEP 10: Create revocation batch record
+	batch := &database.RevocationBatch{
+		BatchID:      fmt.Sprintf("batch_%s_v%d", termID, newVersion),
+		TermID:       termID,
+		OldVersion:   uint(currentVersion),
+		NewVersion:   uint(newVersion),
+		OldRootHash:  fmt.Sprintf("0x%x", originalRoot),
+		NewRootHash:  newRootHex,
+		RequestCount: len(revocations),
+		ProcessedAt:  time.Now(),
+		ProcessedBy:  "system",
+		TxHash:       result.TransactionHash,
+		Status:       "completed",
+	}
+
+	if err := database.CreateRevocationBatch(db, batch); err != nil {
+		fmt.Printf("⚠️  Warning: Failed to create revocation batch record: %v\n", err)
+	}
+
+	fmt.Printf("✅ Revocation processing complete for term %s\n", termID)
+	return nil
+}
+
+// countUniqueStudents counts unique students in course entries
+func countUniqueStudents(entries map[string]verkle.CourseCompletion, termID string) int {
+	students := make(map[string]bool)
+	for courseKey := range entries {
+		// Extract studentDID from courseKey format: studentDID:termID:courseID
+		parts := strings.Split(courseKey, ":")
+		if len(parts) >= 1 {
+			students[parts[0]] = true
+		}
+	}
+	return len(students)
+}
+
+func processApprovedRevocations(network, privateKey string, gasLimit uint64) error {
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		return fmt.Errorf("database connection failed: %w", err)
+	}
+
+	// Get all approved (not yet processed) revocations
+	var approvedRevocations []database.RevocationRequest
+	err = db.Where("status = ?", "approved").Find(&approvedRevocations).Error
+	if err != nil {
+		return fmt.Errorf("failed to get approved revocations: %w", err)
+	}
+
+	if len(approvedRevocations) == 0 {
+		fmt.Println("✅ No pending revocations to process")
+		return nil
+	}
+
+	// Group revocations by term
+	revocationsByTerm := make(map[string][]database.RevocationRequest)
+	for _, rev := range approvedRevocations {
+		revocationsByTerm[rev.TermID] = append(revocationsByTerm[rev.TermID], rev)
+	}
+
+	fmt.Printf("📋 Found %d approved revocations across %d terms\n", 
+		len(approvedRevocations), len(revocationsByTerm))
+
+	// Load configuration
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	// Override config with command line arguments if provided
+	if network != "" {
+		cfg.Network = network
+	}
+	if privateKey != "" {
+		cfg.IssuerPrivateKey = privateKey
+	}
+	if gasLimit > 0 {
+		cfg.DefaultGasLimit = gasLimit
+	}
+
+	// Process each term with revocations
+	for termID, revocations := range revocationsByTerm {
+		fmt.Printf("\n🔄 Processing %d revocations for term: %s\n", len(revocations), termID)
+
+		// Print what will be revoked
+		for _, rev := range revocations {
+			fmt.Printf("  - %s / %s / %s: %s\n",
+				rev.StudentID, rev.TermID, rev.CourseID, rev.Reason)
+		}
+
+		// Execute revocation by rebuilding tree and publishing new version
+		err := supersedeTermWithRevocations(termID, revocations, cfg, db)
+		if err != nil {
+			fmt.Printf("❌ Failed to process revocations for term %s: %v\n", termID, err)
+			fmt.Printf("⚠️  These revocations will remain in 'approved' status\n")
+			continue
+		}
+
+		fmt.Printf("✅ Successfully processed revocations for term %s\n", termID)
+	}
+
+	return nil
+}

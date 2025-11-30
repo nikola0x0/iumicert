@@ -178,6 +178,17 @@ func startAPIServer(port string, corsEnabled bool) error {
 	issuer.HandleFunc("/students/{student_id}/receipts/term/{term_id}", handleGetTermReceipt).Methods("GET")
 	issuer.HandleFunc("/students/{student_id}/receipts/download", handleDownloadJourneyReceipt).Methods("GET")
 
+	// Revocation endpoints (Admin-only - realistic workflow)
+	// Note: Students contact institution through official channels (email, forms, in-person)
+	// Registrar validates and enters approved requests here
+	issuer.HandleFunc("/revocations", handleCreateRevocationRequest).Methods("POST")         // Create approved request
+	issuer.HandleFunc("/revocations", handleListRevocationRequests).Methods("GET")           // List all requests
+	issuer.HandleFunc("/revocations/stats", handleGetRevocationStats).Methods("GET")         // Get statistics
+	issuer.HandleFunc("/revocations/process", handleProcessRevocations).Methods("POST")      // Process all approved revocations
+	issuer.HandleFunc("/revocations/{request_id}", handleDeleteRevocationRequest).Methods("DELETE")  // Delete request
+	issuer.HandleFunc("/terms/{term_id}/revocations", handleGetPendingRevocations).Methods("GET")    // Get approved for term
+	issuer.HandleFunc("/terms/{term_id}/versions", handleGetTermVersionHistory).Methods("GET")       // Get version history
+
 	// Verifier endpoints (public - for students/employers)
 	verifier := api.PathPrefix("/verifier").Subrouter()
 	verifier.HandleFunc("/receipt", handleVerifyReceipt).Methods("POST")
@@ -723,6 +734,7 @@ func handleDemoReset(w http.ResponseWriter, r *http.Request) {
 	dirsToClean := []string{
 		"data/student_journeys",
 		"data/verkle_terms",
+		"data/verkle_trees",
 		"publish_ready/receipts",
 		"publish_ready/roots",
 		"publish_ready/proofs",
@@ -741,6 +753,7 @@ func handleDemoReset(w http.ResponseWriter, r *http.Request) {
 		"data/student_journeys/students",
 		"data/student_journeys/terms",
 		"data/verkle_terms",
+		"data/verkle_trees",
 		"publish_ready/receipts",
 		"publish_ready/roots",
 		"publish_ready/proofs",
@@ -771,7 +784,7 @@ func handleDemoReset(w http.ResponseWriter, r *http.Request) {
 		output.WriteString(fmt.Sprintf("⚠️  Database not available: %v\n", err))
 		output.WriteString("⚠️  Skipping database reset\n\n")
 	} else {
-		// Drop all tables
+		// Drop all tables (including revocation-related tables)
 		tables := []string{
 			"verification_logs",
 			"blockchain_transactions",
@@ -779,6 +792,9 @@ func handleDemoReset(w http.ResponseWriter, r *http.Request) {
 			"term_receipts",
 			"terms",
 			"students",
+			"revocation_requests",
+			"term_root_versions",
+			"revocation_batches",
 		}
 
 		for _, table := range tables {
@@ -788,7 +804,7 @@ func handleDemoReset(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Run migrations to recreate tables
+		// Run migrations to recreate tables (including revocation tables)
 		if err := db.AutoMigrate(
 			&database.Student{},
 			&database.Term{},
@@ -796,6 +812,9 @@ func handleDemoReset(w http.ResponseWriter, r *http.Request) {
 			&database.AccumulatedReceipt{},
 			&database.VerificationLog{},
 			&database.BlockchainTransaction{},
+			&database.RevocationRequest{},
+			&database.TermRootVersion{},
+			&database.RevocationBatch{},
 		); err != nil {
 			log.Printf("❌ Database migration failed: %v", err)
 			output.WriteString(fmt.Sprintf("❌ Database migration failed: %v\n", err))
@@ -1172,6 +1191,46 @@ func handleUpdateTermBlockchainStatus(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("✅ Journey receipts regenerated successfully\n")
 	}
 
+	// Process any pending revocations in the background
+	// This runs async so it doesn't block the response
+	go func() {
+		log.Printf("🔄 Checking for pending revocations to process...")
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			log.Printf("⚠️  Failed to load config for revocation processing: %v", err)
+			return
+		}
+
+		if cfg.IssuerPrivateKey == "" {
+			log.Printf("⚠️  No issuer private key configured, skipping background revocation processing")
+			return
+		}
+
+		// Check if there are any approved revocations
+		dbConn, err := database.Connect()
+		if err != nil {
+			log.Printf("⚠️  Failed to connect to database for revocation check: %v", err)
+			return
+		}
+
+		var count int64
+		dbConn.Model(&database.RevocationRequest{}).Where("status = ?", "approved").Count(&count)
+
+		if count == 0 {
+			log.Printf("✅ No pending revocations to process")
+			return
+		}
+
+		log.Printf("📋 Found %d approved revocations, processing in background...", count)
+
+		// Process revocations using the existing function
+		if err := processApprovedRevocations(cfg.Network, cfg.IssuerPrivateKey, cfg.DefaultGasLimit); err != nil {
+			log.Printf("⚠️  Background revocation processing failed: %v", err)
+		} else {
+			log.Printf("✅ Background revocation processing completed")
+		}
+	}()
+
 	respondJSON(w, http.StatusOK, APIResponse{
 		Success: true,
 		Data: map[string]interface{}{
@@ -1446,18 +1505,19 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Fetch term root info from blockchain to verify it exists
-	termRootInfo, err := blockchainIntegration.GetTermRootInfo(ctx, verkleRootHex)
+	// Check root status on blockchain (includes version info)
+	rootStatus, err := blockchainIntegration.CheckRootStatus(ctx, verkleRootHex)
 	if err != nil {
-		log.Printf("❌ Failed to get term root info from blockchain: %v", err)
+		log.Printf("❌ Failed to check root status on blockchain: %v", err)
 		respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
 			Error: fmt.Sprintf("Verkle root not found on blockchain: %v", err),
 		})
 		return
 	}
-	
-	if !termRootInfo.Exists {
+
+	// Check if root is valid (0=Invalid, 1=Current, 2=Outdated, 3=Superseded)
+	if rootStatus.Status == 0 {
 		log.Printf("❌ Verkle root does not exist on blockchain: %s", verkleRootHex)
 		respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
@@ -1466,21 +1526,32 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if root is superseded
+	if rootStatus.Status == 3 {
+		log.Printf("⚠️  Verkle root superseded: %s - %s", verkleRootHex, rootStatus.Message)
+		respondJSON(w, http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error: fmt.Sprintf("Receipt uses superseded root. %s. Please download updated receipt.", rootStatus.Message),
+		})
+		return
+	}
+
 	// SECURITY: Verify term_id matches between receipt and blockchain
-	if termRootInfo.TermID != request.TermID {
+	if rootStatus.TermID != request.TermID {
 		log.Printf("❌ Term ID mismatch: receipt claims %s but blockchain shows %s for root %s",
-			request.TermID, termRootInfo.TermID, verkleRootHex)
+			request.TermID, rootStatus.TermID, verkleRootHex)
 		respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
 			Error: fmt.Sprintf("Receipt term ID (%s) does not match blockchain term ID (%s) for this verkle root",
-				request.TermID, termRootInfo.TermID),
+				request.TermID, rootStatus.TermID),
 		})
 		return
 	}
 
 	blockchainVerified = true
-	log.Printf("✅ Verkle root verified on blockchain: term=%s, students=%d, published_at=%d",
-		termRootInfo.TermID, termRootInfo.TotalStudents, termRootInfo.PublishedAt)
+	statusMsg := map[uint8]string{1: "Current", 2: "Outdated"}[rootStatus.Status]
+	log.Printf("✅ Verkle root verified on blockchain: term=%s, version=%s, status=%s",
+		rootStatus.TermID, rootStatus.Version.String(), statusMsg)
 	
 	// Convert verified verkle root hex to bytes
 	var verkleRootBytes [32]byte
@@ -1531,7 +1602,7 @@ func handleVerifyCourse(w http.ResponseWriter, r *http.Request) {
 		if result.Error == nil && termReceipt.BlockchainTxHash != nil {
 			blockchainInfo = map[string]interface{}{
 				"tx_hash": *termReceipt.BlockchainTxHash,
-				"published_at": termRootInfo.PublishedAt,
+				"published_at": rootStatus.Version,
 				"block_number": termReceipt.BlockchainBlock,
 			}
 		}
@@ -2269,18 +2340,19 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Verify root exists on blockchain
-		termRootInfo, err := blockchainIntegration.GetTermRootInfo(ctx, verkleRootHex)
+		// Check root status on blockchain
+		rootStatus, err := blockchainIntegration.CheckRootStatus(ctx, verkleRootHex)
 		if err != nil {
 			verificationResults[termID] = map[string]interface{}{
 				"status":         "error",
-				"error":          fmt.Sprintf("Verkle root not found on blockchain: %v", err),
+				"error":          fmt.Sprintf("Failed to check root status: %v", err),
 				"blockchain_check": false,
 			}
 			continue
 		}
 
-		if !termRootInfo.Exists {
+		// Check if root is invalid
+		if rootStatus.Status == 0 {
 			verificationResults[termID] = map[string]interface{}{
 				"status":         "error",
 				"error":          "Verkle root not published on blockchain - invalid receipt",
@@ -2289,11 +2361,22 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Verify term_id matches
-		if termRootInfo.TermID != termID {
+		// Check if root is superseded
+		if rootStatus.Status == 3 {
 			verificationResults[termID] = map[string]interface{}{
 				"status":         "error",
-				"error":          fmt.Sprintf("Term ID mismatch: receipt claims %s but blockchain shows %s", termID, termRootInfo.TermID),
+				"error":          fmt.Sprintf("Receipt uses superseded root. %s", rootStatus.Message),
+				"blockchain_check": false,
+				"version_status": "superseded",
+			}
+			continue
+		}
+
+		// Verify term_id matches
+		if rootStatus.TermID != termID {
+			verificationResults[termID] = map[string]interface{}{
+				"status":         "error",
+				"error":          fmt.Sprintf("Term ID mismatch: receipt claims %s but blockchain shows %s", termID, rootStatus.TermID),
 				"blockchain_check": false,
 			}
 			continue
@@ -2418,7 +2501,7 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 				"courses_failed":      termFailed,
 				"course_results":      termResults,
 				"blockchain_verified": true,
-				"blockchain_published_at": termRootInfo.PublishedAt.String(),
+				"blockchain_published_at": rootStatus.Version.String(),
 				"blockchain_tx_hash":  blockchainTxHash,
 				"blockchain_block":    blockchainBlock,
 			}
@@ -2431,7 +2514,7 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 				"courses_failed":      termFailed,
 				"course_results":      termResults,
 				"blockchain_verified": true,
-				"blockchain_published_at": termRootInfo.PublishedAt.String(),
+				"blockchain_published_at": rootStatus.Version.String(),
 			}
 		}
 	}
