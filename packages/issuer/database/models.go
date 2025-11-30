@@ -131,3 +131,89 @@ type BlockchainTransaction struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+// RevocationRequest represents a request to revoke a credential
+type RevocationRequest struct {
+	ID        uint   `gorm:"primaryKey"`
+	RequestID string `gorm:"uniqueIndex;not null;size:255"` // revoke_req_UUID
+
+	// Target Credential
+	StudentID string `gorm:"index;not null;size:50"` // ITITIU00001
+	TermID    string `gorm:"index;not null;size:50"` // Semester_1_2023
+	CourseID  string `gorm:"index;not null;size:50"` // IT089IU
+
+	// Revocation Details
+	Reason      string `gorm:"type:text;not null"`
+	RequestedBy string `gorm:"size:255"` // Who requested (admin username, system, etc.)
+	Status      string `gorm:"index;size:50;default:'pending'"` // "pending", "approved", "processed", "rejected"
+
+	// Processing
+	ProcessedAt        *time.Time
+	ProcessedByTxHash  *string `gorm:"size:66"` // Transaction hash when supersedeTerm was called
+	ProcessedInVersion *uint   // Which version this was processed in
+
+	// Audit Trail
+	ApprovedBy string     `gorm:"size:255"`
+	ApprovedAt *time.Time
+	RejectedBy string     `gorm:"size:255"`
+	RejectedAt *time.Time
+	Notes      string     `gorm:"type:text"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// TermRootVersion represents a version of a term root (for revocation tracking)
+type TermRootVersion struct {
+	ID       uint   `gorm:"primaryKey"`
+	TermID   string `gorm:"index;not null;size:50"`   // Semester_1_2023
+	Version  uint   `gorm:"index;not null"`           // 1, 2, 3...
+	RootHash string `gorm:"uniqueIndex;not null;size:66"` // Verkle root hex (0x + 64 chars)
+
+	// Version Metadata
+	TotalStudents uint   `gorm:"not null"`
+	PublishedAt   time.Time `gorm:"index"`
+	IsSuperseded  bool   `gorm:"default:false;index"`
+	SupersededBy  string `gorm:"size:66"` // Next version's root hash (if superseded)
+	SupersessionReason string `gorm:"type:text"` // Why superseded
+
+	// Blockchain
+	TxHash      string `gorm:"index;size:66"`
+	BlockNumber uint64
+
+	// Change Summary (for revocations)
+	CredentialsRevoked uint `gorm:"default:0"` // Number of credentials removed in this version
+	CredentialsAdded   uint `gorm:"default:0"` // Number of credentials added (normally 0)
+	ChangeDescription  string `gorm:"type:text"` // Summary of changes
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// RevocationBatch represents a batch of revocations processed together
+type RevocationBatch struct {
+	ID      uint   `gorm:"primaryKey"`
+	BatchID string `gorm:"uniqueIndex;not null;size:255"` // batch_UUID
+
+	// Affected Term
+	TermID     string `gorm:"index;not null;size:50"`
+	OldVersion uint   `gorm:"not null"`
+	NewVersion uint   `gorm:"not null"`
+	OldRootHash string `gorm:"size:66"` // 0x + 64 chars
+	NewRootHash string `gorm:"size:66"` // 0x + 64 chars
+
+	// Processing
+	RequestCount   int       // Number of revocation requests in this batch
+	ProcessedAt    time.Time
+	ProcessedBy    string    `gorm:"size:255"` // Admin who processed
+	TxHash         string    `gorm:"size:66"` // supersedeTerm transaction
+	BlockNumber    uint64
+	GasUsed        uint64
+
+	// Results
+	Status string `gorm:"size:50"` // "success", "failed", "partial"
+	Notes  string `gorm:"type:text"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}

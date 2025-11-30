@@ -74,6 +74,9 @@ func RunMigrations(db *gorm.DB) error {
 		&AccumulatedReceipt{},
 		&VerificationLog{},
 		&BlockchainTransaction{},
+		&RevocationRequest{},
+		&TermRootVersion{},
+		&RevocationBatch{},
 	)
 
 	if err != nil {
@@ -99,6 +102,12 @@ func CreateIndexes(db *gorm.DB) error {
 
 		// Verification logs indexes
 		"CREATE INDEX IF NOT EXISTS idx_verification_logs_receipt ON verification_logs (receipt_id, verified_at DESC)",
+
+		// Revocation indexes
+		"CREATE INDEX IF NOT EXISTS idx_revocation_term_status ON revocation_requests (term_id, status)",
+		"CREATE INDEX IF NOT EXISTS idx_revocation_student_term ON revocation_requests (student_id, term_id, course_id)",
+		"CREATE INDEX IF NOT EXISTS idx_term_versions_term_version ON term_root_versions (term_id, version)",
+		"CREATE INDEX IF NOT EXISTS idx_revocation_batch_term ON revocation_batches (term_id, processed_at DESC)",
 	}
 
 	for _, index := range indexes {

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { FileText, ShieldCheck, Database } from "lucide-react";
+import { FileText, ShieldCheck, Database, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -17,6 +17,11 @@ const navItems: NavItem[] = [
     label: "Publish Terms",
     href: "/",
     icon: FileText,
+  },
+  {
+    label: "Revocations",
+    href: "/revocations",
+    icon: AlertTriangle,
   },
   {
     label: "Verifier",

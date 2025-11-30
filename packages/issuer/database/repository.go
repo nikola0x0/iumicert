@@ -293,3 +293,143 @@ func (r *ReceiptRepository) gradeToPoint(grade string) float64 {
 	}
 	return 0.0
 }
+
+// ===== REVOCATION REPOSITORY METHODS =====
+
+// CreateRevocationRequest creates a new revocation request
+func CreateRevocationRequest(db *gorm.DB, req *RevocationRequest) error {
+	return db.Create(req).Error
+}
+
+// GetPendingRevocations returns all pending revocation requests for a term
+func GetPendingRevocations(db *gorm.DB, termID string) ([]RevocationRequest, error) {
+	var requests []RevocationRequest
+	err := db.Where("term_id = ? AND status = ?", termID, "pending").Find(&requests).Error
+	return requests, err
+}
+
+// GetAllRevocationRequests returns all revocation requests with optional filters
+func GetAllRevocationRequests(db *gorm.DB, termID string, status string) ([]RevocationRequest, error) {
+	query := db.Model(&RevocationRequest{})
+	
+	if termID != "" {
+		query = query.Where("term_id = ?", termID)
+	}
+	
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+	
+	var requests []RevocationRequest
+	err := query.Order("created_at DESC").Find(&requests).Error
+	return requests, err
+}
+
+// UpdateRevocationStatus updates the status of a revocation request
+func UpdateRevocationStatus(db *gorm.DB, requestID string, status string, processedBy string) error {
+	updates := map[string]interface{}{
+		"status":       status,
+		"approved_by":  processedBy,
+		"approved_at":  time.Now(),
+	}
+	
+	return db.Model(&RevocationRequest{}).
+		Where("request_id = ?", requestID).
+		Updates(updates).Error
+}
+
+// MarkRevocationProcessed marks revocations as processed after superseding
+func MarkRevocationProcessed(db *gorm.DB, requestIDs []string, txHash string, version uint) error {
+	now := time.Now()
+	updates := map[string]interface{}{
+		"status":               "processed",
+		"processed_at":         &now,
+		"processed_by_tx_hash": &txHash,
+		"processed_in_version": &version,
+	}
+	
+	return db.Model(&RevocationRequest{}).
+		Where("request_id IN ?", requestIDs).
+		Updates(updates).Error
+}
+
+// CreateTermRootVersion records a new term root version
+func CreateTermRootVersion(db *gorm.DB, version *TermRootVersion) error {
+	return db.Create(version).Error
+}
+
+// GetLatestTermVersion gets the latest version for a term
+// Returns nil, nil if no version exists (not an error)
+func GetLatestTermVersion(db *gorm.DB, termID string) (*TermRootVersion, error) {
+	var version TermRootVersion
+	err := db.Where("term_id = ?", termID).
+		Order("version DESC").
+		First(&version).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil // No version exists yet - not an error
+		}
+		return nil, err
+	}
+	return &version, nil
+}
+
+// GetTermVersionHistory gets all versions for a term
+func GetTermVersionHistory(db *gorm.DB, termID string) ([]TermRootVersion, error) {
+	var versions []TermRootVersion
+	err := db.Where("term_id = ?", termID).
+		Order("version ASC").
+		Find(&versions).Error
+	return versions, err
+}
+
+// MarkTermVersionSuperseded marks a version as superseded
+func MarkTermVersionSuperseded(db *gorm.DB, termID string, oldVersion uint, newRootHash string, reason string) error {
+	updates := map[string]interface{}{
+		"is_superseded":        true,
+		"superseded_by":        newRootHash,
+		"supersession_reason":  reason,
+	}
+	
+	return db.Model(&TermRootVersion{}).
+		Where("term_id = ? AND version = ?", termID, oldVersion).
+		Updates(updates).Error
+}
+
+// CreateRevocationBatch creates a record of a revocation batch
+func CreateRevocationBatch(db *gorm.DB, batch *RevocationBatch) error {
+	return db.Create(batch).Error
+}
+
+// GetRevocationBatchHistory gets all batches for a term
+func GetRevocationBatchHistory(db *gorm.DB, termID string) ([]RevocationBatch, error) {
+	var batches []RevocationBatch
+	err := db.Where("term_id = ?", termID).
+		Order("processed_at DESC").
+		Find(&batches).Error
+	return batches, err
+}
+
+// GetRevocationStats returns statistics about revocations
+func GetRevocationStats(db *gorm.DB) (map[string]interface{}, error) {
+	var pending, approved, processed, rejected int64
+	
+	db.Model(&RevocationRequest{}).Where("status = ?", "pending").Count(&pending)
+	db.Model(&RevocationRequest{}).Where("status = ?", "approved").Count(&approved)
+	db.Model(&RevocationRequest{}).Where("status = ?", "processed").Count(&processed)
+	db.Model(&RevocationRequest{}).Where("status = ?", "rejected").Count(&rejected)
+	
+	var totalBatches int64
+	db.Model(&RevocationBatch{}).Count(&totalBatches)
+	
+	stats := map[string]interface{}{
+		"pending_requests":   pending,
+		"approved_requests":  approved,
+		"processed_requests": processed,
+		"rejected_requests":  rejected,
+		"total_batches":      totalBatches,
+	}
+	
+	return stats, nil
+}
