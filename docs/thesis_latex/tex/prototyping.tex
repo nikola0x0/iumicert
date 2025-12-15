@@ -169,3 +169,118 @@ It ensures that verifiers can securely and conveniently engage with IU-MiCert's 
 These technologies form a cohesive system where each component serves a specific purpose in the micro-credential management workflow. The frontend (React.js, Next.js, TypeScript) provides a seamless user experience for credential verification and selective disclosure, the CLI tools (Go, ethereum/go-verkle) handle efficient cryptographic operations and Verkle tree management, and the blockchain tools (Ethers.js, Solidity, Sepolia, Metamask) ensure secure and transparent interactions.
 
 The integration enables a complete workflow where institutions use the Go CLI to generate Verkle trees and journey receipts, students receive receipts for selective disclosure, and verifiers use the web interface to validate credentials against blockchain-stored commitments. This architecture makes IU-MiCert a robust and reliable system for decentralized micro-credential management with advanced privacy features.
+
+\section{Development Tools}
+\label{sec:development-tools}
+
+The complete development toolchain for IU-MiCert leverages specialized libraries and frameworks optimized for cryptographic operations, blockchain interaction, and database management. Table \ref{tab:dev-tools} summarizes the key tools and their purposes.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{Tool} & \textbf{Purpose} \\
+\hline
+go-verkle & Verkle tree construction, proof generation (MakeVerkleMultiProof), and proof verification using IPA \\
+\hline
+go-ipa & Direct Inner Product Argument verification for cryptographic proof validation \\
+\hline
+Ethers.js & Frontend blockchain interaction, smart contract calls, and wallet integration \\
+\hline
+Foundry & Smart contract development, testing, and deployment with advanced Solidity tooling \\
+\hline
+GORM & Go ORM for PostgreSQL database operations, providing type-safe data access \\
+\hline
+Cobra & CLI command framework for building structured command-line tools with subcommands \\
+\hline
+\end{tabular}
+\caption{Development Tools and Their Purposes}
+\label{tab:dev-tools}
+\end{table}
+
+\section{Blockchain Strategy}
+\label{sec:blockchain-strategy}
+
+The selection of Ethereum Sepolia testnet as the deployment platform reflects careful consideration of multiple factors. Table \ref{tab:blockchain-choice} presents the decision criteria.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{Factor} & \textbf{Decision Rationale} \\
+\hline
+Cost & Free testnet ETH enables development and testing without financial burden \\
+\hline
+Speed & Fast block times (approximately 12 seconds) enable rapid iteration and testing \\
+\hline
+Stability & Long-term Ethereum testnet with commitment to continued support \\
+\hline
+Tooling & Full Etherscan support, block explorers, and development tools availability \\
+\hline
+\end{tabular}
+\caption{Blockchain Network Selection Criteria}
+\label{tab:blockchain-choice}
+\end{table}
+
+\textbf{Production Path:} While the current implementation uses Sepolia testnet for development and testing, the system is designed for eventual mainnet deployment. The architecture supports migration to Ethereum mainnet when the system reaches production readiness. Additionally, the design is compatible with Layer 2 solutions such as Optimism or Arbitrum, which could provide lower transaction costs while maintaining Ethereum's security guarantees. The smart contract code is network-agnostic, requiring only configuration changes to deploy on different Ethereum-compatible networks.
+
+\section{Data Pipeline Design}
+\label{sec:data-pipeline}
+
+The IU-MiCert system implements a five-stage data pipeline that transforms raw academic data from Learning Management Systems into verifiable, blockchain-anchored credentials. Figure \ref{fig:data-pipeline} illustrates this pipeline.
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+┌────────────────────────────────────────────────────────┐
+│                   DATA PIPELINE                        │
+├────────────────────────────────────────────────────────┤
+│                                                        │
+│  STAGE 1: DATA GENERATION                             │
+│     ┌─────────┐                                       │
+│     │ LMS/SIS │ → Export grades → JSON format         │
+│     └─────────┘                                       │
+│           │                                            │
+│           ▼                                            │
+│  STAGE 2: VERKLE CONVERSION                           │
+│     ┌──────────────────┐                              │
+│     │ convert-data     │ → Transform to Verkle format│
+│     │ (CLI command)    │                              │
+│     └──────────────────┘                              │
+│           │                                            │
+│           ▼                                            │
+│  STAGE 3: TREE BUILDING                               │
+│     ┌──────────────────┐                              │
+│     │ batch-process    │ → Build Verkle trees/term   │
+│     │ (CLI command)    │ → Generate commitments      │
+│     └──────────────────┘                              │
+│           │                                            │
+│           ▼                                            │
+│  STAGE 4: RECEIPT GENERATION                          │
+│     ┌──────────────────┐                              │
+│     │ generate-receipts│ → Create student receipts   │
+│     │ (CLI command)    │    with proofs              │
+│     └──────────────────┘                              │
+│           │                                            │
+│           ▼                                            │
+│  STAGE 5: BLOCKCHAIN PUBLISHING                       │
+│     ┌──────────────────┐                              │
+│     │ publish-roots    │ → Publish term roots to     │
+│     │ (CLI command)    │    Ethereum                 │
+│     └──────────────────┘                              │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+\end{verbatim}
+\caption{Five-Stage Data Pipeline from LMS to Blockchain}
+\label{fig:data-pipeline}
+\end{figure}
+
+\textbf{Stage 1: Data Generation} involves exporting finalized grade data from the institution's Learning Management System or Student Information System. The data must include student identifiers, course identifiers, grades, credits, completion dates, and instructor information. The export format is typically JSON or CSV to ensure structured data that can be programmatically processed.
+
+\textbf{Stage 2: Verkle Conversion} transforms the LMS data into the format required for Verkle tree insertion. This stage computes deterministic course keys from student DID, term ID, and course ID combinations, serializes course records into canonical JSON format for consistent hashing, and structures data into the term-based organization required by the tree construction process.
+
+\textbf{Stage 3: Tree Building} constructs Verkle trees for each academic term using the formatted data. This computationally intensive stage involves inserting all course key-value pairs into the appropriate term tree, computing Pedersen commitments recursively from leaves to root, and generating the final 32-byte root commitment that will be published to the blockchain. For a typical term with 500 students and 5 courses each (2,500 total credentials), tree construction completes in under one second on modern hardware.
+
+\textbf{Stage 4: Receipt Generation} creates individual student receipts containing their courses and cryptographic proofs. For each student, the system collects all courses across all terms, generates Verkle membership proofs using the MakeVerkleMultiProof function, bundles proofs with course data and term roots, and exports the complete receipt as a JSON file. Receipts are self-contained, enabling offline verification once term roots are blockchain-anchored.
+
+\textbf{Stage 5: Blockchain Publishing} anchors term root commitments to the Ethereum blockchain through smart contract transactions. The issuer, using their authorized private key, invokes the publishTermRoot function for each term, broadcasting the transaction to the Sepolia network. Upon confirmation (typically 15-30 seconds), the root is permanently stored on-chain with an associated timestamp, completing the credential issuance process and enabling independent verification by any party.

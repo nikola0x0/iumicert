@@ -1,392 +1,657 @@
 \chapter{IMPLEMENTATION}
 \label{ch:implementation}
 
-% TODO: Complete implementation chapter - current content is placeholder
-% TODO: Expand based on actual implementation details from the system
-
-This chapter presents the current implementation state of the IU-MiCert system, detailing the development progress across the frontend, CLI tools, and blockchain components. The implementation follows the methodology outlined in Chapter~\ref{ch:methodology} and utilizes the technology stack described in Chapter~\ref{ch:prototyping}. The system is designed to support multiple receipt types including single-term verification and comprehensive academic journey receipts with selective disclosure capabilities.
+This chapter provides comprehensive technical details of the IU-MiCert system implementation. The chapter presents formal algorithms for Verkle tree construction, proof generation, and verification using pseudocode notation. It documents the CLI tool implementation with the actual commands available, presents the complete smart contract source code, details the revocation system implementation, describes web interface development, and outlines the integration testing strategy. The implementation closely follows the design presented in Chapter 3, translating architectural concepts into working code.
 
 \section{System Architecture Overview}
-\label{sec:architecture_overview}
+\label{sec:impl-architecture}
 
-The IU-MiCert system architecture consists of three primary components working in concert to provide decentralized micro-credential management:
+The implemented system consists of three primary layers organized according to the architecture described in Chapter 3. Figure \ref{fig:impl-component-diagram} shows the implementation's component structure.
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+┌─────────────────────────────────────────────────────┐
+│             packages/issuer/                        │
+├─────────────────────────────────────────────────────┤
+│  ┌───────────────────────────────────────────┐     │
+│  │         cmd/ (CLI + API)                  │     │
+│  │  ┌──────────┐  ┌──────────┐  ┌────────┐  │     │
+│  │  │ main.go  │  │ api_     │  │ commands│ │     │
+│  │  │ (9 cmds) │  │ server   │  │  *.go   │ │     │
+│  │  └──────────┘  └──────────┘  └────────┘  │     │
+│  └───────────────────────────────────────────┘     │
+│                     │                              │
+│        ┌────────────┼────────────┐                 │
+│        ▼            ▼            ▼                  │
+│  ┌──────────┐ ┌──────────┐ ┌───────────────┐      │
+│  │ crypto/  │ │database/ │ │ blockchain_   │      │
+│  │ verkle/  │ │          │ │ integration/  │      │
+│  │          │ │PostgreSQL│ │               │      │
+│  │- trees   │ │+ GORM    │ │ - contract    │      │
+│  │- proofs  │ │          │ │ - publishing  │      │
+│  │- verify  │ │          │ │               │      │
+│  └──────────┘ └──────────┘ └───────────────┘      │
+└─────────────────────────────────────────────────────┘
+\end{verbatim}
+\caption{Implementation Component Diagram}
+\label{fig:impl-component-diagram}
+\end{figure}
+
+The \texttt{packages/issuer/} directory contains the complete backend implementation including the CLI tool, API server, cryptographic operations, database integration, and blockchain publishing functionality. Additional packages include \texttt{packages/client/} for the student/verifier portal and \texttt{packages/contracts/} for Solidity smart contracts.
+
+\section{Verkle Tree Construction Implementation}
+\label{sec:verkle-impl}
+
+This section presents the actual algorithms implemented for Verkle tree construction, using formal pseudocode notation supplemented with Go code examples from the implementation.
+
+\subsection{Tree Initialization Algorithm}
+\label{subsec:tree-init-algo}
+
+The tree initialization establishes the data structure for managing a term's credentials.
+
+\begin{algorithm}[H]
+\caption{NewTermVerkleTree - Initialize Term Tree}
+\label{alg:new-term-tree}
+\begin{algorithmic}[1]
+\STATE \textbf{function} NewTermVerkleTree(termID: string) $\rightarrow$ TermVerkleTree
+\STATE \quad tree $\leftarrow$ new empty Verkle tree using verkle.New()
+\STATE \quad entries $\leftarrow$ empty map[string]CourseCompletion
+\STATE \quad proofs $\leftarrow$ empty map[string][]byte
+\STATE \quad \textbf{return} TermVerkleTree \{
+\STATE \quad \quad TermID: termID,
+\STATE \quad \quad Version: 1,
+\STATE \quad \quad CourseEntries: entries,
+\STATE \quad \quad CourseProofs: proofs,
+\STATE \quad \quad tree: tree
+\STATE \quad \}
+\STATE \textbf{end function}
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Implementation Details:} The function creates a new TermVerkleTree structure for a specific academic term. Version tracking starts at 1 for initial publication. The CourseEntries map enables efficient lookup of course metadata during receipt generation. The CourseProofs map caches generated proofs to avoid redundant computation. The underlying Verkle tree is instantiated using Ethereum's go-verkle library through the \texttt{verkle.New()} function.
+
+\subsection{Course Insertion Algorithm}
+\label{subsec:course-insertion-algo}
+
+The course insertion algorithm adds individual course completions to the term tree.
+
+\begin{algorithm}[H]
+\caption{AddCourses - Insert Student Courses into Tree}
+\label{alg:add-courses}
+\begin{algorithmic}[1]
+\STATE \textbf{function} AddCourses(studentDID: string, courses: []CourseCompletion)
+\FOR{each course in courses}
+    \STATE courseKey $\leftarrow$ studentDID || ":" || termID || ":" || course.CourseID
+    \STATE \COMMENT{Example: "did:example:ITITIU00001:Semester\_1\_2023:IT013IU"}
+    \STATE
+    \STATE keyHash $\leftarrow$ SHA256(courseKey)
+    \STATE \COMMENT{Split into [stem: 31 bytes][suffix: 1 byte]}
+    \STATE
+    \STATE courseJSON $\leftarrow$ JSON.Serialize(course)
+    \STATE valueHash $\leftarrow$ SHA256(courseJSON)
+    \STATE
+    \STATE tree.Insert(keyHash, valueHash)
+    \STATE \COMMENT{Insert into Verkle tree using go-verkle Insert() method}
+    \STATE
+    \STATE CourseEntries[courseKey] $\leftarrow$ course
+    \STATE \COMMENT{Store course data for later access}
+\ENDFOR
+\STATE \textbf{end function}
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Key Implementation Decisions:}
+\begin{itemize}
+    \item \textbf{Deterministic key generation} ensures that the same course for the same student in the same term always produces the same tree position, enabling reproducibility
+    \item \textbf{SHA256 hashing} is used for both keys and values to provide consistent 32-byte outputs compatible with Verkle tree requirements
+    \item \textbf{Stem/suffix split} aligns with Verkle tree's internal addressing scheme where stems identify tree paths and suffixes identify specific positions within nodes
+    \item \textbf{Course data stored separately} from the tree enables metadata access during receipt generation without tree traversal
+\end{itemize}
+
+\subsection{Tree Commitment Algorithm}
+\label{subsec:tree-commitment-algo}
+
+The commitment algorithm computes the cryptographic root binding all courses in a term.
+
+\begin{algorithm}[H]
+\caption{PublishTerm - Compute Tree Commitment}
+\label{alg:publish-term}
+\begin{algorithmic}[1]
+\STATE \textbf{function} PublishTerm() $\rightarrow$ VerkleRoot
+\STATE \quad commitment $\leftarrow$ tree.Commit()
+\STATE \quad \COMMENT{Recursively computes Pedersen commitments for all nodes}
+\STATE
+\STATE \quad VerkleRoot $\leftarrow$ commitment.Bytes()
+\STATE \quad \COMMENT{Converts elliptic curve point to 32-byte array}
+\STATE
+\STATE \quad PublishedAt $\leftarrow$ time.Now()
+\STATE \quad \COMMENT{Records commitment computation timestamp}
+\STATE
+\STATE \quad \textbf{return} VerkleRoot
+\STATE \textbf{end function}
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Implementation Notes:} The \texttt{Commit()} operation from go-verkle traverses the tree bottom-up. At each leaf, it commits to the value hash. At each internal node, it commits to the 256 child commitments using Pedersen commitment scheme: $C = g^{m_1} \cdot h^{m_2} \cdot \ldots$ where $g, h, \ldots$ are generator points. The final root commitment cryptographically binds all course data in the term—any modification to any course would produce a different root.
+
+\section{Proof Generation and Verification Implementation}
+\label{sec:proof-impl}
+
+This section presents the algorithms for generating student receipts and verifying credentials.
+
+\subsection{Receipt Generation Algorithm}
+\label{subsec:receipt-generation-algo}
+
+The receipt generation algorithm creates a complete credential package for a student across multiple terms.
+
+\begin{algorithm}[H]
+\caption{GenerateStudentReceipt - Create Complete Receipt}
+\label{alg:generate-receipt}
+\begin{algorithmic}[1]
+\STATE \textbf{function} GenerateStudentReceipt(studentID: string) $\rightarrow$ StudentReceipt
+\STATE \quad terms $\leftarrow$ []
+\STATE
+\STATE \quad \textbf{for each} termTree in allTermTrees \textbf{do}
+\STATE \quad \quad \textbf{if} termTree.hasCoursesForStudent(studentID) \textbf{then}
+\STATE \quad \quad \quad terms.append(termTree.TermID)
+\STATE \quad \quad \textbf{end if}
+\STATE \quad \textbf{end for}
+\STATE
+\STATE \quad termReceipts $\leftarrow$ []
+\STATE \quad \textbf{for each} term in terms \textbf{do}
+\STATE \quad \quad proofs $\leftarrow$ empty map
+\STATE \quad \quad courses $\leftarrow$ term.getStudentCourses(studentID)
+\STATE
+\STATE \quad \quad \textbf{for each} course in courses \textbf{do}
+\STATE \quad \quad \quad proof $\leftarrow$ GenerateCourseProof(studentID, course.ID, termTree)
+\STATE \quad \quad \quad proofs[course.ID] $\leftarrow$ proof
+\STATE \quad \quad \textbf{end for}
+\STATE
+\STATE \quad \quad termReceipt $\leftarrow$ \{
+\STATE \quad \quad \quad term\_id: termTree.TermID,
+\STATE \quad \quad \quad verkle\_root: termTree.VerkleRoot,
+\STATE \quad \quad \quad version: termTree.Version,
+\STATE \quad \quad \quad courses: courses,
+\STATE \quad \quad \quad proofs: proofs
+\STATE \quad \quad \}
+\STATE \quad \quad termReceipts.append(termReceipt)
+\STATE \quad \textbf{end for}
+\STATE
+\STATE \quad \textbf{return} \{
+\STATE \quad \quad student\_id: studentID,
+\STATE \quad \quad generated\_at: timestamp,
+\STATE \quad \quad terms: termReceipts
+\STATE \quad \}
+\STATE \textbf{end function}
+\end{algorithmic}
+\end{algorithm}
+
+This algorithm aggregates all terms where the student has course completions and generates proofs for each course, creating a comprehensive receipt that enables full or partial credential verification.
+
+\subsection{Individual Proof Generation Algorithm}
+\label{subsec:proof-gen-algo}
+
+The individual proof generation uses go-verkle's multiproof functionality.
+
+\begin{algorithm}[H]
+\caption{GenerateCourseProof - Generate Single Course Proof}
+\label{alg:generate-course-proof}
+\begin{algorithmic}[1]
+\STATE \textbf{function} GenerateCourseProof(studentDID, courseID, termTree) $\rightarrow$ ProofBundle
+\STATE \quad courseKey $\leftarrow$ studentDID || ":" || termTree.TermID || ":" || courseID
+\STATE \quad keyHash $\leftarrow$ SHA256(courseKey)
+\STATE
+\STATE \quad proof, \_, \_, \_, err $\leftarrow$ MakeVerkleMultiProof(
+\STATE \quad \quad tree: termTree.tree,
+\STATE \quad \quad preState: nil, \COMMENT{Current state only - membership proof}
+\STATE \quad \quad keys: [keyHash], \COMMENT{Single key to prove}
+\STATE \quad \quad resolver: nil \COMMENT{No external resolver needed}
+\STATE \quad )
+\STATE
+\STATE \quad \textbf{if} err $\neq$ nil \textbf{then}
+\STATE \quad \quad \textbf{return} error
+\STATE \quad \textbf{end if}
+\STATE
+\STATE \quad verkleProof, stateDiff, \_ $\leftarrow$ SerializeProof(proof)
+\STATE \quad \COMMENT{verkleProof: IPA proof data; stateDiff: leaf values}
+\STATE
+\STATE \quad \textbf{return} \{
+\STATE \quad \quad verkle\_proof: verkleProof,
+\STATE \quad \quad state\_diff: stateDiff,
+\STATE \quad \quad course\_key: courseKey,
+\STATE \quad \quad course\_id: courseID
+\STATE \quad \}
+\STATE \textbf{end function}
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Implementation Details:} The \texttt{MakeVerkleMultiProof} function from Ethereum's go-verkle library generates an IPA-based proof showing the path from the specified key to the tree root. The proof is self-contained and can be verified independently without access to the original tree. The \texttt{SerializeProof} function converts the proof structure into a format suitable for JSON serialization and transmission in receipts.
+
+\subsection{Proof Verification Algorithm}
+\label{subsec:proof-verify-algo}
+
+The verification algorithm validates a single course credential.
+
+\begin{algorithm}[H]
+\caption{VerifyCourseProof - Validate Course Credential}
+\label{alg:verify-course-proof}
+\begin{algorithmic}[1]
+\STATE \textbf{function} VerifyCourseProof(courseKey, course, proofData, verkleRoot) $\rightarrow$ boolean
+\STATE \quad proofBundle $\leftarrow$ Deserialize(proofData)
+\STATE
+\STATE \quad \textbf{if} courseKey $\neq$ proofBundle.CourseKey \textbf{then}
+\STATE \quad \quad \textbf{return} false \COMMENT{Metadata validation failed}
+\STATE \quad \textbf{end if}
+\STATE
+\STATE \quad keyHash $\leftarrow$ SHA256(courseKey)
+\STATE \quad valueHash $\leftarrow$ SHA256(JSON(course))
+\STATE
+\STATE \quad stem $\leftarrow$ keyHash[0:31]
+\STATE \quad suffix $\leftarrow$ keyHash[31]
+\STATE
+\STATE \quad \textbf{for each} entry in proofBundle.StateDiff \textbf{do}
+\STATE \quad \quad \textbf{if} entry.stem = stem \textbf{then}
+\STATE \quad \quad \quad \textbf{if} entry.values[suffix] $\neq$ valueHash \textbf{then}
+\STATE \quad \quad \quad \quad \textbf{return} false \COMMENT{Value mismatch - data tampered}
+\STATE \quad \quad \quad \textbf{end if}
+\STATE \quad \quad \quad \textbf{break}
+\STATE \quad \quad \textbf{end if}
+\STATE \quad \textbf{end for}
+\STATE
+\STATE \quad proof $\leftarrow$ DeserializeProof(proofBundle.VerkleProof)
+\STATE \quad reconstructedRoot $\leftarrow$ VerifyVerkleProof(proof, keyHash, valueHash)
+\STATE
+\STATE \quad \textbf{if} reconstructedRoot $\neq$ verkleRoot \textbf{then}
+\STATE \quad \quad \textbf{return} false \COMMENT{IPA verification failed}
+\STATE \quad \textbf{end if}
+\STATE
+\STATE \quad \textbf{return} true \COMMENT{All checks passed}
+\STATE \textbf{end function}
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Critical Verification Steps:}
+\begin{itemize}
+    \item \textbf{Metadata validation} ensures the proof actually corresponds to the claimed course
+    \item \textbf{Hash recomputation} prevents data tampering by verifying course data matches what was committed
+    \item \textbf{StateDiff check} confirms the correct value is included in the proof
+    \item \textbf{IPA verification} proves the cryptographic path from course to root is valid
+\end{itemize}
+
+\subsection{Full Receipt Verification Algorithm}
+\label{subsec:receipt-verify-algo}
+
+The full receipt verification validates all credentials across all terms in a student receipt.
+
+\begin{algorithm}[H]
+\caption{VerifyReceiptOffChain - Complete Receipt Validation}
+\label{alg:verify-receipt}
+\begin{algorithmic}[1]
+\STATE \textbf{function} VerifyReceiptOffChain(receiptJSON, blockchainRoots) $\rightarrow$ Result
+\STATE \quad result $\leftarrow$ \{valid: true, verifiedTerms: [], errors: []\}
+\STATE
+\STATE \quad \textbf{for each} term in receiptJSON.terms \textbf{do}
+\STATE \quad \quad expectedRoot $\leftarrow$ blockchainRoots[term.term\_id][term.version]
+\STATE
+\STATE \quad \quad \textbf{if} expectedRoot = nil \textbf{then}
+\STATE \quad \quad \quad result.valid $\leftarrow$ false
+\STATE \quad \quad \quad result.errors.append("Term root not found on blockchain")
+\STATE \quad \quad \quad \textbf{continue}
+\STATE \quad \quad \textbf{end if}
+\STATE
+\STATE \quad \quad \textbf{if} term.verkle\_root $\neq$ expectedRoot \textbf{then}
+\STATE \quad \quad \quad result.valid $\leftarrow$ false
+\STATE \quad \quad \quad result.errors.append("Root mismatch for " || term.term\_id)
+\STATE \quad \quad \quad \textbf{continue}
+\STATE \quad \quad \textbf{end if}
+\STATE
+\STATE \quad \quad \textbf{for each} course in term.courses \textbf{do}
+\STATE \quad \quad \quad courseKey $\leftarrow$ receiptJSON.student\_id || ":" || term.term\_id || ":" || course.course\_id
+\STATE \quad \quad \quad proof $\leftarrow$ term.proofs[course.course\_id]
+\STATE
+\STATE \quad \quad \quad valid $\leftarrow$ VerifyCourseProof(courseKey, course, proof, term.verkle\_root)
+\STATE
+\STATE \quad \quad \quad \textbf{if} not valid \textbf{then}
+\STATE \quad \quad \quad \quad result.valid $\leftarrow$ false
+\STATE \quad \quad \quad \quad result.errors.append("Proof failed for " || course.course\_id)
+\STATE \quad \quad \quad \quad \textbf{break}
+\STATE \quad \quad \quad \textbf{end if}
+\STATE \quad \quad \textbf{end for}
+\STATE
+\STATE \quad \quad \textbf{if} no errors for this term \textbf{then}
+\STATE \quad \quad \quad result.verifiedTerms.append(term.term\_id)
+\STATE \quad \quad \textbf{end if}
+\STATE \quad \textbf{end for}
+\STATE
+\STATE \quad \textbf{return} result
+\STATE \textbf{end function}
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Verification Guarantees:} This two-phase verification (blockchain validation + cryptographic proof validation) ensures that credentials are both legitimately issued (root exists on blockchain) and unmodified since issuance (proofs validate against root). Any failure in either phase results in overall verification failure, maintaining strong security guarantees.
+
+\section{CLI Tool Implementation}
+\label{sec:cli-impl}
+
+The command-line interface provides the primary tool for issuers to manage credentials, construct Verkle trees, and publish commitments to the blockchain.
+
+\subsection{Available Commands}
+\label{subsec:cli-commands}
+
+The IU-MiCert CLI implements 9 commands for credential management. Table \ref{tab:cli-commands} lists the actual implemented commands.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{4.5cm}|p{8.5cm}|}
+\hline
+\textbf{Command} & \textbf{Description} \\
+\hline
+\texttt{init} & Initialize system configuration and repository structure \\
+\hline
+\texttt{add-term} & Add academic term with course completions to Verkle tree \\
+\hline
+\texttt{generate-receipt} & Generate student receipt with cryptographic proofs \\
+\hline
+\texttt{verify-local} & Verify receipt offline without blockchain access (cryptographic only) \\
+\hline
+\texttt{publish-roots} & Publish term root commitments to Ethereum blockchain \\
+\hline
+\texttt{supersede-term} & Process credential revocations by publishing new tree version \\
+\hline
+\texttt{serve} & Start REST API server for web interface integration \\
+\hline
+\texttt{version} & Display CLI version and build information \\
+\hline
+\texttt{test-verify} & Run comprehensive cryptographic verification test suite \\
+\hline
+\end{tabular}
+\caption{Implemented CLI Commands}
+\label{tab:cli-commands}
+\end{table}
+
+\textbf{Note:} The \texttt{supersede-term} command was recently added to support the revocation workflow described in Chapter 3. This command handles the complete revocation process including tree reconstruction, version increment, root computation, and blockchain publication.
+
+\subsection{Key Command Flows}
+\label{subsec:command-flows}
+
+The typical workflow for issuing credentials involves executing commands in sequence:
+
+\begin{lstlisting}[language=bash, caption=Complete Issuance Workflow, label=lst:issuance-flow]
+# Initialize repository (first-time setup)
+./micert init
+
+# Add academic term with course data
+./micert add-term --term="Semester_1_2023" --data="courses.json"
+
+# Generate receipt for a student
+./micert generate-receipt --student="ITITIU00001" --output="receipt.json"
+
+# Publish term roots to blockchain (requires ISSUER_PRIVATE_KEY)
+./micert publish-roots --network="sepolia"
+
+# Start API server for web interfaces
+./micert serve --port=8080
+\end{lstlisting}
+
+For revocation scenarios, the workflow includes:
+
+\begin{lstlisting}[language=bash, caption=Revocation Workflow, label=lst:revocation-flow]
+# Revoke a specific course credential
+./micert supersede-term \
+  --term="Semester_1_2024" \
+  --student="ITITIU00003" \
+  --course="IT254IU" \
+  --reason="Academic misconduct"
+
+# This command:
+# 1. Loads the current term tree (v1)
+# 2. Removes the specified course
+# 3. Rebuilds tree and computes new root
+# 4. Publishes v2 root to blockchain
+# 5. Generates new receipts
+\end{lstlisting}
+
+\section{Smart Contract Implementation}
+\label{sec:smart-contract-impl}
+
+The IUMiCertRegistry smart contract provides the blockchain infrastructure for storing term root commitments with version tracking.
+
+\subsection{Contract Source Code}
+\label{subsec:contract-code}
+
+Listing \ref{lst:smart-contract} presents the complete Solidity implementation:
+
+\begin{lstlisting}[language=Solidity, caption=IUMiCertRegistry Smart Contract, label=lst:smart-contract]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+contract IUMiCertRegistry {
+    address public issuer;
+
+    // termIdHash => version => root (32 bytes)
+    mapping(bytes32 => mapping(uint256 => bytes32)) public termRoots;
+
+    // termIdHash => current version number
+    mapping(bytes32 => uint256) public currentVersion;
+
+    event TermRootPublished(
+        bytes32 indexed termIdHash,
+        uint256 version,
+        bytes32 root,
+        uint256 timestamp
+    );
+
+    constructor() {
+        issuer = msg.sender;
+    }
+
+    modifier onlyIssuer() {
+        require(msg.sender == issuer, "Not authorized issuer");
+        _;
+    }
+
+    function publishTermRoot(
+        string calldata termId,
+        bytes32 root
+    ) external onlyIssuer {
+        bytes32 termIdHash = keccak256(bytes(termId));
+        uint256 newVersion = currentVersion[termIdHash] + 1;
+
+        termRoots[termIdHash][newVersion] = root;
+        currentVersion[termIdHash] = newVersion;
+
+        emit TermRootPublished(
+            termIdHash,
+            newVersion,
+            root,
+            block.timestamp
+        );
+    }
+
+    function getTermRoot(
+        string calldata termId,
+        uint256 version
+    ) external view returns (bytes32) {
+        bytes32 termIdHash = keccak256(bytes(termId));
+        return termRoots[termIdHash][version];
+    }
+
+    function getCurrentVersion(
+        string calldata termId
+    ) external view returns (uint256) {
+        return currentVersion[keccak256(bytes(termId))];
+    }
+}
+\end{lstlisting}
+
+\textbf{Contract Deployment:} The contract is deployed at address \texttt{0x2452F0063c600BcFc232cC9daFc48B7372472f79} on Ethereum Sepolia testnet. The deployment was performed on November 27, 2025, and the contract has been used to publish term roots for all test academic terms.
+
+\section{Revocation System Implementation}
+\label{sec:revocation-impl}
+
+The revocation system implementation consists of database schema for tracking requests and workflow implementation for processing revocations.
+
+\subsection{Database Schema}
+\label{subsec:revocation-schema}
+
+The revocation system uses two primary database tables:
+
+\begin{lstlisting}[language=SQL, caption=Revocation Database Schema, label=lst:revocation-schema]
+CREATE TABLE revocation_requests (
+    id INTEGER PRIMARY KEY,
+    term_id TEXT NOT NULL,
+    student_id TEXT NOT NULL,
+    course_id TEXT NOT NULL,
+    reason TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at DATETIME,
+    processed_at DATETIME
+);
+
+CREATE TABLE term_versions (
+    id INTEGER PRIMARY KEY,
+    term_id TEXT NOT NULL,
+    version INTEGER NOT NULL,
+    verkle_root TEXT NOT NULL,
+    tx_hash TEXT,
+    published_at DATETIME
+);
+\end{lstlisting}
+
+The \texttt{revocation\_requests} table tracks the complete lifecycle of revocation requests from submission through processing. The \texttt{term\_versions} table maintains a complete history of all published tree versions with their corresponding blockchain transaction hashes.
+
+\subsection{Revocation Processing Flow}
+\label{subsec:revocation-processing}
+
+The revocation workflow implementation consists of several stages:
 
 \begin{enumerate}
-    \item \textbf{Frontend Client Application}: A React.js-based web interface supporting multiple receipt verification types
-    \item \textbf{CLI Tools}: Go-based command-line utilities for Verkle tree construction and credential management
-    \item \textbf{Blockchain Infrastructure}: Smart contract-based verification system for on-chain credential validation
+    \item \textbf{Request Creation:} POST to \texttt{/api/issuer/revocations} creates a new revocation request with status ``pending''
+    \item \textbf{Review and Approval:} POST to \texttt{/api/issuer/revocations/\{id\}/approve} moves request to ``approved'' status
+    \item \textbf{Batch Processing:} POST to \texttt{/api/issuer/revocations/process} executes:
+    \begin{enumerate}
+        \item Load current term tree from database
+        \item Remove all approved revoked courses
+        \item Rebuild tree structure with remaining courses
+        \item Compute new root commitment
+        \item Increment version number
+        \item Publish new root to blockchain via smart contract
+        \item Generate new receipts for all students in affected term
+        \item Update request status to ``processed''
+    \end{enumerate}
 \end{enumerate}
 
-The modular design ensures scalability and maintainability while supporting the core functionalities of credential issuance, selective disclosure, and verification as outlined in the system requirements.
-
-% TODO: Add section on actual CLI commands implemented:
-% - init: Initialize new credential repository
-% - generate-data: Generate comprehensive academic dataset for testing
-% - add-term: Add new academic term with course completions
-% - batch-process: Process all available terms from generated student data
-% - generate-receipt: Generate academic journey receipt for student
-% - generate-all-receipts: Generate receipts for all students in batch
-% - generate-addon-term: Generate a single additional term for demo/testing
-% - verify-local: Verify receipt locally without blockchain
-% - test-verify: Full cryptographic verification
-% - display-receipt: Display receipt in human-readable format
-% - verification-guide: Show step-by-step verification guide for third parties
-% - publish-roots: Publish term root commitments to blockchain
-% - serve: Start the IU-MiCert API server for web interface
-% - migrate: Run database migrations
-% - db-import: Import generated data into database
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.8\textwidth]{figures/system_architecture.png}
-    \caption{IU-MiCert System Architecture Overview}
-    \label{fig:system_architecture}
-\end{figure}
-
-\section{Frontend Implementation}
-\label{sec:frontend_implementation}
-
-The frontend implementation represents the most mature component of the IU-MiCert system, providing a comprehensive user interface for credential verification and receipt management.
-
-\subsection{Client Application Architecture}
-\label{subsec:client_architecture}
-
-The client application is built using React.js with Next.js framework, leveraging TypeScript for type safety and enhanced developer experience. The application architecture follows a component-based design pattern, ensuring modularity and reusability across different verification workflows.
-
-\subsubsection{Receipt Type Support}
-The frontend application supports multiple receipt verification types to accommodate various credential scenarios:
-
-\begin{itemize}
-    \item \textbf{Single Term Receipts}: Verification of credentials for a specific academic term or period
-    \item \textbf{Academic Journey Receipts}: Comprehensive verification of multiple terms representing complete academic progression
-    \item \textbf{Selective Disclosure}: Granular control over which credentials are revealed during verification
-\end{itemize}
-
-The implementation utilizes a unified interface that dynamically adapts based on the receipt type, providing optimal user experience while maintaining consistency across different verification scenarios.
-
-\subsubsection{Verification Workflow Implementation}
-The verification workflow implementation handles the complete process from receipt upload to credential validation:
-
-\begin{enumerate}
-    \item \textbf{Receipt Upload}: Secure handling of journey receipts with format validation
-    \item \textbf{Proof Parsing}: Extraction and validation of Verkle proofs from receipt data
-    \item \textbf{Blockchain Interaction}: Communication with smart contracts for root commitment verification
-    \item \textbf{Result Display}: Comprehensive presentation of verification results with detailed credential information
-\end{enumerate}
-
-The implementation ensures that all verification steps are performed securely and efficiently, with appropriate error handling and user feedback throughout the process.
-
-\subsection{User Interface Components}
-\label{subsec:ui_components}
-
-The frontend implementation includes several key UI components designed for optimal user experience across different verification workflows. The system provides specialized interfaces for each receipt type, ensuring users can efficiently navigate through various credential verification scenarios.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/landing-ui.png}
-    \caption{Client Site Landing - \url{https://iu-micert.vercel.app/}}
-    \label{fig:verify-ui}
-\end{figure}
-
-\subsubsection{Main Verification Interface}
-The primary entry point for all verification activities provides a unified starting interface:
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/verify-ui.png}
-    \caption{Main Verification Interface - Entry Point for All Receipt Types}
-    \label{fig:verify-ui}
-\end{figure}
-
-The main verification interface (Figure~\ref{fig:verify-ui}) offers:
-\begin{itemize}
-    \item Intuitive receipt type selection
-    \item Drag-and-drop upload functionality with format validation
-    \item Clear workflow guidance for different verification scenarios
-    \item Responsive design ensuring optimal display across all devices
-\end{itemize}
-
-\subsubsection{Single Term Verification Interface}
-For focused credential verification of specific academic periods:
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/term-verify.png}
-    \caption{Single Term Verification Interface}
-    \label{fig:term-verify}
-\end{figure}
-
-The single term interface (Figure~\ref{fig:term-verify}) provides:
-\begin{itemize}
-    \item Streamlined workflow for individual term verification
-    \item Detailed credential display with comprehensive metadata
-    \item Real-time verification progress indicators
-\end{itemize}
-
-\subsubsection{Academic Journey Verification Interface}
-For comprehensive multi-term credential verification:
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/journey-verify.png}
-    \caption{Academic Journey Verification Interface}
-    \label{fig:journey-verify}
-\end{figure}
-
-The journey verification interface (Figure~\ref{fig:journey-verify}) features:
-\begin{itemize}
-    \item Multi-term credential organization and display
-    \item Timeline visualization for academic progression
-    \item Batch verification capabilities with individual term status
-    \item Comprehensive academic history presentation
-\end{itemize}
-
-\subsubsection{Academic Journey Lookup}
-For advanced journey receipt management with lookup capabilities:
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/journey-lookup-verify.png}
-    \caption{Journey Lookup}
-    \label{fig:journey-lookup-verify}
-\end{figure}
-
-The journey lookup interface (Figure~\ref{fig:journey-lookup-verify}) delivers:
-\begin{itemize}
-    \item Quick access to single terms that comprise the journey
-\end{itemize}
-
-\subsubsection{Cross-Interface Design Consistency}
-All verification interfaces maintain design consistency through:
-\begin{itemize}
-    \item Unified color scheme and typography across all components
-    \item Consistent navigation patterns and user interaction models
-    \item Standardized error handling and user feedback mechanisms
-    \item Responsive design principles ensuring optimal functionality across desktop, tablet, and mobile devices
-\end{itemize}
-
-\subsubsection{Accessibility and Usability Features}
-The interface implementation prioritizes accessibility:
-\begin{itemize}
-    \item WCAG 2.1 compliance for screen reader compatibility
-    \item Intuitive user flows with clear progress indicators and helpful guidance text
-\end{itemize}
-
-\section{CLI Tools Implementation Status}
-\label{sec:cli_implementation}
-
-The CLI tools component represents the next phase of development, building upon existing Verkle tree implementation experience to create comprehensive credential management utilities.
-
-\subsection{Current Development State}
-\label{subsec:cli_current_state}
-
-While the CLI tools are not yet fully implemented, the development foundation is well-established based on previous thesis work on single diploma issuance using Verkle tree construction. The existing codebase provides:
-
-\begin{itemize}
-    \item Proven Verkle tree construction algorithms
-    \item Cryptographic proof generation mechanisms
-    \item Secure key management utilities
-    \item Blockchain interaction capabilities
-\end{itemize}
-
-\subsection{Planned CLI Architecture}
-\label{subsec:cli_architecture}
-
-The CLI tools will be implemented in Go, leveraging the \texttt{ethereum/go-verkle} library for cryptographic operations. The planned architecture includes:
-
-\subsubsection{Core Commands}
-\begin{itemize}
-    \item \texttt{micert init}: Initialize new credential repository
-    \item \texttt{micert add-term}: Add new academic term with credentials
-    \item \texttt{micert generate-receipt}: Create journey receipts with selective disclosure
-    \item \texttt{micert verify-local}: Local verification without blockchain interaction
-    \item \texttt{micert publish-roots}: Publish term root commitments to blockchain
-\end{itemize}
-
-\subsubsection{Data Format Adaptation}
-The CLI implementation will adapt the existing single diploma format to support:
-\begin{itemize}
-    \item Multi-term credential structures
-    \item Hierarchical academic progression
-    \item Selective disclosure metadata
-    \item Temporal consistency validation
-\end{itemize}
-
-\subsection{Implementation Roadmap}
-\label{subsec:cli_roadmap}
-
-The CLI development follows a phased approach:
-
-\begin{enumerate}
-    \item \textbf{Phase 1}: Adapt existing Verkle tree implementation for multi-term support
-    \item \textbf{Phase 2}: Implement journey receipt generation with selective disclosure
-    \item \textbf{Phase 3}: Integrate blockchain publishing capabilities
-    \item \textbf{Phase 4}: Add comprehensive testing and validation utilities
-\end{enumerate}
-
-The implementation leverages proven cryptographic libraries and follows established security practices from the previous diploma issuance system.
-
-\section{Blockchain Implementation Approach}
-\label{sec:blockchain_implementation}
-
-The blockchain component implementation strategy leverages existing verification capabilities while exploring enhanced system architectures for improved efficiency and functionality.
-
-\subsection{Current Blockchain Integration Status}
-\label{subsec:blockchain_status}
-
-The blockchain integration is in the planning and design phase, with implementation strategies informed by previous thesis work on on-chain credential verification. The current understanding includes:
-
-\begin{itemize}
-    \item Proven feasibility of on-chain Verkle proof verification
-    \item Smart contract capabilities for credential validation
-    \item Gas optimization strategies for batch operations
-    \item Integration patterns with frontend applications
-\end{itemize}
-
-\subsection{Implementation Strategies}
-\label{subsec:blockchain_strategies}
-
-Two primary approaches are being considered for blockchain implementation:
-
-\subsubsection{Direct Verification Approach}
-The direct approach involves:
-\begin{itemize}
-    \item Individual term verification through separate smart contract calls
-    \item Straightforward implementation using existing proof verification functions
-    \item Higher gas costs but simpler smart contract logic
-    \item Direct compatibility with current frontend verification workflows
-\end{itemize}
-
-This approach provides immediate functionality by adapting existing single-term verification to handle multiple terms sequentially.
-
-\subsubsection{Enhanced Batch Verification}
-The enhanced approach focuses on:
-\begin{itemize}
-    \item Batch verification of multiple terms in single transactions
-    \item Optimized gas usage through aggregated proof validation
-    \item Complex smart contract logic for journey receipt validation
-    \item Advanced cryptographic operations for efficient verification
-\end{itemize}
-
-This approach requires more sophisticated implementation but offers superior performance and cost-effectiveness for large-scale deployments.
-
-\subsection{Smart Contract Architecture}
-\label{subsec:smart_contract_architecture}
-
-The planned smart contract architecture builds upon the pseudocode outlined in Chapter \ref{ch:methodology} (Methodology), extending functionality to support:
-
-\subsubsection{Enhanced Storage Management}
-\begin{itemize}
-    \item Hierarchical term organization by academic periods
-    \item Efficient root commitment storage with metadata
-    \item Revocation management with granular control
-    \item Access control for authorized credential issuers
-\end{itemize}
-
-\subsubsection{Advanced Verification Functions}
-\begin{itemize}
-    \item Batch verification capabilities for journey receipts
-    \item Temporal consistency validation across multiple terms
-    \item Academic progression rule enforcement
-    \item Selective disclosure support with privacy preservation
-\end{itemize}
-
-\subsection{Development Priorities}
-\label{subsec:blockchain_priorities}
-
-The blockchain implementation prioritizes:
-
-\begin{enumerate}
-    \item \textbf{Security}: Comprehensive cryptographic validation and access control
-    \item \textbf{Efficiency}: Gas-optimized operations for cost-effective verification
-    \item \textbf{Compatibility}: Seamless integration with existing frontend and CLI components
-    \item \textbf{Scalability}: Architecture supporting high-volume credential verification
-\end{enumerate}
-
-The implementation will begin with the direct verification approach to establish baseline functionality, followed by enhancement to batch verification for improved performance.
-
-
-\section{Integration and Testing Strategy}
-\label{sec:integration_testing}
-
-The implementation strategy emphasizes thorough integration testing and validation across all system components to ensure reliable operation and security.
-
-\subsection{Component Integration}
-\label{subsec:component_integration}
-
-The integration approach follows a systematic methodology:
-
-\begin{enumerate}
-    \item \textbf{Frontend-CLI Integration}: Ensuring seamless data flow between web interface and command-line tools
-    \item \textbf{CLI-Blockchain Integration}: Validating smart contract interactions and transaction handling
-    \item \textbf{End-to-End Workflows}: Complete credential lifecycle testing from issuance to verification
-    \item \textbf{Cross-Component Validation}: Ensuring data consistency and format compatibility
-\end{enumerate}
-
-\subsection{Testing Framework}
-\label{subsec:testing_framework}
-
-The testing strategy encompasses:
-
-\subsubsection{Unit Testing}
-\begin{itemize}
-    \item Individual component functionality validation
-    \item Cryptographic operation correctness verification
-    \item Data format and serialization testing
-    \item Error handling and edge case coverage
-\end{itemize}
-
-\subsubsection{Integration Testing}
-\begin{itemize}
-    \item Cross-component communication validation
-    \item Blockchain transaction testing on Sepolia testnet
-    \item Performance benchmarking for large credential sets
-    \item Security audit of cryptographic implementations
-\end{itemize}
-
-\subsubsection{User Acceptance Testing}
-\begin{itemize}
-    \item Realistic workflow simulation with generated test data
-    \item User interface usability evaluation
-    \item Performance testing under various load conditions
-    \item Compatibility testing across different browser environments
-\end{itemize}
-
-\section{Current Limitations and Future Enhancements}
-\label{sec:limitations_enhancements}
-
-The current implementation state presents several limitations that will be addressed in future development phases:
-
-\subsection{Current Limitations}
-\label{subsec:current_limitations}
-
-\begin{itemize}
-    \item \textbf{CLI Tools}: Not yet implemented, limiting end-to-end credential management capabilities
-    \item \textbf{Blockchain Integration}: Pending implementation of smart contract verification system
-    \item \textbf{Scalability Testing}: Limited validation with large-scale credential datasets
-    \item \textbf{Production Deployment}: Current implementation focused on development and testing environments
-\end{itemize}
-
-\subsection{Planned Enhancements}
-\label{subsec:planned_enhancements}
-
-Future development will address current limitations through:
-
-\begin{itemize}
-    \item \textbf{Complete CLI Implementation}: Full command-line utility suite for credential management
-    \item \textbf{Advanced Blockchain Features}: Enhanced smart contract capabilities with batch verification
-    \item \textbf{Performance Optimization}: Improved efficiency for large-scale credential processing
-    \item \textbf{Security Auditing}: Comprehensive security analysis and vulnerability assessment
-    \item \textbf{Production Readiness}: Deployment optimization and monitoring capabilities
-\end{itemize}
-
-\section{Chapter Summary}
-\label{sec:implementation_summary}
-
-This chapter has presented the current implementation state of the IU-MiCert system, highlighting the completed frontend components, planned CLI tools development, and blockchain integration strategy. The implementation demonstrates significant progress in creating a comprehensive decentralized credential management system with advanced privacy features.
-
-The frontend implementation provides a robust foundation for credential verification and receipt management, supporting multiple verification types and selective disclosure capabilities. The planned CLI tools development builds upon proven Verkle tree implementation experience, while the blockchain integration strategy balances immediate functionality with long-term performance optimization.
-
-The systematic approach to implementation ensures that each component contributes effectively to the overall system architecture while maintaining security, efficiency, and user experience standards. The integration and testing strategy provides confidence in system reliability and prepares for future enhancements and production deployment.
-
-The current progress establishes a solid foundation for the complete IU-MiCert system implementation, with clear development paths for the remaining components and a comprehensive understanding of the technical challenges and solutions involved in decentralized credential management.
+\section{Web Interface Implementation}
+\label{sec:web-impl}
+
+Two separate web applications provide user interfaces for different stakeholder groups.
+
+\subsection{Issuer Dashboard}
+\label{subsec:issuer-dashboard}
+
+The issuer dashboard, implemented as a Next.js application at \texttt{packages/issuer/web/}, provides administrative interfaces:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{Route} & \textbf{Purpose} \\
+\hline
+\texttt{/} & Main dashboard for publishing term roots to blockchain \\
+\hline
+\texttt{/demo-data} & Generate test data for demonstration and development \\
+\hline
+\texttt{/verifier} & Test receipt verification functionality \\
+\hline
+\texttt{/revocations} & Manage credential revocation requests and approvals \\
+\hline
+\end{tabular}
+\caption{Issuer Dashboard Routes}
+\label{tab:issuer-routes}
+\end{table}
+
+The dashboard integrates with Ethereum wallets through wagmi library, enabling blockchain transactions directly from the browser. It displays term status, computes gas estimates, and provides transaction confirmation feedback.
+
+\subsection{Student/Verifier Portal}
+\label{subsec:student-portal}
+
+The student/verifier portal, deployed at \url{https://iu-micert.vercel.app}, provides verification interfaces:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{Route} & \textbf{Purpose} \\
+\hline
+\texttt{/} & Upload and verify receipt JSON files \\
+\hline
+\texttt{/about} & System information and verification instructions \\
+\hline
+\end{tabular}
+\caption{Student/Verifier Portal Routes}
+\label{tab:portal-routes}
+\end{table}
+
+\section{Integration and Testing}
+\label{sec:integration-testing}
+
+The system integration validates that all components work together correctly.
+
+\subsection{Test Strategy}
+\label{subsec:test-strategy}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.5cm}|p{5cm}|p{4.5cm}|}
+\hline
+\textbf{Level} & \textbf{Scope} & \textbf{Tools} \\
+\hline
+Unit & Verkle tree operations & Go testing framework \\
+\hline
+Integration & API endpoints and workflows & HTTP test clients \\
+\hline
+End-to-End & Full issuance and verification & Manual + automated scripts \\
+\hline
+Contract & Smart contract functions & Foundry test framework \\
+\hline
+\end{tabular}
+\caption{Testing Strategy by Level}
+\label{tab:test-strategy}
+\end{table}
+
+\subsection{Key Test Cases}
+\label{subsec:test-cases}
+
+The implementation includes comprehensive test coverage for critical operations. A representative test case for full IPA verification:
+
+\begin{lstlisting}[language=Go, caption=Full IPA Verification Test, label=lst:ipa-test]
+func TestFullIPAVerification(t *testing.T) {
+    // 1. Create term tree
+    termTree := NewTermVerkleTree("TestTerm_2024")
+
+    // 2. Add courses for test student
+    termTree.AddCourses(studentDID, courses)
+
+    // 3. Publish (compute root commitment)
+    termTree.PublishTerm()
+
+    // 4. Generate proof for specific course
+    proofData, err := termTree.GenerateCourseProof(
+        studentDID,
+        courseID
+    )
+    assert.NoError(t, err)
+
+    // 5. Verify proof against computed root
+    err = VerifyCourseProof(
+        courseKey,
+        course,
+        proofData,
+        termTree.VerkleRoot
+    )
+    assert.NoError(t, err)
+}
+\end{lstlisting}
+
+This test validates the complete cryptographic pipeline: tree construction, commitment computation, proof generation, and IPA verification. Additional tests cover edge cases such as invalid proofs, tampered course data, mismatched roots, and empty receipts.

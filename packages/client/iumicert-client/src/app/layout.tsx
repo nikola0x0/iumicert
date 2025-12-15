@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ViewTransitions } from "next-view-transitions";
 import { Inter, Space_Grotesk, Crimson_Text } from "next/font/google";
 
+import StyledComponentsRegistry from "@/lib/registry";
 import ConditionalLayout from "./components/ConditionalLayout";
 
 import "./globals.css";
@@ -44,7 +45,9 @@ export default function RootLayout({
         className={`h-full ${inter.variable} ${spaceGrotesk.variable} ${crimsonText.variable}`}
       >
         <body className="antialiased h-full relative overflow-hidden">
-          <ConditionalLayout>{children}</ConditionalLayout>
+          <StyledComponentsRegistry>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </StyledComponentsRegistry>
         </body>
       </html>
     </ViewTransitions>

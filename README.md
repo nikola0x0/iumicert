@@ -31,7 +31,6 @@ Traditional credential systems treat courses as isolated achievements without pr
 Current blockchain credential systems:
 
 - Focus primarily on whole degree verification
-- Lack efficient mechanisms for micro-credential management
 - Create opportunities for credential forgery through timeline gaps
 - Use Merkle trees that become inefficient at scale
 
@@ -59,14 +58,14 @@ graph TD
 
 ## 🚀 Key Features
 
-| Feature                    | Benefit                                            |
-| -------------------------- | -------------------------------------------------- |
-| Verkle Tree Implementation | Compact proofs with efficient verification         |
-| Term-by-Term Verification  | Verify specific academic periods independently     |
-| Academic Provenance        | Complete, tamper-proof timeline of achievements    |
-| Micro-Credential Tracking  | Each course becomes an independently verifiable credential |
+| Feature                    | Benefit                                                       |
+| -------------------------- | ------------------------------------------------------------- |
+| Verkle Tree Implementation | Compact proofs with efficient verification                    |
+| Term-by-Term Verification  | Verify specific academic periods independently                |
+| Academic Provenance        | Complete, tamper-proof timeline of achievements               |
+| Micro-Credential Tracking  | Each course becomes an independently verifiable credential    |
 | Selective Disclosure       | Share specific achievements without revealing full transcript |
-| Temporal Integrity         | Prevents backdating and timeline manipulation       |
+| Temporal Integrity         | Prevents backdating and timeline manipulation                 |
 
 ## 📚 Thesis Chapters
 
@@ -132,10 +131,12 @@ If you use this work in your research, please cite:
 ## 🌐 Live Demo & Deployed Contracts
 
 **Ethereum Sepolia Testnet:**
+
 - **IUMiCertRegistry**: [`0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60`](https://sepolia.etherscan.io/address/0x4bE58F5EaFDa3b09BA87c2F5Eb17a23c37C0dD60)
 - **ReceiptRevocationRegistry**: [`0x8814ae511d54Dc10C088143d86110B9036B3aa92`](https://sepolia.etherscan.io/address/0x8814ae511d54Dc10C088143d86110B9036B3aa92)
 
 **Web Applications:**
+
 - **Student/Verifier Portal**: [https://iu-micert.vercel.app](https://iu-micert.vercel.app)
 - **Issuer Dashboard**: [https://iumicert-issuer.vercel.app](https://iumicert-issuer.vercel.app)
 
