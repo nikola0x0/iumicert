@@ -1,0 +1,185 @@
+<mxfile host="app.diagrams.net" modified="2024-12-16T00:00:00.000Z" agent="Mozilla/5.0" version="22.1.0" type="device">
+  <diagram name="Verkle Microcredential Structure" id="verkle-microcred">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="IU-MiCert: One Verkle Tree Per Academic Term" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="500" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Blockchain Layer -->
+        <mxCell id="bc-layer" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#000000;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="1000" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="bc-label" value="BLOCKCHAIN (Ethereum Sepolia)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=11;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="60" y="55" width="250" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Term Roots on Blockchain -->
+        <mxCell id="root1" value="Root₁&#xa;Semester_1_2023&#xa;v1: 0x7f3a..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="100" y="75" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="root2" value="Root₂&#xa;Semester_2_2023&#xa;v1: 0x4b2c..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="280" y="75" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="root3" value="Root₃&#xa;Summer_2023&#xa;v1: 0x9d1e..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="460" y="75" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="root4" value="Root₄&#xa;Semester_1_2024&#xa;v2: 0xf5a8..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#000000;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="640" y="75" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="dots" value="..." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="800" y="85" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rootN" value="Root_N&#xa;Current Term&#xa;v1: 0x..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="880" y="75" width="120" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows from roots to trees -->
+        <mxCell id="arr1" value="" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="120" as="sourcePoint" />
+            <mxPoint x="160" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arr2" value="" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="340" y="120" as="sourcePoint" />
+            <mxPoint x="340" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arr3" value="" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="120" as="sourcePoint" />
+            <mxPoint x="520" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arr4" value="" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="700" y="120" as="sourcePoint" />
+            <mxPoint x="700" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Term Trees -->
+        <!-- Tree 1 -->
+        <mxCell id="tree1-box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="70" y="160" width="180" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="tree1-label" value="Term Tree: Semester_1_2023" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=1;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="75" y="165" width="170" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="tree1-root" value="C_root" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="130" y="185" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t1-conn1" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#000000" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="215" as="sourcePoint" />
+            <mxPoint x="110" y="245" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t1-conn2" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#000000" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="215" as="sourcePoint" />
+            <mxPoint x="160" y="245" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t1-conn3" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#000000" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="215" as="sourcePoint" />
+            <mxPoint x="210" y="245" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t1-s1" value="Student A" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=8;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="80" y="245" width="55" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="t1-s2" value="Student B" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=8;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="133" y="245" width="55" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="t1-s3" value="..." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="190" y="248" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="t1-courses" value="IT013  IT153  PE008&#xa;(courses as leaves)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=8;fontStyle=2;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="80" y="280" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t1-count" value="~2,500 courses" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="100" y="340" width="120" height="15" as="geometry" />
+        </mxCell>
+
+        <!-- Tree 2 -->
+        <mxCell id="tree2-box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="260" y="160" width="160" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="tree2-label" value="Term Tree: Semester_2_2023" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=1;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="265" y="165" width="150" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="tree2-root" value="C_root" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="310" y="185" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t2-tree" value="..." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="320" y="230" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t2-count" value="~2,500 courses" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="280" y="340" width="120" height="15" as="geometry" />
+        </mxCell>
+
+        <!-- Tree 3 -->
+        <mxCell id="tree3-box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="440" y="160" width="160" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="tree3-label" value="Term Tree: Summer_2023" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=1;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="445" y="165" width="150" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="tree3-root" value="C_root" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="490" y="185" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t3-tree" value="..." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="500" y="230" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t3-count" value="~1,000 courses" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="460" y="340" width="120" height="15" as="geometry" />
+        </mxCell>
+
+        <!-- Tree 4 (with version indicator) -->
+        <mxCell id="tree4-box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e0e0e0;strokeColor=#000000;strokeWidth=1;dashed=1" vertex="1" parent="1">
+          <mxGeometry x="620" y="160" width="160" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="tree4-label" value="Term Tree: Semester_1_2024" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=1;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="625" y="165" width="150" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="tree4-version" value="v2 (after revocation)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=8;fontStyle=2;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="645" y="180" width="100" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="tree4-root" value="C_root" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="670" y="195" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t4-tree" value="..." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="680" y="240" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="t4-count" value="~2,499 courses&#xa;(1 revoked)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="640" y="330" width="120" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Key points box -->
+        <mxCell id="key-box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="800" y="160" width="240" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="key-title" value="Key Design Points" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=10;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="810" y="165" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="key-points" value="• One tree per academic term&#xa;&#xa;• Each term root published&#xa;   independently to blockchain&#xa;&#xa;• Courses = leaf nodes&#xa;   (micro-credentials)&#xa;&#xa;• Version tracking enables&#xa;   revocation per term&#xa;&#xa;• 32 bytes per term on-chain" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="810" y="185" width="220" height="165" as="geometry" />
+        </mxCell>
+
+        <!-- Bottom note -->
+        <mxCell id="note" value="Each term tree is independent. Students receive receipts aggregating proofs from multiple terms." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=2;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="200" y="380" width="600" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

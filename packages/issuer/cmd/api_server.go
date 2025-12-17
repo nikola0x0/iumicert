@@ -850,8 +850,8 @@ func handleDemoGenerateFull(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate inputs
-	if req.NumStudents < 1 || req.NumStudents > 100 {
-		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "num_students must be between 1 and 100"})
+	if req.NumStudents < 1 || req.NumStudents > 50000 {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "num_students must be between 1 and 50000"})
 		return
 	}
 

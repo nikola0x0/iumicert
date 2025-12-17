@@ -1,27 +1,19 @@
 \chapter{INTRODUCTION}
 \label{ch:introduction}
 
-% TODO: Expand introduction to 8 pages as per REPORT.md outline
-% TODO: Include the following sections as outlined in REPORT.md:
-% 1. Motivation & Problem Statement (already started)
-% 2. Research Objectives
-% 3. Scope & Limitations
-% 4. Contributions
-% 5. Thesis Organization
-
 \section{Motivation}
 
 \subsection{Traditional Academic Credential Systems}
 Traditional paper-based and PDF credentials suffer from fundamental issues. Centralized verification requires employers to contact institutions directly for each credential check, creating administrative overhead and delays in hiring processes. These credentials are easily forged, as paper certificates and digital PDFs lack cryptographic protection against tampering. Furthermore, traditional systems cannot verify individual achievements—only complete degrees or certificates can be validated, preventing granular verification of specific skills or courses.
 
 \subsection{Existing Blockchain Credential Systems}
-Blockchain-based credentials such as BlockCerts (MIT Media Lab), CVSS (Chinese Vocational School System), IU-TransCert, and IU-VecCert have emerged as solutions to address the limitations of traditional systems. These systems provide immutability and transparency through blockchain anchoring, enabling cryptographic verification without institutional contact. The tamper-proof nature of blockchain records ensures that once credentials are issued, they cannot be modified or forged, representing a significant advancement over paper-based systems.
+Blockchain-based credentials such as BlockCerts \cite{blockcerts_mit}, CVSS \cite{nguyen2018cvss}, IU-TransCert \cite{le_iutranscert}, and IU-VecCert \cite{nguyen2024iuvec} have emerged as solutions to address the limitations of traditional systems. These systems provide immutability and transparency through blockchain anchoring, enabling cryptographic verification without institutional contact. The tamper-proof nature of blockchain records ensures that once credentials are issued, they cannot be modified or forged, representing a significant advancement over paper-based systems.
 
 \subsection{Remaining Technical Gaps in Current Blockchain Systems}
 Despite these advances, existing blockchain credential systems still face critical limitations. First, they lack granularity—most systems can only verify whole certificates or transcripts, not individual courses or micro-credentials. Second, Merkle tree-based proof systems produce proofs that scale with tree depth (O(log n)), resulting in larger proof sizes for systems with many credentials. Third, current systems require full transcript disclosure for any verification, lacking selective disclosure mechanisms that would preserve student privacy. Fourth, temporal integrity is absent—there is no cryptographic binding to prove when credentials were issued, enabling potential backdating attacks. Finally, storing full credential hashes on-chain creates high costs that limit scalability for large-scale institutional deployments.
 
 \subsection{Our Solution: Verkle Tree Technology}
-Verkle trees, originally designed for Ethereum state proofs, address these gaps in blockchain credential systems. They provide compact proofs with constant size (approximately 600 bytes) regardless of dataset size, solving the proof scaling problem. The technology enables granular verification where each course becomes an independent micro-credential that can be verified separately. Students gain selective disclosure capabilities—they can prove specific achievements without revealing their full academic records. The term-based tree structure with blockchain timestamps provides temporal binding, creating verifiable issuance timelines that prevent backdating. Finally, the architecture is cost-effective, requiring only 32-byte root commitments to be stored on-chain per academic term, enabling scalable deployment for institutions with thousands of students.
+Verkle trees, originally designed for Ethereum state proofs, address these gaps in blockchain credential systems. They provide compact proofs with constant size (approximately 1.8 KB) regardless of dataset size, solving the proof scaling problem. The technology enables granular verification where each course becomes an independent micro-credential that can be verified separately. Students gain selective disclosure capabilities—they can prove specific achievements without revealing their full academic records. The term-based tree structure with blockchain timestamps provides temporal binding, creating verifiable issuance timelines that prevent backdating. Finally, the architecture is cost-effective, requiring only 32-byte root commitments to be stored on-chain per academic term, enabling scalable deployment for institutions with thousands of students.
 
 \section{Problem Statement}
 How can we design a \textbf{blockchain-based system for verifiable academic credentials} using \textbf{Verkle tree technology} that addresses the limitations of existing solutions by:
@@ -82,7 +74,7 @@ This thesis is organized into eight chapters that systematically present the res
 
 \textbf{Chapter 1: Introduction} establishes the research foundation by presenting the motivation for blockchain-based micro-credential systems, defining the specific problem addressed by this work, delineating the scope and constraints of the system, and outlining measurable research objectives.
 
-\textbf{Chapter 2: Background and Related Work} provides the theoretical foundation and contextualizes the research within existing literature. This chapter first presents the theoretical background covering blockchain technology, Ethereum platform, Pedersen commitments, Inner Product Arguments (IPA), and Verkle trees. It then surveys current advancements in blockchain credential systems including BlockCerts, CVSS, EduCTX, and previous IU Vietnam projects (IU-TransCert, IU-VecCert). Finally, it identifies specific research gaps that IU-MiCert addresses.
+\textbf{Chapter 2: Background and Related Work} provides the theoretical foundation and contextualizes the research within existing literature. This chapter first presents the theoretical background covering blockchain technology, Ethereum platform, Pedersen commitments, Inner Product Arguments (IPA), and Verkle trees. It then surveys current advancements in blockchain credential systems including BlockCerts, CVSS, EduCTX, and previous institutional projects (IU-TransCert, IU-VecCert). Finally, it identifies specific research gaps that IU-MiCert addresses.
 
 \textbf{Chapter 3: Methodology} describes the system design and architectural approach. Beginning with high-level system requirements derived from the problem statement, this chapter presents functional and non-functional requirements, use case analyses, and comprehensive system architecture. The chapter details the design of Verkle tree construction, proof generation and verification mechanisms, blockchain integration strategy, credential revocation system, and complexity analysis.
 

@@ -8,7 +8,7 @@ This chapter describes the systematic approach to designing and implementing the
 
 The system must fulfill several high-level requirements derived from the problem statement and gaps identified in existing blockchain credential systems.
 
-The system must enable \textbf{granular verification} of individual course completions as independent micro-credentials, rather than requiring verification of complete certificates or transcripts. This addresses the limitation where existing systems such as BlockCerts and IU-TransCert can only verify credentials as atomic units, preventing employers from verifying specific technical skills without accessing complete academic records. To achieve this efficiently, the system must generate \textbf{compact cryptographic proofs} of approximately 600 bytes that remain constant regardless of the total dataset size. This directly addresses the O(log n) scaling limitation of Merkle tree-based systems where proof sizes grow with tree depth, creating verification overhead and storage burdens that limit scalability. Additionally, the system must provide \textbf{temporal integrity} through cryptographic binding between credentials and their issuance time via blockchain timestamps. This ensures credentials cannot be backdated or manipulated to falsely claim earlier achievements, addressing the temporal proof gap that enables timeline manipulation in current systems.
+The system must enable \textbf{granular verification} of individual course completions as independent micro-credentials, rather than requiring verification of complete certificates or transcripts. This addresses the limitation where existing systems such as BlockCerts and IU-TransCert can only verify credentials as atomic units, preventing employers from verifying specific technical skills without accessing complete academic records. To achieve this efficiently, the system must generate \textbf{compact cryptographic proofs} that remain constant in size regardless of the total dataset size. This directly addresses the O(log n) scaling limitation of Merkle tree-based systems where proof sizes grow with tree depth, creating verification overhead and storage burdens that limit scalability. Additionally, the system must provide \textbf{temporal integrity} through cryptographic binding between credentials and their issuance time via blockchain timestamps. This ensures credentials cannot be backdated or manipulated to falsely claim earlier achievements, addressing the temporal proof gap that enables timeline manipulation in current systems.
 
 To address privacy concerns that arise when students must reveal complete transcripts for any verification, the system must support \textbf{selective disclosure}, allowing students to prove specific achievements without revealing their complete academic history. The system must enable filtering of credentials at the receipt level while maintaining cryptographic validity of the remaining proofs, addressing the current limitation where full transcripts must be disclosed even when verifiers need only specific information. This capability must be achieved while maintaining \textbf{cost-effective deployment} by anchoring only compact tree roots (32 bytes per term) on-chain rather than storing individual credential hashes as in systems like CVSS. This design enables scalable deployment where thousands of credentials can be verified through a single on-chain commitment, amortizing blockchain costs across all students in a term rather than incurring per-credential publishing fees.
 
@@ -125,6 +125,15 @@ The system supports three primary use cases corresponding to the main workflows 
     \item \textbf{Postcondition:} Partial receipt still passes cryptographic verification; privacy preserved
 \end{itemize}
 
+Figure \ref{fig:use-case-diagram} illustrates the primary use cases and their relationships for the IU-MiCert system.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/use_case_diagram.png}
+\caption{IU-MiCert Use Case Diagram}
+\label{fig:use-case-diagram}
+\end{figure}
+
 \subsection{System Overview}
 \label{subsec:system-overview}
 
@@ -132,32 +141,7 @@ Figure \ref{fig:system-architecture} illustrates the three-tier architecture of 
 
 \begin{figure}[H]
 \centering
-\begin{verbatim}
-┌─────────────────────────────────────────────────────┐
-│              PRESENTATION LAYER                     │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────┐  │
-│  │   Issuer     │  │   Student    │  │ Verifier │  │
-│  │  Dashboard   │  │    Portal    │  │  Portal  │  │
-│  └──────────────┘  └──────────────┘  └──────────┘  │
-└─────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────┐
-│              APPLICATION LAYER                      │
-│              REST API Server                        │
-│      (Business Logic & Coordination)                │
-└─────────────────────────────────────────────────────┘
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-┌─────────────────────────────────────────────────────┐
-│                  DATA LAYER                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
-│  │ Verkle   │  │  Local   │  │   Blockchain     │  │
-│  │  Engine  │  │ Database │  │ (Smart Contract) │  │
-│  └──────────┘  └──────────┘  └──────────────────┘  │
-└─────────────────────────────────────────────────────┘
-\end{verbatim}
+\includegraphics[width=0.95\textwidth]{figures/system_overview.png}
 \caption{IU-MiCert System Architecture Overview}
 \label{fig:system-architecture}
 \end{figure}
@@ -175,36 +159,7 @@ This section details the specific responsibilities of each system component and 
 
 \begin{figure}[H]
 \centering
-\begin{verbatim}
-┌──────────────────────────────────────────────┐
-│           ISSUER OPERATIONS                  │
-│                                              │
-│  Issuer Dashboard ──(1)──> API Server        │
-│                                 │            │
-│                                 ├──(2)──>    │
-│                                 │   Verkle   │
-│                                 │   Engine   │
-│                                 │      │     │
-│                                 │      └(3)──│
-│                                 ├──(4)──>    │
-│                                 │  Database  │
-│                                 │            │
-│                                 └──(5)──>    │
-│                                   Blockchain │
-└──────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────┐
-│       STUDENT/VERIFIER OPERATIONS            │
-│                                              │
-│  Portal ──(6)──> API Server                  │
-│                      │                       │
-│                      ├──(7)──> Verkle Engine │
-│                      │         (Verify)      │
-│                      │                       │
-│                      └──(8)──> Blockchain    │
-│                               (Query)        │
-└──────────────────────────────────────────────┘
-\end{verbatim}
+\includegraphics[width=0.85\textwidth]{figures/system_architecture.png}
 \caption{Component Interaction Diagram}
 \label{fig:component-interaction}
 \end{figure}
@@ -330,24 +285,20 @@ This (keyHash, valueHash) pair forms the leaf entry in the Verkle tree. The dete
 
 IU-MiCert employs a single Verkle tree per academic term, aggregating all course completions for all students within that term. This design choice provides several advantages: it enables efficient term-based commitment with a single 32-byte root covering potentially thousands of credentials, supports temporal integrity by associating all credentials in a term with a single blockchain timestamp, and simplifies revocation by allowing term-level tree reconstruction.
 
-Figure \ref{fig:term-tree-structure} illustrates the organization of a single term tree:
+Figure \ref{fig:verkle-microcred-structure} illustrates the overall architecture with multiple independent term trees, each with its own blockchain-anchored root commitment.
 
 \begin{figure}[H]
 \centering
-\begin{verbatim}
-Term: Semester_1_2023
-                              Root
-                         (32-byte commitment)
-                               │
-              ┌────────────────┼────────────────┐
-              │                │                │
-         [stem byte 0]    [stem byte 0]   [stem byte 0]
-           = 0x87            = 0x4a          = 0xf2
-              │                │                │
-              ▼                ▼                ▼
-         Student A        Student B        Student C
-         courses          courses          courses
-\end{verbatim}
+\includegraphics[width=0.95\textwidth]{figures/verkle_microcred_structure.png}
+\caption{One Verkle Tree Per Academic Term Architecture}
+\label{fig:verkle-microcred-structure}
+\end{figure}
+
+Figure \ref{fig:term-tree-structure} illustrates the internal organization of a single term tree:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/term_tree_structure.png}
 \caption{Single Term Verkle Tree Structure}
 \label{fig:term-tree-structure}
 \end{figure}
@@ -407,28 +358,7 @@ Figure \ref{fig:revocation-concept} illustrates the version-based supersession c
 
 \begin{figure}[H]
 \centering
-\begin{verbatim}
-Original State (v1):
-┌─────────────────────────────────────┐
-│ Semester_1_2023 v1                  │
-│ ├─ Student A: Course1, Course2      │
-│ ├─ Student B: Course1, Course3      │
-│ └─ Student C: Course1               │
-└─────────────────────────────────────┘
-
-After Revocation (v2):
-┌─────────────────────────────────────┐
-│ Semester_1_2023 v2                  │
-│ ├─ Student A: Course1, Course2      │
-│ ├─ Student B: Course3  ← Course1 removed
-│ └─ Student C: Course1               │
-└─────────────────────────────────────┘
-
-Blockchain State:
-  termRoots["Semester_1_2023"][1] = 0xabc...  (original)
-  termRoots["Semester_1_2023"][2] = 0xdef...  (after revocation)
-  currentVersion["Semester_1_2023"] = 2
-\end{verbatim}
+\includegraphics[width=0.9\textwidth]{figures/revocation_versioning.png}
 \caption{Version-Based Revocation Through Tree Supersession}
 \label{fig:revocation-concept}
 \end{figure}
@@ -507,7 +437,7 @@ Blockchain transaction costs directly impact system economics. The IU-MiCert des
 \hline
 \textbf{Operation} & \textbf{Gas} & \textbf{Cost at 20 gwei} \\
 \hline
-publishTermRoot & Approximately 50,000 & Approximately 0.001 ETH \\
+publishTermRoot & Approximately 204,000 & Approximately 0.004 ETH \\
 \hline
 getTermRoot (query) & 0 (view function) & Free \\
 \hline

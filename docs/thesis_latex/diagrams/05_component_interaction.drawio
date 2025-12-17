@@ -1,0 +1,162 @@
+<mxfile host="app.diagrams.net" modified="2024-12-16T00:00:00.000Z" agent="Mozilla/5.0" version="22.1.0" type="device">
+  <diagram name="Component Interaction" id="component-interaction">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="650" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Component Interaction Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="280" y="10" width="290" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ISSUER OPERATIONS Section -->
+        <mxCell id="issuer-section" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="750" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="issuer-title" value="ISSUER OPERATIONS (Credential Issuance)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=12;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="60" y="55" width="350" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Components for Issuer Flow -->
+        <mxCell id="issuer-dash" value="Issuer&#xa;Dashboard" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="80" y="100" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api-server-iss" value="API Server&#xa;(Go + Gin)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="250" y="100" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="verkle-engine" value="Verkle Engine&#xa;(go-verkle)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="420" y="100" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="database" value="Local Storage&#xa;(JSON Files)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="420" y="200" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="blockchain" value="Ethereum&#xa;Blockchain" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d0d0d0;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="590" y="100" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows for Issuer Flow -->
+        <mxCell id="arrow1" value="(1)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="125" as="sourcePoint" />
+            <mxPoint x="250" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow2" value="(2)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="350" y="115" as="sourcePoint" />
+            <mxPoint x="420" y="115" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow3" value="(3)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="470" y="150" as="sourcePoint" />
+            <mxPoint x="470" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow4" value="(4)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="350" y="135" as="sourcePoint" />
+            <mxPoint x="420" y="215" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="380" y="135" />
+              <mxPoint x="380" y="215" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow5" value="(5)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="125" as="sourcePoint" />
+            <mxPoint x="590" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Flow descriptions -->
+        <mxCell id="flow-desc" value="(1) Upload course data&#xa;(2) Send to Verkle Engine&#xa;(3) Build tree, compute root&#xa;(4) Store tree &amp; proofs&#xa;(5) Publish root to blockchain" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="600" y="180" width="180" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- VERIFIER OPERATIONS Section -->
+        <mxCell id="verifier-section" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#000000;strokeWidth=1" vertex="1" parent="1">
+          <mxGeometry x="50" y="320" width="750" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="verifier-title" value="STUDENT/VERIFIER OPERATIONS (Credential Verification)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontStyle=1;fontSize=12;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="60" y="325" width="400" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Components for Verifier Flow -->
+        <mxCell id="portal" value="Verification&#xa;Portal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="80" y="370" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api-server-ver" value="API Server&#xa;(Go + Gin)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="250" y="370" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="verkle-verify" value="Verkle Engine&#xa;(Verify)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="420" y="370" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="blockchain-ver" value="Ethereum&#xa;(Query)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d0d0d0;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="420" y="450" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="result" value="Verified&#xa;Result" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=#000000;fontStyle=1;fontFamily=Times New Roman;fontSize=10" vertex="1" parent="1">
+          <mxGeometry x="590" y="400" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows for Verifier Flow -->
+        <mxCell id="arrow6" value="(6)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="395" as="sourcePoint" />
+            <mxPoint x="250" y="395" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow7" value="(7)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="350" y="385" as="sourcePoint" />
+            <mxPoint x="420" y="385" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow8" value="(8)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="350" y="405" as="sourcePoint" />
+            <mxPoint x="420" y="465" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="380" y="405" />
+              <mxPoint x="380" y="465" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow9" value="(9)" style="endArrow=classic;html=1;strokeWidth=1;strokeColor=#000000;fontFamily=Times New Roman;fontSize=9" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="520" y="415" as="sourcePoint" />
+            <mxPoint x="590" y="415" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Verifier flow descriptions -->
+        <mxCell id="flow-desc2" value="(6) Upload receipt JSON&#xa;(7) Verify IPA proofs&#xa;(8) Query blockchain for root&#xa;(9) Return verified result" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="600" y="460" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="Steps (1)-(5) = Issuance | Steps (6)-(9) = Verification" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=2;fontFamily=Times New Roman" vertex="1" parent="1">
+          <mxGeometry x="250" y="530" width="350" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

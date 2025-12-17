@@ -10,30 +10,7 @@ The implemented system consists of three primary layers organized according to t
 
 \begin{figure}[H]
 \centering
-\begin{verbatim}
-┌─────────────────────────────────────────────────────┐
-│             packages/issuer/                        │
-├─────────────────────────────────────────────────────┤
-│  ┌───────────────────────────────────────────┐     │
-│  │         cmd/ (CLI + API)                  │     │
-│  │  ┌──────────┐  ┌──────────┐  ┌────────┐  │     │
-│  │  │ main.go  │  │ api_     │  │ commands│ │     │
-│  │  │ (9 cmds) │  │ server   │  │  *.go   │ │     │
-│  │  └──────────┘  └──────────┘  └────────┘  │     │
-│  └───────────────────────────────────────────┘     │
-│                     │                              │
-│        ┌────────────┼────────────┐                 │
-│        ▼            ▼            ▼                  │
-│  ┌──────────┐ ┌──────────┐ ┌───────────────┐      │
-│  │ crypto/  │ │database/ │ │ blockchain_   │      │
-│  │ verkle/  │ │          │ │ integration/  │      │
-│  │          │ │PostgreSQL│ │               │      │
-│  │- trees   │ │+ GORM    │ │ - contract    │      │
-│  │- proofs  │ │          │ │ - publishing  │      │
-│  │- verify  │ │          │ │               │      │
-│  └──────────┘ └──────────┘ └───────────────┘      │
-└─────────────────────────────────────────────────────┘
-\end{verbatim}
+\includegraphics[width=0.85\textwidth]{figures/implementation_components.png}
 \caption{Implementation Component Diagram}
 \label{fig:impl-component-diagram}
 \end{figure}
@@ -485,8 +462,6 @@ contract IUMiCertRegistry {
 }
 \end{lstlisting}
 
-\textbf{Contract Deployment:} The contract is deployed at address \texttt{0x2452F0063c600BcFc232cC9daFc48B7372472f79} on Ethereum Sepolia testnet. The deployment was performed on November 27, 2025, and the contract has been used to publish term roots for all test academic terms.
-
 \section{Revocation System Implementation}
 \label{sec:revocation-impl}
 
@@ -576,7 +551,7 @@ The dashboard integrates with Ethereum wallets through wagmi library, enabling b
 \subsection{Student/Verifier Portal}
 \label{subsec:student-portal}
 
-The student/verifier portal, deployed at \url{https://iu-micert.vercel.app}, provides verification interfaces:
+The student/verifier portal provides verification interfaces deployed on a cloud hosting platform:
 
 \begin{table}[H]
 \centering

@@ -1,9 +1,6 @@
 \chapter{PROTOTYPING}
 \label{ch:prototyping}
 
-% TODO: Expand prototyping chapter to cover all aspects mentioned in REPORT.md related to methodology section
-% TODO: Include detailed system architecture and design decisions
-
 This chapter presents a prototype design based on the methodology outlined above. Developing a comprehensive and functional blockchain decentralized application necessitates the utilization of a robust technical stack. To realize these functionalities, the system architecture is also designed to support those functionalities. A thorough comprehension of each component, its functionality, and its integration into the system facilitates understanding how they collaborate to ensure the project's success.
 \section{Technology Stack Rationale}
 
@@ -24,14 +21,6 @@ Together, these strategies form a cohesive, modular architecture that supports s
 \end{center}
 
 React.js, a widely used JavaScript library, facilitates the creation of user interfaces, particularly for single-page applications. It enables developers to construct reusable UI components, efficiently manage application state, and leverage features such as the virtual DOM for enhanced rendering and performance. In the context of the IU-MiCert system, React.js serves as the cornerstone for constructing a highly interactive and responsive user interface, enabling seamless interaction with the micro-credential verification, selective disclosure, and journey receipt validation functionalities.
-
-% TODO: Add remaining sections to align with REPORT.md methodology outline:
-% - System Architecture & Design details
-% - Verkle tree implementation specifics
-% - Blockchain integration approach
-% - Security and privacy considerations
-% - Performance optimization strategies
-% - CLI Architecture and Implementation details
 
 React.js exhibits several advantages over traditional HTML or other frontend frameworks such as Angular. Its lightweight nature, modular design, and relatively low learning curve for contemporary web development facilitate ease of maintenance. React.js aligns seamlessly with the IU-MiCert system by employing a component-driven architecture, simplifying the management of dynamic credential interactions and complex verification workflows.
 
@@ -231,46 +220,7 @@ The IU-MiCert system implements a five-stage data pipeline that transforms raw a
 
 \begin{figure}[H]
 \centering
-\begin{verbatim}
-┌────────────────────────────────────────────────────────┐
-│                   DATA PIPELINE                        │
-├────────────────────────────────────────────────────────┤
-│                                                        │
-│  STAGE 1: DATA GENERATION                             │
-│     ┌─────────┐                                       │
-│     │ LMS/SIS │ → Export grades → JSON format         │
-│     └─────────┘                                       │
-│           │                                            │
-│           ▼                                            │
-│  STAGE 2: VERKLE CONVERSION                           │
-│     ┌──────────────────┐                              │
-│     │ convert-data     │ → Transform to Verkle format│
-│     │ (CLI command)    │                              │
-│     └──────────────────┘                              │
-│           │                                            │
-│           ▼                                            │
-│  STAGE 3: TREE BUILDING                               │
-│     ┌──────────────────┐                              │
-│     │ batch-process    │ → Build Verkle trees/term   │
-│     │ (CLI command)    │ → Generate commitments      │
-│     └──────────────────┘                              │
-│           │                                            │
-│           ▼                                            │
-│  STAGE 4: RECEIPT GENERATION                          │
-│     ┌──────────────────┐                              │
-│     │ generate-receipts│ → Create student receipts   │
-│     │ (CLI command)    │    with proofs              │
-│     └──────────────────┘                              │
-│           │                                            │
-│           ▼                                            │
-│  STAGE 5: BLOCKCHAIN PUBLISHING                       │
-│     ┌──────────────────┐                              │
-│     │ publish-roots    │ → Publish term roots to     │
-│     │ (CLI command)    │    Ethereum                 │
-│     └──────────────────┘                              │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-\end{verbatim}
+\includegraphics[width=0.85\textwidth]{figures/data_pipeline.png}
 \caption{Five-Stage Data Pipeline from LMS to Blockchain}
 \label{fig:data-pipeline}
 \end{figure}

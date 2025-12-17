@@ -30,10 +30,10 @@ The cost of blockchain operations on Ethereum is measured in \textbf{gas}—a un
 \text{Transaction Cost} = \text{Gas Used} \times \text{Gas Price (in ETH)}
 \end{equation}
 
-For the IU-MiCert system, publishing a term root commitment requires approximately 50,000 gas. At a typical gas price of 20 gwei (20 × 10\textsuperscript{-9} ETH), the cost per term publication is:
+For the IU-MiCert system, publishing a term root commitment requires approximately 204,000 gas based on actual deployment measurements. At a typical gas price of 20 gwei (20 × 10\textsuperscript{-9} ETH), the cost per term publication is:
 
 \begin{equation}
-\text{Cost per Term} = 50,000 \times 20 \times 10^{-9} = 0.001 \text{ ETH}
+\text{Cost per Term} = 204,000 \times 20 \times 10^{-9} \approx 0.004 \text{ ETH}
 \end{equation}
 
 This economic model has profound implications for system design. By storing only 32-byte root commitments on-chain rather than individual credential hashes, IU-MiCert achieves dramatic cost savings. A single term root covers all students and all courses in that term, amortizing the blockchain cost across potentially thousands of credentials. This design enables economically viable deployment at institutional scale.
@@ -106,18 +106,8 @@ A Verkle tree is a 256-ary tree (each node has up to 256 children) where each no
 
 \begin{figure}[H]
 \centering
-\begin{verbatim}
-                    Root (commitment)
-                         │
-         ┌───────────────┼───────────────┐
-         │               │               │
-      Node[0]        Node[1]    ...   Node[255]
-         │
-    ┌────┴────┐
-    │         │
- Leaf[0]   Leaf[1]  ...  Leaf[255]
-\end{verbatim}
-\caption{Verkle Tree Structure with 256-ary Branching}
+\includegraphics[width=0.7\textwidth]{figures/verkle_tree_structure.png}
+\caption{Verkle Tree Structure with Commitments and Proofs}
 \label{fig:verkle-structure}
 \end{figure}
 
@@ -132,7 +122,7 @@ Each level reduction decreases proof size and verification time. However, the cr
 \textbf{Proof Size Comparison:}
 \begin{itemize}
     \item Merkle tree (1M leaves): 32 bytes × 20 levels = 640 bytes
-    \item Verkle tree (1M leaves): approximately 600 bytes (constant!)
+    \item Verkle tree (1M leaves): approximately 1.8 KB (constant!)
 \end{itemize}
 
 The proof size remains constant even as the tree grows to 10 million or 100 million entries, providing true O(1) scalability for credential verification.
@@ -140,7 +130,7 @@ The proof size remains constant even as the tree grows to 10 million or 100 mill
 \textbf{Application to Academic Credentials:} In IU-MiCert, each academic term has one Verkle tree containing all course completions for all students in that term. The 32-byte root commitment is published to the blockchain, providing an immutable anchor point. Students receive receipts containing the Verkle proofs for their specific courses, enabling selective disclosure—they can prove completion of individual courses without revealing their full academic record.
 
 \section{Current Advancements in Blockchain Credentials}
-This section surveys existing blockchain-based credential systems, analyzing their approaches, innovations, and limitations. The review covers both general blockchain credential platforms and specific implementations from IU Vietnam's research lineage.
+This section surveys existing blockchain-based credential systems, analyzing their approaches, innovations, and limitations. The review covers both general blockchain credential platforms and specific implementations from the International University's research lineage.
 
 \subsection{BlockCerts (MIT Media Lab)}
 \label{subsec:blockcerts}
@@ -219,7 +209,7 @@ While EduCTX addresses important institutional interoperability challenges, it d
 \subsection{IU-TransCert (Previous IU Work)}
 \label{subsec:iutranscert}
 
-IU-TransCert, developed at IU Vietnam, represents the institution's first foray into blockchain-based credential verification \cite{le_iutranscert}. The system implements Merkle tree structures for transcript verification on Ethereum.
+IU-TransCert, developed at the International University, represents the institution's first foray into blockchain-based credential verification \cite{le_iutranscert}. The system implements Merkle tree structures for transcript verification on Ethereum.
 
 \begin{table}[H]
 \centering
@@ -229,7 +219,7 @@ IU-TransCert, developed at IU Vietnam, represents the institution's first foray 
 \hline
 Approach & Merkle tree-based transcript verification on Ethereum \\
 \hline
-Innovation & First IU Vietnam blockchain credential system; demonstrated feasibility of blockchain adoption \\
+Innovation & First International University blockchain credential system; demonstrated feasibility of blockchain adoption \\
 \hline
 Limitation & Whole-transcript verification only; no micro-credential support; O(log n) proof sizes \\
 \hline
@@ -238,12 +228,12 @@ Limitation & Whole-transcript verification only; no micro-credential support; O(
 \label{tab:iutranscert}
 \end{table}
 
-IU-TransCert established IU Vietnam's research presence in blockchain credentials but inherited Merkle tree limitations including proof size scaling and lack of granular verification.
+IU-TransCert established the International University's research presence in blockchain credentials but inherited Merkle tree limitations including proof size scaling and lack of granular verification.
 
 \subsection{IU-VecCert (Previous IU Work)}
 \label{subsec:iuveccert}
 
-IU-VecCert introduced vector commitment schemes to IU Vietnam's credential research, providing improved cryptographic properties over Merkle trees \cite{nguyen2024iuvec}.
+IU-VecCert introduced vector commitment schemes to the International University's credential research, providing improved cryptographic properties over Merkle trees \cite{nguyen2024iuvec}.
 
 \begin{table}[H]
 \centering
@@ -277,7 +267,7 @@ Granularity & Whole credentials only (certificates, transcripts) & Each course t
 \hline
 Temporal Proof & No cryptographic timestamp binding & Term-based trees with blockchain timestamps provide verifiable issuance timeline \\
 \hline
-Proof Size & O(log n) Merkle proofs scale with tree size & O(1) Verkle proofs remain constant at approximately 600 bytes \\
+Proof Size & O(log n) Merkle proofs scale with tree size & O(1) Verkle proofs remain constant at approximately 1.8 KB \\
 \hline
 Privacy & Full disclosure required for any verification & Selective disclosure via proof filtering—reveal only relevant courses \\
 \hline
