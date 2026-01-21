@@ -84,7 +84,7 @@ The IPA protocol achieves this through a logarithmic number of interaction round
 \hline
 Trusted Setup & Required (multi-party ceremony) & Not needed \\
 \hline
-Proof Size & O(1) - 48 bytes & O(log n) - approximately 576 bytes \\
+Proof Size & O(1) - 48 bytes & O(log n) - approximately 1.8 KB \\
 \hline
 Verification & Fast (pairing operations) & Slower (scalar multiplications) \\
 \hline
@@ -111,10 +111,10 @@ A Verkle tree is a 256-ary tree (each node has up to 256 children) where each no
 \label{fig:verkle-structure}
 \end{figure}
 
-\textbf{Key Innovation:} The 256-ary branching factor (versus binary in Merkle trees) dramatically reduces tree height. For a dataset with 1 million entries:
+\textbf{Key Innovation:} The 256-ary branching factor (versus binary in Merkle trees) provides wide trees with efficient access patterns. The go-verkle implementation uses:
 \begin{itemize}
-    \item Binary Merkle tree: 20 levels deep
-    \item 256-ary Verkle tree: 3 levels deep
+    \item Binary Merkle tree: 20 levels deep for 1M items
+    \item 256-ary Verkle tree: 32 levels with 256-ary width per level
 \end{itemize}
 
 Each level reduction decreases proof size and verification time. However, the critical advantage is that Verkle proofs use IPA, resulting in constant-size proofs regardless of tree size.

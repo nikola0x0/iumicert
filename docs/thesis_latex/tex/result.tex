@@ -81,7 +81,7 @@ Proof size & 32 bytes × 20 levels = 640 bytes & Approximately 1.8 KB (constant)
 \hline
 Verification complexity & O(20 hash operations) & O(1 IPA verification) \\
 \hline
-Tree height & 20 levels & 3 levels \\
+Tree height & 20 levels (binary) & 32 levels (256-ary width) \\
 \hline
 \end{tabular}
 \caption{Merkle vs Verkle Tree Comparison}
@@ -275,7 +275,7 @@ Table \ref{tab:solution-comparison} compares IU-MiCert with prominent existing b
 \hline
 Granularity & Whole cert & Whole transcript & Per course \\
 \hline
-Proof size & Approx. 2KB & Approx. 1KB & Approx. 600B \\
+Proof size & Approx. 2KB & Approx. 1KB (O(log n)) & Approx. 1.8 KB (constant) \\
 \hline
 Selective disclosure & No & No & Yes \\
 \hline
