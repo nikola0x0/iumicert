@@ -10,7 +10,12 @@ export const config = createConfig(
     // RPC transport mapping
     transports: {
       [mainnet.id]: http(),
-      [sepolia.id]: http(),
+      [sepolia.id]: http("https://ethereum-sepolia-rpc.publicnode.com", {
+        batch: false,
+        fetchOptions: {
+          cache: "no-store",
+        },
+      }),
     },
 
     // Your actual WalletConnect project ID

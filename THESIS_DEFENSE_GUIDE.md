@@ -1,4 +1,5 @@
 # Verkle Tree Thesis Defense Guide
+
 # IU-MiCrypt Project: Comprehensive Verkle Tree Explanation for Thesis Defense
 
 ## 🎯 Defense Structure Overview
@@ -16,6 +17,7 @@ This guide is structured to help you deliver a compelling 15-20 minute presentat
 > "Traditional academic credential verification faces several critical challenges: centralized verification systems create single points of failure, privacy concerns arise when students must share entire transcripts, and existing blockchain solutions using Merkle trees result in proof sizes that grow logarithmically with data size."
 
 **Key Statistics to Mention:**
+
 - Traditional verification: 2-5 business days
 - Merkle tree proofs: O(log n) size (can reach hundreds of bytes)
 - Privacy: All-or-nothing disclosure problem
@@ -23,20 +25,22 @@ This guide is structured to help you deliver a compelling 15-20 minute presentat
 ### 1.2 Verkle Trees: Mathematical Foundation
 
 **Core Concept:**
+
 > "Verkle Trees combine the best of vector commitments and Merkle trees, enabling constant-size cryptographic proofs through polynomial commitments and Inner Product Arguments (IPAs)."
 
 **Key Mathematical Properties:**
 
-| Property | Merkle Trees | Verkle Trees |
-|----------|-------------|--------------|
-| **Proof Size** | O(log n) bytes | O(1) ≈ 1.5KB |
-| **Verification Time** | O(log n) | O(1) |
+| Property                | Merkle Trees   | Verkle Trees           |
+| ----------------------- | -------------- | ---------------------- |
+| **Proof Size**          | O(log n) bytes | O(1) ≈ 1.5KB           |
+| **Verification Time**   | O(log n)       | O(1)                   |
 | **Cryptographic Basis** | Hash functions | Polynomial commitments |
-| **Zero-Knowledge** | No | Yes |
+| **Zero-Knowledge**      | No             | Yes                    |
 
 **Mathematical Framework:**
 
 1. **Polynomial Commitment Scheme**
+
    ```
    Commitment: C = g^P(α)
    where g is a generator point, α is a secret evaluation point
@@ -51,6 +55,7 @@ This guide is structured to help you deliver a compelling 15-20 minute presentat
    ```
 
 **Why This Matters:**
+
 - **Succinctness**: Proof size independent of tree size
 - **Zero-Knowledge**: Prove membership without revealing other data
 - **Efficiency**: Constant-time verification
@@ -62,6 +67,7 @@ This guide is structured to help you deliver a compelling 15-20 minute presentat
 ### 2.1 System Architecture Overview
 
 **High-Level Architecture:**
+
 ```
 LMS Data → Verkle Format → Term Trees → Receipts → Blockchain
 ```
@@ -73,18 +79,21 @@ LMS Data → Verkle Format → Term Trees → Receipts → Blockchain
 ### 2.2 Data Structure Design
 
 **Course Key Generation (Deterministic):**
+
 ```go
 courseKey := fmt.Sprintf("%s:%s:%s", studentDID, termID, courseID)
 courseKeyHash := sha256.Sum256([]byte(courseKey))
 ```
 
 **Value Commitment:**
+
 ```go
 courseData, _ := json.Marshal(course)
 courseValueHash := sha256.Sum256(courseData)
 ```
 
 **Tree Structure Visualization:**
+
 ```
                             [Root Commitment: R]
                                    |
@@ -101,6 +110,7 @@ courseValueHash := sha256.Sum256(courseData)
 ### 2.3 Proof Generation and Verification
 
 **The Complete Verification Chain:**
+
 ```
 Student Course Data → Hash → Tree Insertion → Proof Generation → Receipt
                         ↓
@@ -111,6 +121,7 @@ Student Course Data → Hash → Tree Insertion → Proof Generation → Receipt
 **Step-by-Step Process:**
 
 1. **Proof Generation** (Issuer side)
+
    - Create term Verkle tree with all course completions
    - Generate IPA proof for specific course
    - Bundle with StateDiff and course metadata
@@ -122,6 +133,7 @@ Student Course Data → Hash → Tree Insertion → Proof Generation → Receipt
    - Compare with blockchain-anchored root
 
 **Key Innovation:**
+
 > "Our implementation cryptographically binds the Verkle proof to a StateDiff, preventing tampering attacks where malicious actors might modify the proof data."
 
 ---
@@ -138,6 +150,7 @@ Student Course Data → Hash → Tree Insertion → Proof Generation → Receipt
 4. **Succinctness**: Proof size independent of tree size
 
 **Cryptographic Assumptions:**
+
 - Discrete Logarithm Problem (ECDLP hardness)
 - Knowledge of Exponent (polynomial commitment binding)
 - Random Oracle Model (hash function idealization)
@@ -145,12 +158,14 @@ Student Course Data → Hash → Tree Insertion → Proof Generation → Receipt
 ### 3.2 Threat Model and Attack Resistance
 
 **Attacks Prevented:**
+
 - **Forgery Prevention**: Cannot create valid proofs for non-existent data
 - **Privacy Preservation**: Zero-knowledge property prevents data leakage
 - **Replay Protection**: Each proof tied to specific tree state and key
 - **StateDiff Tampering**: Cryptographic binding prevents modification
 
 **Security Visualization:**
+
 ```
 Attacker tries to modify:
 ┌─────────────────────────────────────────────────────────┐
@@ -178,6 +193,7 @@ Attacker tries to modify:
 ### 3.3 Blockchain Anchoring
 
 **Ethereum Integration:**
+
 - Term roots published to Ethereum Sepolia testnet
 - Contract: `0x2452F0063c600BcFc232cC9daFc48B7372472f79`
 - Provides independent timestamp and existence proof
@@ -190,6 +206,7 @@ Attacker tries to modify:
 ### 4.1 Experimental Results
 
 **Benchmark Results:**
+
 ```
 Tree Size: 1,000,000 courses
 Traditional Merkle Proof: ~640 bytes (20 × 32 bytes)
@@ -200,21 +217,23 @@ Verkle Root: 1a72a4e56a6bb6795706de393ca774d9fed3c29c92867878a6aee92c8b2bf3de
 
 **Performance Comparison:**
 
-| Operation | Traditional Merkle | Verkle Trees (Our Implementation) |
-|-----------|-------------------|-----------------------------------|
-| Proof Generation | O(log n) | O(log n) |
-| Proof Size | O(log n) ≈ 32×log₂(n) bytes | O(1) ≈ 1.5KB |
-| Verification Time | O(log n) | O(1) |
-| Storage per Node | 32 bytes | ~48 bytes (commitment) |
+| Operation         | Traditional Merkle          | Verkle Trees (Our Implementation) |
+| ----------------- | --------------------------- | --------------------------------- |
+| Proof Generation  | O(log n)                    | O(log n)                          |
+| Proof Size        | O(log n) ≈ 32×log₂(n) bytes | O(1) ≈ 1.5KB                      |
+| Verification Time | O(log n)                    | O(1)                              |
+| Storage per Node  | 32 bytes                    | ~48 bytes (commitment)            |
 
 ### 4.2 Real-World Application
 
 **Test Data Model:**
+
 - **Students**: ITITIU00001-ITITIU00005 (Vietnamese names, IU course codes)
 - **Terms**: 6 semesters (Semester_1_2023 through Summer_2024)
 - **Courses**: Real IU Vietnam codes (IT013IU, IT153IU, PE008IU, etc.)
 
 **Deployed System:**
+
 - Smart contracts deployed on Ethereum Sepolia
 - Web applications deployed (issuer + student/verifier portals)
 - Full IPA verification with cryptographic binding
@@ -233,11 +252,13 @@ Verkle Root: 1a72a4e56a6bb6795706de393ca774d9fed3c29c92867878a6aee92c8b2bf3de
 ### 5.2 Impact and Future Work
 
 **Immediate Impact:**
+
 - Reduces verification time from days to seconds
 - Enables privacy-preserving credential sharing
 - Provides tamper-proof academic provenance
 
 **Future Enhancements:**
+
 - Batch verification for multiple credentials
 - Integration with more LMS systems
 - Mobile wallet integration for students
@@ -282,12 +303,14 @@ A: Current limitations include the need for off-chain verification infrastructur
 ## 📝 Delivery Tips
 
 ### Before the Defense
+
 1. **Practice Timing**: Ensure your presentation fits within 15-20 minutes
 2. **Prepare Demos**: Have live verification ready if possible
 3. **Test Technical Setup**: Ensure blockchain explorer URLs work
 4. **Backup Slides**: Have PDFs ready in case of technical issues
 
 ### During the Defense
+
 1. **Start with the Problem**: Begin with the credential verification challenge
 2. **Use Visualizations**: Leverage the tree structure and verification flow diagrams
 3. **Emphasize Innovation**: Highlight the term-based design and StateDiff binding
@@ -295,6 +318,7 @@ A: Current limitations include the need for off-chain verification infrastructur
 5. **Be Prepared for Depth**: Expect technical questions about IPA and polynomial commitments
 
 ### Key Phrases to Use
+
 - "Cryptographically binds the proof to the data"
 - "Constant-size verification regardless of database size"
 - "Privacy-preserving through zero-knowledge properties"
@@ -306,11 +330,13 @@ A: Current limitations include the need for off-chain verification infrastructur
 ## 🔧 Technical Appendix (for deep technical questions)
 
 ### Core Verification Function
+
 ```go
 err = verkleLib.Verify(proofBundle.VerkleProof, verkleRoot[:], verkleRoot[:], proofBundle.StateDiff)
 ```
 
 ### Key Data Structures
+
 ```go
 type VerkleProofBundle struct {
     VerkleProof *verkleLib.VerkleProof `json:"verkle_proof"`
@@ -321,6 +347,7 @@ type VerkleProofBundle struct {
 ```
 
 ### Blockchain Deployment
+
 - **Network**: Ethereum Sepolia Testnet
 - **Contract**: IUMiCertRegistry (v2 with versioning)
 - **Address**: `0x2452F0063c600BcFc232cC9daFc48B7372472f79`
@@ -328,4 +355,4 @@ type VerkleProofBundle struct {
 
 ---
 
-*This guide provides a comprehensive framework for defending your thesis on Verkle trees in academic credential management. Focus on the practical innovation while demonstrating strong theoretical understanding.*
+_This guide provides a comprehensive framework for defending your thesis on Verkle trees in academic credential management. Focus on the practical innovation while demonstrating strong theoretical understanding._

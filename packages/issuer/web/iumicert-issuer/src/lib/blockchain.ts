@@ -25,7 +25,7 @@ const CONTRACT_ADDRESS =
 // Public client for reading from blockchain
 const publicClient = createPublicClient({
   chain: sepolia,
-  transport: http(),
+  transport: http("https://ethereum-sepolia-rpc.publicnode.com"),
 });
 
 export interface TermRootData {

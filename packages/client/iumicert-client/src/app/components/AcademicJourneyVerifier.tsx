@@ -61,6 +61,7 @@ interface VerificationResult {
   verkle_root?: string;
   details?: string;
   error?: string;
+  version_status?: string; // "superseded" when credential is revoked
 }
 
 export default function AcademicJourneyVerifier() {
@@ -529,15 +530,21 @@ export default function AcademicJourneyVerifier() {
                                   {hasVerificationResult && (
                                     <div
                                       className={`px-3 py-1.5 rounded-full text-xs font-semibold border font-inter ${
-                                        isBlockchainVerified
+                                        termResult?.version_status === "superseded"
+                                          ? "bg-red-500/20 text-red-300 border-red-500/30"
+                                          : isBlockchainVerified
                                           ? "bg-green-500/20 text-green-300 border-green-500/30"
                                           : "bg-amber-500/20 text-amber-300 border-amber-500/30"
                                       }`}
-                                      title={isBlockchainVerified
+                                      title={termResult?.version_status === "superseded"
+                                        ? "This credential has been revoked - a newer version exists"
+                                        : isBlockchainVerified
                                         ? `${termResult.courses_verified || 0} courses in this term verified against blockchain`
                                         : "This term's root is not published on blockchain"}
                                     >
-                                      {isBlockchainVerified
+                                      {termResult?.version_status === "superseded"
+                                        ? "⛔ REVOKED"
+                                        : isBlockchainVerified
                                         ? `✓ ${termResult.courses_verified || 0}/${termData.total_courses} courses verified`
                                         : "⚠ Not Published"}
                                     </div>
@@ -549,6 +556,37 @@ export default function AcademicJourneyVerifier() {
                             {/* Term Content */}
                             {isTermExpanded && (
                   <div className="border-t border-white/10 bg-black/20 p-6">
+                    {/* Revoked/Superseded Status */}
+                    {termResult && termResult.version_status === "superseded" && (
+                      <div className="mb-4 p-4 bg-red-500/20 rounded-xl border border-red-500/30">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-red-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-red-300 mb-2 font-space-grotesk">
+                              Credential Revoked
+                            </h4>
+                            <div className="space-y-2 text-sm font-inter">
+                              <p className="text-red-200">
+                                This receipt uses a <strong>superseded root</strong>. A newer version of this term has been published, which means some credentials in this receipt have been revoked or updated.
+                              </p>
+                              {termResult.error && (
+                                <p className="text-red-200/80 text-xs mt-2 bg-red-500/10 p-2 rounded">
+                                  {termResult.error}
+                                </p>
+                              )}
+                              <p className="text-red-200/60 text-xs mt-2">
+                                Please request a new receipt from the issuing institution to get the current credentials.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Verification Status */}
                     {termResult && termResult.blockchain_verified && (
                       <div className="mb-4 p-4 bg-green-500/20 rounded-xl border border-green-500/30">

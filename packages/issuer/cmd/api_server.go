@@ -850,8 +850,8 @@ func handleDemoGenerateFull(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate inputs
-	if req.NumStudents < 1 || req.NumStudents > 100 {
-		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "num_students must be between 1 and 100"})
+	if req.NumStudents < 1 || req.NumStudents > 50000 {
+		respondJSON(w, http.StatusBadRequest, APIResponse{Success: false, Error: "num_students must be between 1 and 50000"})
 		return
 	}
 
@@ -2528,8 +2528,17 @@ func handleIPAVerify(w http.ResponseWriter, r *http.Request) {
 		overallStatus = "failure"
 	}
 
+	// Build error message if verification failed
+	var errorMsg string
+	if overallStatus == "failure" {
+		errorMsg = fmt.Sprintf("Credential verification failed: all %d courses failed cryptographic verification. The receipt may have been tampered with.", totalCourses)
+	} else if overallStatus == "partial_failure" {
+		errorMsg = fmt.Sprintf("Partial verification failure: %d of %d courses failed cryptographic verification. Some credentials may have been tampered with.", len(failedCourses), totalCourses)
+	}
+
 	respondJSON(w, http.StatusOK, APIResponse{
 		Success: overallStatus == "success",
+		Error:   errorMsg,
 		Data: map[string]interface{}{
 			"status":           overallStatus,
 			"student_id":       studentID,
