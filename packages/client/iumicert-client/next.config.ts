@@ -20,9 +20,9 @@ if (typeof globalThis !== 'undefined') {
     }
   } catch {
     // If it throws, replace with mock
-    // @ts-expect-error - replacing broken localStorage in Node.js 25+
+    // @ts-ignore - replacing broken localStorage in Node.js 25+
     globalThis.localStorage = mockStorage;
-    // @ts-expect-error - also mock sessionStorage
+    // @ts-ignore - also mock sessionStorage
     globalThis.sessionStorage = mockStorage;
   }
 }
