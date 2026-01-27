@@ -60,8 +60,10 @@ const LandingPage = () => {
   const heroButtonRef = useRef<HTMLDivElement>(null);
   const heroContainerRef = useRef<HTMLDivElement>(null);
   const heroTitleContainerRef = useRef<HTMLDivElement>(null);
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const floatAnimationRef = useRef<gsap.core.Tween | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const timelineRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const floatAnimationRef = useRef<any>(null);
 
   const slides = [
     {

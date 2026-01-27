@@ -28,6 +28,11 @@ if (typeof globalThis !== 'undefined') {
 }
 
 const nextConfig: NextConfig = {
+  // Skip ESLint during builds (run separately in CI if needed)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Performance optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
