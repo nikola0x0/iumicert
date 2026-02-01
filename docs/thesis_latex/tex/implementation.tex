@@ -320,6 +320,8 @@ The IU-MiCert CLI implements 9 commands for credential management. Table \ref{ta
 
 \begin{table}[H]
 \centering
+\caption{Implemented CLI Commands}
+\label{tab:cli-commands}
 \begin{tabular}{|p{4.5cm}|p{8.5cm}|}
 \hline
 \textbf{Command} & \textbf{Description} \\
@@ -343,8 +345,6 @@ The IU-MiCert CLI implements 9 commands for credential management. Table \ref{ta
 \texttt{test-verify} & Run comprehensive cryptographic verification test suite \\
 \hline
 \end{tabular}
-\caption{Implemented CLI Commands}
-\label{tab:cli-commands}
 \end{table}
 
 \textbf{Note:} The \texttt{supersede-term} command was recently added to support the revocation workflow described in Chapter 3. This command handles the complete revocation process including tree reconstruction, version increment, root computation, and blockchain publication.
@@ -529,6 +529,8 @@ The issuer dashboard, implemented as a Next.js application at \texttt{packages/i
 
 \begin{table}[H]
 \centering
+\caption{Issuer Dashboard Routes}
+\label{tab:issuer-routes}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Route} & \textbf{Purpose} \\
@@ -542,8 +544,6 @@ The issuer dashboard, implemented as a Next.js application at \texttt{packages/i
 \texttt{/revocations} & Manage credential revocation requests and approvals \\
 \hline
 \end{tabular}
-\caption{Issuer Dashboard Routes}
-\label{tab:issuer-routes}
 \end{table}
 
 The dashboard integrates with Ethereum wallets through wagmi library, enabling blockchain transactions directly from the browser. It displays term status, computes gas estimates, and provides transaction confirmation feedback.
@@ -555,6 +555,8 @@ The student/verifier portal provides verification interfaces deployed on a cloud
 
 \begin{table}[H]
 \centering
+\caption{Student/Verifier Portal Routes}
+\label{tab:portal-routes}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Route} & \textbf{Purpose} \\
@@ -564,8 +566,6 @@ The student/verifier portal provides verification interfaces deployed on a cloud
 \texttt{/about} & System information and verification instructions \\
 \hline
 \end{tabular}
-\caption{Student/Verifier Portal Routes}
-\label{tab:portal-routes}
 \end{table}
 
 \section{Integration and Testing}
@@ -578,6 +578,8 @@ The system integration validates that all components work together correctly.
 
 \begin{table}[H]
 \centering
+\caption{Testing Strategy by Level}
+\label{tab:test-strategy}
 \begin{tabular}{|p{3.5cm}|p{5cm}|p{4.5cm}|}
 \hline
 \textbf{Level} & \textbf{Scope} & \textbf{Tools} \\
@@ -591,8 +593,6 @@ End-to-End & Full issuance and verification & Manual + automated scripts \\
 Contract & Smart contract functions & Foundry test framework \\
 \hline
 \end{tabular}
-\caption{Testing Strategy by Level}
-\label{tab:test-strategy}
 \end{table}
 
 \subsection{Key Test Cases}

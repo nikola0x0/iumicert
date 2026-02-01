@@ -78,6 +78,8 @@ The IPA protocol achieves this through a logarithmic number of interaction round
 
 \begin{table}[H]
 \centering
+\caption{Comparison of KZG and IPA Proof Systems}
+\label{tab:kzg-ipa}
 \begin{tabular}{|p{3cm}|p{5.5cm}|p{4.5cm}|}
 \hline
 \textbf{Factor} & \textbf{KZG} & \textbf{IPA} \\
@@ -91,8 +93,6 @@ Verification & Fast (pairing operations) & Slower (scalar multiplications) \\
 Security & If setup compromised, all proofs forgeable & No trusted setup risk \\
 \hline
 \end{tabular}
-\caption{Comparison of KZG and IPA Proof Systems}
-\label{tab:kzg-ipa}
 \end{table}
 
 For IU-MiCert, the choice of IPA is driven by the trustless setup requirement. Academic credentials must remain valid for decades, potentially outliving institutions and administrative structures. A trusted setup ceremony creates a long-term security vulnerability: if the setup parameters are ever compromised, all historical credentials become forgeable. IPA eliminates this risk entirely, making it the appropriate choice for long-lived credential systems despite slightly larger proof sizes.
@@ -139,6 +139,8 @@ BlockCerts, developed by the MIT Media Lab, represents one of the earliest and m
 
 \begin{table}[H]
 \centering
+\caption{BlockCerts System Characteristics}
+\label{tab:blockcerts}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Aspect} & \textbf{Description} \\
@@ -152,8 +154,6 @@ Granularity & Whole certificate only—cannot verify individual components \\
 Limitation & No selective disclosure capabilities; large certificate sizes due to embedded proofs \\
 \hline
 \end{tabular}
-\caption{BlockCerts System Characteristics}
-\label{tab:blockcerts}
 \end{table}
 
 While BlockCerts successfully demonstrates blockchain-based credential verification, its whole-certificate approach limits applicability to micro-credential scenarios where individual courses or skills need independent verification.
@@ -165,6 +165,8 @@ The Certificate Verifying Support System (CVSS) by Nguyen et al. \cite{nguyen201
 
 \begin{table}[H]
 \centering
+\caption{CVSS System Characteristics}
+\label{tab:cvss}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Aspect} & \textbf{Description} \\
@@ -176,8 +178,6 @@ Storage & Full credential data stored on-chain \\
 Limitation & Prohibitively high gas costs; no privacy features; scalability concerns \\
 \hline
 \end{tabular}
-\caption{CVSS System Characteristics}
-\label{tab:cvss}
 \end{table}
 
 CVSS's one-contract-per-student model creates unsustainable costs for large institutions. Storing complete credential data on-chain eliminates privacy and results in high gas fees that scale linearly with student population.
@@ -189,6 +189,8 @@ EduCTX focuses on European Credit Transfer System (ECTS) credit portability acro
 
 \begin{table}[H]
 \centering
+\caption{EduCTX System Characteristics}
+\label{tab:eductx}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Aspect} & \textbf{Description} \\
@@ -200,8 +202,6 @@ Focus & Credit portability and transfer across educational institutions \\
 Limitation & Requires complex multi-institution coordination and governance structures \\
 \hline
 \end{tabular}
-\caption{EduCTX System Characteristics}
-\label{tab:eductx}
 \end{table}
 
 While EduCTX addresses important institutional interoperability challenges, it does not focus on cryptographic efficiency or micro-credential granularity.
@@ -213,6 +213,8 @@ IU-TransCert, developed at the International University, represents the institut
 
 \begin{table}[H]
 \centering
+\caption{IU-TransCert System Characteristics}
+\label{tab:iutranscert}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Aspect} & \textbf{Description} \\
@@ -224,8 +226,6 @@ Innovation & First International University blockchain credential system; demons
 Limitation & Whole-transcript verification only; no micro-credential support; O(log n) proof sizes \\
 \hline
 \end{tabular}
-\caption{IU-TransCert System Characteristics}
-\label{tab:iutranscert}
 \end{table}
 
 IU-TransCert established the International University's research presence in blockchain credentials but inherited Merkle tree limitations including proof size scaling and lack of granular verification.
@@ -237,6 +237,8 @@ IU-VecCert introduced vector commitment schemes to the International University'
 
 \begin{table}[H]
 \centering
+\caption{IU-VecCert System Characteristics}
+\label{tab:iuveccert}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Aspect} & \textbf{Description} \\
@@ -248,8 +250,6 @@ Innovation & Introduced commitment-based verification to IU research; improved p
 Limitation & No temporal integrity guarantees; limited scalability for large credential sets \\
 \hline
 \end{tabular}
-\caption{IU-VecCert System Characteristics}
-\label{tab:iuveccert}
 \end{table}
 
 While IU-VecCert improved upon IU-TransCert's cryptographic efficiency, it did not address temporal provenance or micro-credential granularity.
@@ -259,6 +259,8 @@ Based on the comprehensive review of existing systems, several critical gaps eme
 
 \begin{table}[H]
 \centering
+\caption{Research Gaps and IU-MiCert Solutions}
+\label{tab:research-gaps}
 \begin{tabular}{|p{3cm}|p{4.5cm}|p{5.5cm}|}
 \hline
 \textbf{Gap} & \textbf{Current State} & \textbf{IU-MiCert Solution} \\
@@ -276,8 +278,6 @@ Revocation & Complex revocation lists or absent functionality & Version-based su
 Cost & High on-chain storage for individual credential hashes & Only 32-byte roots stored on-chain per term \\
 \hline
 \end{tabular}
-\caption{Research Gaps and IU-MiCert Solutions}
-\label{tab:research-gaps}
 \end{table}
 
 \subsection{Granularity Gap}

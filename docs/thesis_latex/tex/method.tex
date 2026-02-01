@@ -26,6 +26,8 @@ The functional requirements define the specific capabilities the system must pro
 
 \begin{table}[H]
 \centering
+\caption{Functional Requirements}
+\label{tab:functional-requirements}
 \begin{tabular}{|p{1cm}|p{8cm}|p{2.5cm}|}
 \hline
 \textbf{ID} & \textbf{Requirement} & \textbf{Priority} \\
@@ -45,8 +47,6 @@ FR6 & Revoke credentials when needed through tree supersession & Should \\
 FR7 & Provide web interfaces for all stakeholder groups & Should \\
 \hline
 \end{tabular}
-\caption{Functional Requirements}
-\label{tab:functional-requirements}
 \end{table}
 
 \subsection{Non-Functional Requirements}
@@ -56,6 +56,8 @@ Non-functional requirements specify performance, security, and usability criteri
 
 \begin{table}[H]
 \centering
+\caption{Non-Functional Requirements}
+\label{tab:non-functional-requirements}
 \begin{tabular}{|p{1.5cm}|p{5cm}|p{5.5cm}|}
 \hline
 \textbf{ID} & \textbf{Requirement} & \textbf{Target} \\
@@ -69,8 +71,6 @@ NFR3 & On-chain cost & Less than 0.01 ETH per term root publication \\
 NFR4 & System availability & 99.9\% uptime for verification services \\
 \hline
 \end{tabular}
-\caption{Non-Functional Requirements}
-\label{tab:non-functional-requirements}
 \end{table}
 
 \subsection{Use Cases}
@@ -385,6 +385,8 @@ This section analyzes the theoretical complexity and expected performance charac
 
 \begin{table}[H]
 \centering
+\caption{Time Complexity Analysis}
+\label{tab:time-complexity}
 \begin{tabular}{|p{4.5cm}|p{3cm}|p{5.5cm}|}
 \hline
 \textbf{Operation} & \textbf{Complexity} & \textbf{Notes} \\
@@ -398,8 +400,6 @@ Proof generation & O(log\textsubscript{256} n) & Per course, logarithmic in tree
 Proof verification & O(log\textsubscript{256} n) & IPA verification rounds \\
 \hline
 \end{tabular}
-\caption{Time Complexity Analysis}
-\label{tab:time-complexity}
 \end{table}
 
 The logarithmic complexities are computed with base 256 due to Verkle tree's 256-ary branching factor, resulting in dramatically reduced tree heights compared to binary Merkle trees.
@@ -409,6 +409,8 @@ The logarithmic complexities are computed with base 256 due to Verkle tree's 256
 
 \begin{table}[H]
 \centering
+\caption{Space Complexity Analysis}
+\label{tab:space-complexity}
 \begin{tabular}{|p{4.5cm}|p{3cm}|p{5.5cm}|}
 \hline
 \textbf{Component} & \textbf{Size} & \textbf{Notes} \\
@@ -420,8 +422,6 @@ Full receipt & 5-20 KB & Depends on number of courses \\
 On-chain storage & 32 bytes/term & Only root stored on blockchain \\
 \hline
 \end{tabular}
-\caption{Space Complexity Analysis}
-\label{tab:space-complexity}
 \end{table}
 
 The constant proof size is the critical advantage of Verkle trees over Merkle trees, enabling scalable verification even as institutions grow to millions of credentials.
@@ -433,6 +433,8 @@ Blockchain transaction costs directly impact system economics. The IU-MiCert des
 
 \begin{table}[H]
 \centering
+\caption{Gas Cost Analysis for Smart Contract Operations}
+\label{tab:gas-costs}
 \begin{tabular}{|p{4.5cm}|p{3cm}|p{5.5cm}|}
 \hline
 \textbf{Operation} & \textbf{Gas} & \textbf{Cost at 20 gwei} \\
@@ -442,8 +444,6 @@ publishTermRoot & Approximately 204,000 & Approximately 0.004 ETH \\
 getTermRoot (query) & 0 (view function) & Free \\
 \hline
 \end{tabular}
-\caption{Gas Cost Analysis for Smart Contract Operations}
-\label{tab:gas-costs}
 \end{table}
 
 The minimal publishing cost (approximately 0.004 ETH per term) combined with the ability to amortize this cost across all students and courses in a term makes the system economically viable for institutional deployment. A university issuing credentials for 1,000 students across 7 terms per degree program incurs total blockchain costs of approximately 0.028 ETH (roughly \$84 at \$3,000/ETH), which is negligible compared to traditional credential verification costs.

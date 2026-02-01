@@ -15,6 +15,8 @@ Table \ref{tab:proof-sizes} presents the measured proof sizes for IU-MiCert cred
 
 \begin{table}[H]
 \centering
+\caption{Proof Size Measurements}
+\label{tab:proof-sizes}
 \begin{tabular}{|p{6cm}|p{6cm}|}
 \hline
 \textbf{Metric} & \textbf{Value} \\
@@ -28,8 +30,6 @@ On-chain storage per term & 32 bytes (root commitment only) \\
 Proof size consistency & Constant across 450-207,866 course trees \\
 \hline
 \end{tabular}
-\caption{Proof Size Measurements}
-\label{tab:proof-sizes}
 \end{table}
 
 The measured single course proof size of 1,813-1,883 bytes exceeds the initial target of less than 1KB by approximately 80\%. However, this size represents the complete IPA proof data required for trustless verification without requiring a trusted setup ceremony. The critical finding is that proof size remains virtually constant across all tested scales—from trees with 450 courses to trees with 207,866 courses (a 460-fold variation)—validating the theoretical O(1) constant-size property of Verkle trees. This constancy means that as institutions scale to millions of credentials accumulated over decades, proof sizes do not grow, unlike Merkle tree proofs which scale logarithmically. The slightly larger proof size compared to the target is an acceptable trade-off for the trustless setup guarantee, which eliminates long-term security risks associated with trusted ceremony compromise in systems like KZG commitments. Full student receipts containing 21 courses average 11 KB, making them highly portable via email, messaging apps, or direct file sharing.
@@ -41,6 +41,8 @@ Performance timing measurements evaluate the system's responsiveness and scalabi
 
 \begin{table}[H]
 \centering
+\caption{Timing Benchmarks}
+\label{tab:timing-benchmarks}
 \begin{tabular}{|p{7cm}|p{5cm}|}
 \hline
 \textbf{Operation} & \textbf{Time} \\
@@ -60,8 +62,6 @@ Proof verification (per course) & Approximately 5 ms \\
 Full receipt verification (21 courses) & Less than 100 ms \\
 \hline
 \end{tabular}
-\caption{Timing Benchmarks}
-\label{tab:timing-benchmarks}
 \end{table}
 
 The timing benchmarks demonstrate that the system meets the NFR2 target of less than 100 milliseconds per course verification by a factor of 20, achieving approximately 5 milliseconds per course. This enables real-time verification suitable for automated hiring workflows where instant feedback is required. An interesting finding is that tree construction becomes more efficient per course at larger scales—at 100 students, insertion averages 1.27ms per course, while at 50,000 students it improves to 0.05ms per course. This sublinear scaling behavior results from Go's efficient memory management and the amortization of tree commitment overhead across larger datasets. For a typical term with 22,500 courses (5,000 students), complete tree construction including commitment computation completes in under 2 seconds, making nightly batch processing of grade exports practically feasible for institutional deployment.
@@ -73,6 +73,8 @@ Theoretical comparison between Merkle and Verkle tree approaches for credential 
 
 \begin{table}[H]
 \centering
+\caption{Merkle vs Verkle Tree Comparison}
+\label{tab:merkle-verkle-comparison}
 \begin{tabular}{|p{4cm}|p{4cm}|p{4cm}|}
 \hline
 \textbf{Metric} & \textbf{Merkle (1M items)} & \textbf{Verkle (1M items)} \\
@@ -84,8 +86,6 @@ Verification complexity & O(20 hash operations) & O(1 IPA verification) \\
 Tree height & 20 levels (binary) & 32 levels (256-ary width) \\
 \hline
 \end{tabular}
-\caption{Merkle vs Verkle Tree Comparison}
-\label{tab:merkle-verkle-comparison}
 \end{table}
 
 The comparison demonstrates Verkle trees' constant proof size advantage, particularly significant as credential datasets scale to institutional sizes.
@@ -97,6 +97,8 @@ To validate the scalability properties of the system, comprehensive testing was 
 
 \begin{table}[H]
 \centering
+\caption{Multi-Scale Performance Validation (100 to 50,000 Students)}
+\label{tab:multi-scale}
 \small
 \begin{tabular}{|p{2cm}|p{2cm}|p{2.2cm}|p{2.2cm}|p{2.2cm}|p{2cm}|}
 \hline
@@ -119,8 +121,6 @@ To validate the scalability properties of the system, comprehensive testing was 
 \textbf{50,000} & \textbf{225,000} & \textbf{12.11s} & \textbf{0.05} & \textbf{~8 KB} & \textbf{Mega Univ.} \\
 \hline
 \end{tabular}
-\caption{Multi-Scale Performance Validation (100 to 50,000 Students)}
-\label{tab:multi-scale}
 \end{table}
 
 The multi-scale testing reveals two critical findings. First, receipt sizes remain constant at approximately 11 KB regardless of whether 100 or 50,000 other students exist in the system, empirically validating the O(1) constant-size property of Verkle proofs. Second, tree construction exhibits sublinear scaling—the per-course construction time decreases from 1.27ms at small scale to 0.05ms at large scale, demonstrating economy of scale benefits. This counterintuitive improvement occurs because Go's concurrent processing and memory management become more efficient when operating on larger datasets, with fixed overhead costs amortized across more operations. The system successfully processes up to 225,000 courses per term in approximately 12 seconds, validating production readiness for the largest educational institutions globally.
@@ -137,6 +137,8 @@ Table \ref{tab:threat-model} analyzes potential threats and their mitigations:
 
 \begin{table}[H]
 \centering
+\caption{Threat Model and Mitigations}
+\label{tab:threat-model}
 \begin{tabular}{|p{5cm}|p{7cm}|}
 \hline
 \textbf{Threat} & \textbf{Mitigation} \\
@@ -152,8 +154,6 @@ Replay attack with old credentials & Version tracking alerts verifiers to supers
 Private key leakage & Only issuer can publish roots; access control in smart contract enforces authorization \\
 \hline
 \end{tabular}
-\caption{Threat Model and Mitigations}
-\label{tab:threat-model}
 \end{table}
 
 The threat model was validated through comprehensive testing. Attempts to verify receipts with tampered course data (modified grades, altered course names) correctly failed verification due to value hash mismatches. All 21 test courses achieved 100\% verification success rate with zero false positives or negatives, confirming the effectiveness of the cryptographic protections.
@@ -165,6 +165,8 @@ The system's security relies on standard cryptographic assumptions:
 
 \begin{table}[H]
 \centering
+\caption{Cryptographic Security Assumptions}
+\label{tab:crypto-assumptions}
 \begin{tabular}{|p{5.5cm}|p{6.5cm}|}
 \hline
 \textbf{Assumption} & \textbf{Basis} \\
@@ -176,8 +178,6 @@ Hash collision resistance & SHA-256 for key and value hashing \\
 Blockchain immutability & Ethereum Proof-of-Stake consensus mechanism \\
 \hline
 \end{tabular}
-\caption{Cryptographic Security Assumptions}
-\label{tab:crypto-assumptions}
 \end{table}
 
 \section{Cost Analysis}
@@ -192,6 +192,8 @@ Measured blockchain transaction costs for term root publication based on actual 
 
 \begin{table}[H]
 \centering
+\caption{On-Chain Cost Measurements from Sepolia Testnet}
+\label{tab:onchain-costs}
 \begin{tabular}{|p{5.5cm}|p{3cm}|p{3.5cm}|}
 \hline
 \textbf{Operation} & \textbf{Gas} & \textbf{Cost (20 gwei)} \\
@@ -203,8 +205,6 @@ Publish 7 terms (full degree) & 1,430,513 & 0.02861 ETH \\
 Read root (view function) & 0 & Free \\
 \hline
 \end{tabular}
-\caption{On-Chain Cost Measurements from Sepolia Testnet}
-\label{tab:onchain-costs}
 \end{table}
 
 The gas measurements are based on three actual transactions to the deployed IUMiCertRegistry contract on Sepolia testnet. Transaction hashes: \texttt{0x047f9bbc...} (204,371 gas, 50K students), \texttt{0x3bba1220...} (204,383 gas, 50K students), and \texttt{0xf600d3bd...} (204,323 gas, 100 students). The variance of ±0.03\% across vastly different tree sizes (450 to 207,866 courses) confirms that blockchain costs are independent of the number of students or credentials in a term. This cost independence validates the economic scalability of the aggregation approach—whether publishing credentials for 100 or 50,000 students, the on-chain cost remains constant at approximately 204,000 gas, as only the 32-byte root commitment is stored regardless of dataset size.
@@ -241,6 +241,8 @@ For different institutional sizes, the per-student cost varies dramatically due 
 
 \begin{table}[H]
 \centering
+\caption{Per-Student Cost at Different Institutional Scales}
+\label{tab:per-student-cost-scale}
 \begin{tabular}{|p{3.5cm}|p{3.5cm}|p{4.5cm}|}
 \hline
 \textbf{Students per Term} & \textbf{Total Cost} & \textbf{Per-Student Cost} \\
@@ -256,8 +258,6 @@ For different institutional sizes, the per-student cost varies dramatically due 
 50,000 & \$85.82 & \$0.0017 \\
 \hline
 \end{tabular}
-\caption{Per-Student Cost at Different Institutional Scales}
-\label{tab:per-student-cost-scale}
 \end{table}
 
 \textbf{Comparison with Traditional Systems:} Traditional credential verification costs \$50-\$100 per request due to administrative overhead. At a medium university scale (5,000 students), the IU-MiCert per-student cost of \$0.017 reaches break-even after just 0.00034 verifications—essentially immediate. For a mega university with 50,000 students, the per-student cost drops to \$0.0017, providing a 29,000-fold cost reduction compared to a single traditional verification. Given that graduates typically require 10-15 credential verifications throughout their careers (job applications, further education, professional certifications), the blockchain approach provides savings of \$499-\$1,499 per student over their lifetime.
@@ -269,6 +269,8 @@ Table \ref{tab:solution-comparison} compares IU-MiCert with prominent existing b
 
 \begin{table}[H]
 \centering
+\caption{Feature Comparison with Existing Solutions}
+\label{tab:solution-comparison}
 \begin{tabular}{|p{3.5cm}|p{2.5cm}|p{3cm}|p{3cm}|}
 \hline
 \textbf{Feature} & \textbf{BlockCerts} & \textbf{IU-TransCert} & \textbf{IU-MiCert} \\
@@ -286,8 +288,6 @@ On-chain storage & Full hash & Full hash & Root only (32B) \\
 Revocation & Separate list & None & Versioning \\
 \hline
 \end{tabular}
-\caption{Feature Comparison with Existing Solutions}
-\label{tab:solution-comparison}
 \end{table}
 
 IU-MiCert advances the state of blockchain credentials \cite{blockcerts_mit, le_iutranscert, nguyen2024iuvec} through micro-credential granularity, compact constant-size proofs, and elegant version-based revocation. Compared to BlockCerts' whole-certificate approach and IU-TransCert's whole-transcript model, IU-MiCert enables per-course verification while maintaining comparable or better proof sizes that remain constant regardless of institutional scale.
@@ -302,6 +302,8 @@ This section evaluates the system's usability from the perspective of all stakeh
 
 \begin{table}[H]
 \centering
+\caption{User Flow Testing Results}
+\label{tab:user-flows}
 \begin{tabular}{|p{3.5cm}|p{5cm}|p{3.5cm}|}
 \hline
 \textbf{Actor} & \textbf{Task} & \textbf{Completion Rate} \\
@@ -315,8 +317,6 @@ Verifier & Verify receipt & 100\% \\
 Issuer & Revoke credential & 100\% \\
 \hline
 \end{tabular}
-\caption{User Flow Testing Results}
-\label{tab:user-flows}
 \end{table}
 
 All user flows were successfully completed during system testing. The issuer dashboard enables seamless term root publication with MetaMask integration. Students can view their complete receipts and apply selective disclosure filters through the verification portal. Verifiers receive instant verification results with detailed blockchain confirmation. The revocation workflow provides administrative controls for credential invalidation with proper version management.
@@ -539,29 +539,24 @@ Table \ref{tab:design-goals-achieved} compares the measured achievements against
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{4.5cm}|p{3cm}|p{3cm}|p{1.5cm}|}
-\hline
-\textbf{Design Goal (SR\#)} & \textbf{Target} & \textbf{Achieved} & \textbf{Status} \\
-\hline
-Granular verification (SR1) & Per course & Per course & ✓ \\
-\hline
-Compact proofs (SR2) & <1KB & 1.8 KB & ✓* \\
-\hline
-Temporal integrity (SR3) & Blockchain & Blockchain & ✓ \\
-\hline
-Selective disclosure (SR4) & Proof filtering & 86\% privacy & ✓ \\
-\hline
-Cost-effective (SR5) & <\$1/student & \$0.017 & ✓ \\
-\hline
-Trustless verification (SR6) & Independent & Independent & ✓ \\
-\hline
-Immutable records (SR7) & Blockchain & Blockchain & ✓ \\
-\hline
-Revocation support (SR8) & Versioning & Implemented & ✓ \\
-\hline
-\end{tabular}
-\caption{Validation of System Requirements (*constant-size property validated)}
+\caption{Validation of System Requirements}
 \label{tab:design-goals-achieved}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Design Goal (SR\#)} & \textbf{Target} & \textbf{Achieved} & \textbf{Status} \\
+\midrule
+Granular verification (SR1)  & Per course      & Per course   & \checkmark \\
+Compact proofs (SR2)         & $<$1KB          & 1.8 KB       & \checkmark* \\
+Temporal integrity (SR3)     & Blockchain      & Blockchain   & \checkmark \\
+Selective disclosure (SR4)   & Proof filtering & 86\% privacy & \checkmark \\
+Cost-effective (SR5)         & $<$ \$1/student & \$0.017      & \checkmark \\
+Trustless verification (SR6) & Independent     & Independent  & \checkmark \\
+Immutable records (SR7)      & Blockchain      & Blockchain   & \checkmark \\
+Revocation support (SR8)     & Versioning      & Implemented  & \checkmark \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize * constant-size property validated}
+\end{tabular}
 \end{table}
 
 All eight system requirements (SR1-SR8) from Chapter 3 are successfully met in the deployed system. The proof size (SR2) exceeds the 1KB target but achieves the critical constant-size property across 460-fold dataset variation, which is the fundamental scalability requirement. The system demonstrates production-ready performance across all dimensions: granular per-course verification enables selective disclosure, blockchain anchoring provides temporal integrity and immutability, cost-effectiveness is validated at \$0.017 per student for 5,000-student institutions, and the version-based revocation mechanism provides credential management capabilities without compromising system integrity.

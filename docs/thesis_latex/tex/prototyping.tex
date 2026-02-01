@@ -166,6 +166,8 @@ The complete development toolchain for IU-MiCert leverages specialized libraries
 
 \begin{table}[H]
 \centering
+\caption{Development Tools and Their Purposes}
+\label{tab:dev-tools}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Tool} & \textbf{Purpose} \\
@@ -183,8 +185,6 @@ GORM & Go ORM for PostgreSQL database operations, providing type-safe data acces
 Cobra & CLI command framework for building structured command-line tools with subcommands \\
 \hline
 \end{tabular}
-\caption{Development Tools and Their Purposes}
-\label{tab:dev-tools}
 \end{table}
 
 \section{Blockchain Strategy}
@@ -194,6 +194,8 @@ The selection of Ethereum Sepolia testnet as the deployment platform reflects ca
 
 \begin{table}[H]
 \centering
+\caption{Blockchain Network Selection Criteria}
+\label{tab:blockchain-choice}
 \begin{tabular}{|p{3.5cm}|p{9.5cm}|}
 \hline
 \textbf{Factor} & \textbf{Decision Rationale} \\
@@ -207,8 +209,6 @@ Stability & Long-term Ethereum testnet with commitment to continued support \\
 Tooling & Full Etherscan support, block explorers, and development tools availability \\
 \hline
 \end{tabular}
-\caption{Blockchain Network Selection Criteria}
-\label{tab:blockchain-choice}
 \end{table}
 
 \textbf{Production Path:} While the current implementation uses Sepolia testnet for development and testing, the system is designed for eventual mainnet deployment. The architecture supports migration to Ethereum mainnet when the system reaches production readiness. Additionally, the design is compatible with Layer 2 solutions such as Optimism or Arbitrum, which could provide lower transaction costs while maintaining Ethereum's security guarantees. The smart contract code is network-agnostic, requiring only configuration changes to deploy on different Ethereum-compatible networks.

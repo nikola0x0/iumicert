@@ -60,6 +60,8 @@ This thesis makes several distinct contributions to the field of blockchain-base
 
 \begin{table}[H]
 \centering
+\caption{Research Contributions and Their Impact}
+\label{tab:contributions}
 \begin{tabular}{|p{5.5cm}|p{7.5cm}|}
 \hline
 \textbf{Contribution} & \textbf{Impact} \\
@@ -75,8 +77,6 @@ Temporal integrity & Provable issuance timeline through term-based trees with bl
 Selective disclosure & Privacy-preserving verification through cryptographic proof filtering \\
 \hline
 \end{tabular}
-\caption{Research Contributions and Their Impact}
-\label{tab:contributions}
 \end{table}
 
 \textbf{Micro-Credential Architecture:} This work demonstrates the first practical implementation of treating individual courses as independently verifiable micro-credentials. While the concept of micro-credentials exists in educational theory, prior blockchain implementations operated at the whole-certificate or whole-transcript granularity. The IU-MiCert architecture proves that Verkle trees enable efficient per-course verification at scale, validating the feasibility of granular blockchain credentials.
@@ -96,6 +96,8 @@ While the IU-MiCert system successfully addresses multiple gaps in blockchain cr
 
 \begin{table}[H]
 \centering
+\caption{System Limitations and Mitigations}
+\label{tab:limitations}
 \begin{tabular}{|p{5cm}|p{4cm}|p{4cm}|}
 \hline
 \textbf{Limitation} & \textbf{Impact} & \textbf{Mitigation} \\
@@ -109,8 +111,6 @@ Manual selective disclosure & UX friction for non-technical users & Future: UI-b
 Single issuer design & Centralized trust in university & Future: Multi-issuer federation \\
 \hline
 \end{tabular}
-\caption{System Limitations and Mitigations}
-\label{tab:limitations}
 \end{table}
 
 \textbf{Quantum Computing Vulnerability:} The system's cryptographic foundations—elliptic curve discrete logarithm problem for Pedersen commitments and SHA-256 for hashing—are vulnerable to quantum attacks using Shor's algorithm. While current quantum computers lack the scale to threaten these primitives, academic credentials must remain valid for 50+ years, potentially outliving current cryptographic security. This represents a fundamental limitation for any system relying on classical cryptography. Mitigation requires monitoring post-quantum cryptography research and planning migration paths to quantum-resistant alternatives as they mature. The modular design of IU-MiCert facilitates such migration, as the proof system could theoretically be replaced while maintaining the overall architecture.
